@@ -1,14 +1,10 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="112" fill="#27AE60"/>
-  <g fill="#ffffff" transform="translate(106,106) scale(3.0)">
-    <path d="M50 92 L31 50 L41 50 L50 71 L59 50 L69 50 Z"/>
-    <path d="M50 36 L57 50 L43 50 Z"/>
-    <path d="M14 38 L24 33 L38 52 L30 58 Z"/>
-    <path d="M86 38 L76 33 L62 52 L70 58 Z"/>
-    <path d="M47 8 L53 8 L52 28 L48 28 Z"/>
-    <path d="M30 12 L36 9 L44 28 L39 30 Z"/>
-    <path d="M70 12 L64 9 L56 28 L61 30 Z"/>
-    <path d="M16 22 L21 17 L36 33 L32 37 Z"/>
-    <path d="M84 22 L79 17 L64 33 L68 37 Z"/>
+  <rect width="512" height="512" rx="112" fill="#2BA94C"/>
+  <g transform="translate(106,106) scale(3.0)" fill="none" stroke="#ffffff" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M50 50 V70"/><path d="M50 70 L41 80"/><path d="M50 70 L59 80"/>
+    <path d="M50 50 V25"/>
+    <path d="M50 50 L39 29"/><path d="M50 50 L61 29"/>
+    <path d="M50 50 L30 36"/><path d="M50 50 L70 36"/>
+    <path d="M50 51 L24 47"/><path d="M50 51 L76 47"/>
   </g>
 </svg>

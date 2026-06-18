@@ -18,7 +18,7 @@
       V.statusbar() +
       '<div class="screen"><div class="splash">' +
       blobs +
-      '<div class="splash__logo">' + V.logo(110) +
+      '<div class="splash__logo">' + V.mark(116) +
         '<div class="word">VITA</div></div>' +
       '<div class="splash__cta">' +
         '<div><small>' + t("noAccount") + '</small><b>' + t("createNow") + "</b></div>" +

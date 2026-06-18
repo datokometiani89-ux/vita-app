@@ -2,34 +2,48 @@
 window.VITA = window.VITA || {};
 
 (function (V) {
-  /* VITA tree-V logomark (approximation of the Figma mark) */
-  V.logo = function (size, color) {
-    size = size || 56; color = color || "#27AE60";
+  /* VITA tree mark (per brand guideline) — fan canopy + forked trunk/roots.
+     Drawn as bold round strokes; recolourable. 100×100 viewBox. */
+  V.treeMark = function (color) {
     return (
-      '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="VITA">' +
-      '<g fill="' + color + '">' +
-      /* central V trunk */
-      '<path d="M50 92 L31 50 L41 50 L50 71 L59 50 L69 50 Z"/>' +
-      /* inner upward leaf */
-      '<path d="M50 36 L57 50 L43 50 Z"/>' +
-      /* side arms */
-      '<path d="M14 38 L24 33 L38 52 L30 58 Z"/>' +
-      '<path d="M86 38 L76 33 L62 52 L70 58 Z"/>' +
-      /* crown rays */
-      '<path d="M47 8 L53 8 L52 28 L48 28 Z"/>' +
-      '<path d="M30 12 L36 9 L44 28 L39 30 Z"/>' +
-      '<path d="M70 12 L64 9 L56 28 L61 30 Z"/>' +
-      '<path d="M16 22 L21 17 L36 33 L32 37 Z"/>' +
-      '<path d="M84 22 L79 17 L64 33 L68 37 Z"/>' +
-      "</g></svg>"
+      '<g fill="none" stroke="' + color + '" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round">' +
+      // trunk + forked roots
+      '<path d="M50 50 V70"/><path d="M50 70 L41 80"/><path d="M50 70 L59 80"/>' +
+      // canopy: central + three pairs fanning out
+      '<path d="M50 50 V25"/>' +
+      '<path d="M50 50 L39 29"/><path d="M50 50 L61 29"/>' +
+      '<path d="M50 50 L30 36"/><path d="M50 50 L70 36"/>' +
+      '<path d="M50 51 L24 47"/><path d="M50 51 L76 47"/>' +
+      "</g>"
     );
   };
 
+  /* tree only (transparent bg) — used inside badges and as a coloured mark */
+  V.logo = function (size, color) {
+    size = size || 56; color = color || "#2BA94C";
+    return (
+      '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="VITA">' +
+      V.treeMark(color) + "</svg>"
+    );
+  };
+
+  /* full brandmark — green organic blob with the white tree (primary lockup) */
+  V.mark = function (size) {
+    size = size || 96;
+    return (
+      '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="VITA">' +
+      '<path d="M50 5 C75 5 93 19 95 43 C97 67 87 95 50 95 C15 95 3 67 5 43 C7 19 25 5 50 5 Z" fill="var(--green)"/>' +
+      '<g transform="translate(19,18) scale(0.62)">' + V.treeMark("#ffffff") + "</g>" +
+      "</svg>"
+    );
+  };
+
+  /* circular badge (matches the merchandise stickers) — green disc + white tree */
   V.logoBadge = function (size) {
     size = size || 30;
     return (
       '<span class="logo-badge" style="width:' + size + "px;height:" + size + 'px">' +
-      V.logo(Math.round(size * 0.62), "#ffffff") +
+      V.logo(Math.round(size * 0.66), "#ffffff") +
       "</span>"
     );
   };
