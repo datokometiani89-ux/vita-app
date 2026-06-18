@@ -245,6 +245,16 @@ window.VITA = window.VITA || {};
     mJson: { ka: "მონაცემები (JSON)", en: "My data (JSON)" },
     mPrint: { ka: "ექიმის რეზიუმე", en: "Doctor summary" },
     mSettings: { ka: "პარამეტრები", en: "Settings" },
+    mWater: { ka: "წყლის თრექერი", en: "Water tracker" },
+    /* water */
+    waterTitle: { ka: "წყლის თრექერი", en: "Water tracker" },
+    waterDesc: { ka: "დღიური მიზანი — 2.5 ლ. დაამატე თითო ჭიქა (250 მლ).", en: "Daily goal — 2.5 L. Add one glass (250 ml) at a time." },
+    waterGlass: { ka: "ჭიქა", en: "glass" },
+    waterAddGlass: { ka: "+ ჭიქა", en: "+ Glass" },
+    waterOf: { ka: "მიზნიდან", en: "of goal" },
+    waterGoalHit: { ka: "დღის მიზანი მიღწეულია! 🎉", en: "Daily goal reached! 🎉" },
+    waterWeek: { ka: "ბოლო 7 დღე", en: "Last 7 days" },
+    waterWidget: { ka: "წყალი დღეს", en: "Water today" },
     dashNext: { ka: "შემდეგი რეკომენდებული შემოწმება", en: "Next recommended screening" },
     dashNextCta: { ka: "სრული გეგმა", en: "Full plan" },
 

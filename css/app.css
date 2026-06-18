@@ -660,6 +660,30 @@
 .sc-row.on .sc-box { background: var(--green); border-color: var(--green); color: #fff; }
 .sc-box svg { width: 16px; height: 16px; }
 
+/* water tracker */
+.water-hero { display: flex; align-items: center; gap: 18px; background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 20px; margin-bottom: 16px; }
+.water-bottle { flex: none; }
+.water-stat__big { font-size: 30px; font-weight: 800; }
+.water-stat__big span { font-size: 16px; color: var(--muted); font-weight: 600; }
+.water-stat__sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.water-controls { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.water-btn { width: 48px; height: 48px; border-radius: 14px; flex: none; background: var(--blue-tint); color: var(--blue); font-size: 26px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.water-btn:active { transform: scale(.94); }
+.water-glasses { flex: 1; display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
+.wg { color: var(--line); }
+.wg svg { width: 20px; height: 20px; }
+.wg.on { color: var(--blue); }
+.water-card { display: flex; align-items: center; gap: 14px; width: 100%; background: var(--card); border: 1.5px solid var(--blue-tint); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 14px 16px; margin-bottom: 12px; text-align: left; }
+.water-card b { font-size: 15.5px; display: block; }
+.water-card small { color: var(--muted); font-size: 13px; }
+.water-card__ring { width: 42px; height: 42px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center; color: var(--blue);
+  background: radial-gradient(var(--card) 54%, transparent 55%), conic-gradient(var(--blue) calc(var(--p) * 1%), var(--blue-tint) 0); }
+.water-card__ring svg { width: 20px; height: 20px; }
+.water-card__bar { height: 6px; border-radius: 99px; background: var(--blue-tint); overflow: hidden; margin-top: 7px; }
+.water-card__bar > span { display: block; height: 100%; background: var(--blue); border-radius: 99px; transition: width .4s; }
+.water-card__add { width: 36px; height: 36px; border-radius: 50%; flex: none; background: var(--blue); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+.water-card__add svg { width: 18px; height: 18px; }
+
 /* menu hub */
 .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .menu-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 12px;

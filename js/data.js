@@ -323,6 +323,31 @@ window.VITA = window.VITA || {};
     ];
   };
 
+  /* ---------- Water tracker ---------- */
+  V.WATER_GLASS = 250;            // ml per glass
+  V.waterGoal = function () { return 2500; };   // ml/day target (2–2.5L)
+  V.waterToday = function () { return V.state.waterLog[V.todayISO()] || 0; };
+  V.waterAdd = function (ml) {
+    var d = V.todayISO();
+    var was = V.state.waterLog[d] || 0;
+    var now = Math.max(0, was + ml);
+    V.state.waterLog[d] = now;
+    V.save();
+    // reward: first time hitting the daily goal
+    if (was < V.waterGoal() && now >= V.waterGoal() && V.award) V.award(10, "water");
+    return now;
+  };
+  V.waterSeries = function (days) {
+    days = days || 7;
+    var out = [], d = new Date();
+    for (var i = days - 1; i >= 0; i--) {
+      var dt = new Date(d); dt.setDate(d.getDate() - i);
+      var iso = dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0");
+      out.push({ iso: iso, ml: V.state.waterLog[iso] || 0, key: ["sun","mon","tue","wed","thu","fri","sat"][dt.getDay()] });
+    }
+    return out;
+  };
+
   /* ---------- Holistic care plans (A–F, from the doc) ----------
      Each plan: {id, key(title), icon, tone, sections:[{h, items:[]}]}.
      Personalised numbers pulled from the profile where the doc uses them. */

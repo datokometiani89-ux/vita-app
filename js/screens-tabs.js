@@ -105,6 +105,17 @@
     var doneMeds = V.state.doneMeds[today] || [];
     var food = V.foodPlan();
 
+    function waterWidget() {
+      var goal = V.waterGoal(), w = V.waterToday();
+      var pct = Math.min(100, Math.round(w / goal * 100));
+      return '<button class="water-card" data-water-open>' +
+        '<span class="water-card__ring" style="--p:' + pct + '">' + V.icon("drop") + "</span>" +
+        '<div style="flex:1;text-align:left"><b>' + t("waterWidget") + "</b>" +
+          '<small>' + (w / 1000).toFixed(2).replace(/\.?0+$/, "") + " / " + (goal / 1000) + " ლ · " + pct + "%</small>" +
+          '<div class="water-card__bar"><span style="width:' + pct + '%"></span></div></div>' +
+        '<span class="water-card__add" data-water-add>' + V.icon("plus") + "</span></button>";
+    }
+
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
@@ -119,6 +130,7 @@
           '<div class="daysleft"><span>' + t("plDaysLeft", { n: Math.max(0, 4 - ((day - 1) % 4)) }) + "</span></div>" +
         "</div>" +
 
+        waterWidget() +
         '<button class="careplans-cta" data-careplans>' + V.iconBox("heart", "green") +
           '<div style="flex:1;text-align:left"><b>' + t("plCarePlans") + "</b><small>" + t("plCarePlansSub") + "</small></div>" +
           '<span class="cplan__chev">' + V.icon("next") + "</span></button>" +
@@ -167,6 +179,10 @@
         if (wo) wo.addEventListener("click", function () { V.go("workouts"); });
         var an = $("[data-annual]");
         if (an) an.addEventListener("click", function () { V.go("annual"); });
+        var wopen = $("[data-water-open]");
+        if (wopen) wopen.addEventListener("click", function () { V.go("water"); });
+        var wadd = $("[data-water-add]");
+        if (wadd) wadd.addEventListener("click", function (e) { e.stopPropagation(); V.waterAdd(250); V.render(); });
         each("[data-toggle]", function (el) {
           el.addEventListener("click", function () {
             var id = el.getAttribute("data-toggle");
@@ -532,6 +548,80 @@
     );
   };
 
+  /* ===================== WATER TRACKER ===================== */
+  V.screens.water = function () {
+    var goal = V.waterGoal();
+    var ml = V.waterToday();
+    var pct = Math.min(100, Math.round(ml / goal * 100));
+    var glasses = Math.round(ml / V.WATER_GLASS);
+    var goalGlasses = Math.round(goal / V.WATER_GLASS);
+    var series = V.waterSeries(7);
+    var maxMl = Math.max(goal, Math.max.apply(null, series.map(function (s) { return s.ml; })));
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("waterTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("waterDesc") + "</p>" +
+
+        '<div class="water-hero">' +
+          waterBottle(pct) +
+          '<div class="water-stat"><div class="water-stat__big">' + (ml / 1000).toFixed(2).replace(/\.?0+$/, "") + '<span> / ' + (goal / 1000) + " ლ</span></div>" +
+            '<div class="water-stat__sub">' + pct + "% " + t("waterOf") + " · " + glasses + "/" + goalGlasses + " " + t("waterGlass") + "</div>" +
+            (ml >= goal ? '<div class="tag green" style="margin-top:10px">' + t("waterGoalHit") + "</div>" : "") +
+          "</div>" +
+        "</div>" +
+
+        '<div class="water-controls">' +
+          '<button class="water-btn minus" data-water="-250">−</button>' +
+          '<div class="water-glasses">' +
+            Array.apply(null, { length: goalGlasses }).map(function (_, i) {
+              return '<span class="wg ' + (i < glasses ? "on" : "") + '">' + V.icon("drop") + "</span>";
+            }).join("") +
+          "</div>" +
+          '<button class="water-btn plus" data-water="250">+</button>' +
+        "</div>" +
+        '<button class="btn btn-primary" data-water="250" style="width:100%;margin-top:6px">' + V.icon("drop") + " " + t("waterAddGlass") + "</button>" +
+
+        '<div class="section-head"><h3>' + t("waterWeek") + "</h3></div>" +
+        '<div class="chart-card"><svg viewBox="0 0 320 130">' +
+          series.map(function (s, i) {
+            var bw = 30, gap = (320 - bw * 7) / 8, x = gap + i * (bw + gap);
+            var bh = Math.max(3, (s.ml / maxMl) * 92), y = 104 - bh;
+            var col = s.ml >= goal ? "#2BA94C" : "#7FC8E8";
+            return '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '" rx="6" fill="' + col + '"/>' +
+              '<text x="' + (x + bw / 2) + '" y="120" text-anchor="middle" font-size="11" fill="var(--muted)">' + V.dayShort(s.key) + "</text>";
+          }).join("") +
+          '<line x1="0" y1="' + (104 - (goal / maxMl) * 92) + '" x2="320" y2="' + (104 - (goal / maxMl) * 92) + '" stroke="var(--muted)" stroke-dasharray="4 4" opacity=".5"/>' +
+        "</svg></div>" +
+      "</div>" +
+      V.tabbar("plan") +
+      "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("plan"); });
+        each("[data-water]", function (b) {
+          b.addEventListener("click", function () { V.waterAdd(parseInt(b.getAttribute("data-water"), 10)); V.render(); });
+        });
+      }}
+    );
+  };
+
+  function waterBottle(pct) {
+    var fillY = 96 - (pct / 100) * 84; // bottle body 12..96
+    return '<svg class="water-bottle" viewBox="0 0 80 120" width="120" height="160">' +
+      '<defs><clipPath id="bottleClip"><path d="M28 8 h24 v10 q12 6 12 22 v66 q0 10 -12 10 h-24 q-12 0 -12 -10 v-66 q0 -16 12 -22 Z"/></clipPath>' +
+      '<linearGradient id="wfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FD4F0"/><stop offset="1" stop-color="#36A0D8"/></linearGradient></defs>' +
+      '<g clip-path="url(#bottleClip)">' +
+        '<rect x="0" y="0" width="80" height="120" fill="var(--field)"/>' +
+        '<rect x="0" y="' + fillY + '" width="80" height="120" fill="url(#wfill)"><animate attributeName="y" to="' + fillY + '" dur="0.5s" fill="freeze"/></rect>' +
+        '<ellipse cx="40" cy="' + fillY + '" rx="42" ry="5" fill="#A7E0F5" opacity=".7"/>' +
+      "</g>" +
+      '<path d="M28 8 h24 v10 q12 6 12 22 v66 q0 10 -12 10 h-24 q-12 0 -12 -10 v-66 q0 -16 12 -22 Z" fill="none" stroke="var(--line)" stroke-width="2.5"/>' +
+      '<rect x="31" y="2" width="18" height="7" rx="2" fill="var(--line)"/>' +
+      "</svg>";
+  }
+
   /* ===================== MENU / HUB ===================== */
   V.screens.menu = function () {
     function tile(icon, tone, labelKey, attr) {
@@ -560,7 +650,8 @@
           tile("plan", "green", "mPlan", 'data-go="plan"'),
           tile("heart", "green", "mCare", 'data-go="careplans"'),
           tile("bolt", "blue", "mWorkouts", 'data-go="workouts"'),
-          tile("drop", "pink", "mCheckup", 'data-go="checkup"'),
+          tile("drop", "blue", "mWater", 'data-go="water"'),
+          tile("flask", "pink", "mCheckup", 'data-go="checkup"'),
         ]) +
         group("grpAssistant", [
           tile("chat", "blue", "mChat", 'data-go="vita"'),
