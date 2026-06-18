@@ -629,6 +629,89 @@
       "</svg>";
   }
 
+  /* ===================== CALENDAR (month view) ===================== */
+  var calY = null, calM = null, calSel = null;
+  V.screens.calendar = function () {
+    var now = new Date();
+    if (calY == null) { calY = now.getFullYear(); calM = now.getMonth() + 1; }
+    var ev = V.calendarEvents(calY, calM);
+    var todayISO = V.todayISO();
+    var first = new Date(calY, calM - 1, 1);
+    var startPad = (first.getDay() + 6) % 7;       // Mon=0
+    var daysIn = new Date(calY, calM, 0).getDate();
+    var cells = [];
+    for (var i = 0; i < startPad; i++) cells.push(null);
+    for (var d = 1; d <= daysIn; d++) cells.push(d);
+    while (cells.length % 7) cells.push(null);
+
+    function cell(d) {
+      if (d == null) return '<div class="cal-cell empty"></div>';
+      var iso = calY + "-" + String(calM).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+      var evs = ev[iso] || [];
+      var isToday = iso === todayISO, isSel = iso === calSel;
+      var dots = evs.slice(0, 3).map(function (e) { return '<i style="background:' + e.color + '"></i>'; }).join("");
+      return '<button class="cal-cell ' + (isToday ? "today " : "") + (isSel ? "sel " : "") + (evs.length ? "has" : "") + '" data-day="' + iso + '">' +
+        "<span>" + d + "</span><div class='cal-dots'>" + dots + "</div></button>";
+    }
+
+    var selEvs = calSel ? (ev[calSel] || []) : [];
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("calTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("calDesc") + "</p>" +
+
+        '<div class="cal-nav"><button class="cal-arrow" data-mn="-1">' + V.icon("back") + "</button>" +
+          "<b>" + V.monthName(calM) + " " + calY + "</b>" +
+          '<button class="cal-arrow" data-mn="1">' + V.icon("next") + "</button></div>" +
+
+        '<div class="cal-grid cal-head">' + ["mon","tue","wed","thu","fri","sat","sun"].map(function (k) { return "<span>" + V.dayShort(k) + "</span>"; }).join("") + "</div>" +
+        '<div class="cal-grid">' + cells.map(cell).join("") + "</div>" +
+
+        '<div class="cal-legend-row">' +
+          '<span><i style="background:var(--green)"></i>' + t("calLegendScreen") + "</span>" +
+          '<span><i style="background:var(--green)"></i>' + t("calLegendVisit") + "</span>" +
+          (V.state.profile.sex === "woman" ? '<span><i style="background:var(--pink)"></i>' + t("calLegendPeriod") + "</span><span><i style=\"background:var(--blue)\"></i>" + t("calLegendFertile") + "</span>" : "") +
+        "</div>" +
+
+        '<div class="section-head"><h3>' + (calSel ? (V.monthName(calM) + " " + parseInt(calSel.slice(8))) : t("calToday")) + "</h3></div>" +
+        (selEvs.length ? '<div class="list-card">' + selEvs.map(function (e) {
+          return '<div class="list-row"><span class="sc-dot" style="background:' + e.color + '"></span>' +
+            '<div class="list-row__t"><b>' + L(e.label) + "</b></div></div>";
+        }).join("") + "</div>" +
+        '<div class="upload-grid" style="margin-top:12px">' +
+          '<button class="upload-opt" data-gcal>' + V.iconBox("calendar", "blue") + "<div><b>" + t("calAddGoogle") + "</b></div></button>" +
+          '<button class="upload-opt" data-ics>' + V.iconBox("upload", "green") + "<div><b>" + t("calAddIcs") + "</b></div></button>" +
+        "</div>"
+        : '<p class="cal-note">' + t("calNoEvents") + "</p>") +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        each("[data-mn]", function (b) {
+          b.addEventListener("click", function () {
+            calM += parseInt(b.getAttribute("data-mn"));
+            if (calM < 1) { calM = 12; calY--; } else if (calM > 12) { calM = 1; calY++; }
+            calSel = null; V.render();
+          });
+        });
+        each("[data-day]", function (b) {
+          b.addEventListener("click", function () { calSel = b.getAttribute("data-day"); V.render(); });
+        });
+        var g = $("[data-gcal]");
+        if (g) g.addEventListener("click", function () {
+          var e = selEvs[0];
+          window.open(V.gcalLink("VITA: " + L(e.label), calSel), "_blank", "noopener");
+        });
+        var ics = $("[data-ics]");
+        if (ics) ics.addEventListener("click", function () { V.features.exportICS(); });
+      }}
+    );
+  };
+
   /* ===================== WOMEN'S CYCLE ===================== */
   V.screens.cycle = function () {
     var c = V.cycle();
@@ -839,6 +922,7 @@
           tile("heart", "green", "mCare", 'data-go="careplans"'),
           tile("bolt", "blue", "mWorkouts", 'data-go="workouts"'),
           tile("drop", "blue", "mWater", 'data-go="water"'),
+          tile("calendar", "green", "mCalendar", 'data-go="calendar"'),
           tile("flask", "pink", "mCheckup", 'data-go="checkup"'),
         ]) +
         group("grpAssistant", [

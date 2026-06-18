@@ -323,6 +323,63 @@ window.VITA = window.VITA || {};
     ];
   };
 
+  /* ---------- Calendar events (for the month view) ---------- */
+  function ymd(y, m, d) { return y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0"); }
+  V.calendarEvents = function (year, month) {   // month 1-12
+    var ev = {};
+    function push(iso, e) { (ev[iso] = ev[iso] || []).push(e); }
+    var daysIn = new Date(year, month, 0).getDate();
+
+    // screenings (placed mid-month on day 12)
+    if (V.screeningByMonth) {
+      V.screeningByMonth().forEach(function (mo) {
+        if (mo.month === month) {
+          mo.items.forEach(function (s) {
+            push(ymd(year, month, Math.min(12, daysIn)), { type: "screen", label: s.name, color: V.catColor(s.cat) });
+          });
+        }
+      });
+    }
+    // bookings (exact dates) — from the clinics/visit flow
+    (V.state.bookings || []).forEach(function (b) {
+      if (!b.date) return;
+      var p = b.date.split("-");
+      if (parseInt(p[0]) === year && parseInt(p[1]) === month)
+        push(b.date, { type: "visit", label: { ka: "ვიზიტი", en: "Visit" }, color: "var(--green)" });
+    });
+    // women's cycle — period days + fertile window
+    if (V.state.profile && V.state.profile.sex === "woman" && V.cycle) {
+      var c = V.cycle(), base = new Date(c.lastPeriod), len = c.cycleLen || 28, plen = c.periodLen || 5;
+      for (var k = -2; k <= 14; k++) {
+        var start = new Date(base); start.setDate(base.getDate() + k * len);
+        for (var d = 0; d < plen; d++) {
+          var pd = new Date(start); pd.setDate(start.getDate() + d);
+          if (pd.getFullYear() === year && pd.getMonth() + 1 === month)
+            push(ymd(year, month, pd.getDate()), { type: "period", label: { ka: "მენსტრუაცია", en: "Period" }, color: "var(--pink)" });
+        }
+        var ov = new Date(start); ov.setDate(start.getDate() + (len - 14));
+        for (var f = -4; f <= 1; f++) {
+          var fd = new Date(ov); fd.setDate(ov.getDate() + f);
+          if (fd.getFullYear() === year && fd.getMonth() + 1 === month)
+            push(ymd(year, month, fd.getDate()), { type: "fertile", label: { ka: "ნაყოფიერი", en: "Fertile" }, color: "var(--blue)" });
+        }
+      }
+    }
+    return ev;
+  };
+
+  // google calendar add-link for an all-day event
+  V.gcalLink = function (title, isoDate, details, location) {
+    var d = isoDate.replace(/-/g, "");
+    var end = new Date(isoDate); end.setDate(end.getDate() + 1);
+    var de = end.getFullYear() + String(end.getMonth() + 1).padStart(2, "0") + String(end.getDate()).padStart(2, "0");
+    return "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+      "&text=" + encodeURIComponent(title) +
+      "&dates=" + d + "/" + de +
+      (details ? "&details=" + encodeURIComponent(details) : "") +
+      (location ? "&location=" + encodeURIComponent(location) : "");
+  };
+
   /* ---------- Women's cycle ---------- */
   function dISO(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function addDays(iso, n) { var d = new Date(iso); d.setDate(d.getDate() + n); return d; }

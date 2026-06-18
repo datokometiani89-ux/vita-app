@@ -248,6 +248,18 @@ window.VITA = window.VITA || {};
     mWater: { ka: "წყლის თრექერი", en: "Water tracker" },
     mRewards: { ka: "ჯილდოები", en: "Rewards" },
     mCycle: { ka: "ციკლი", en: "Cycle" },
+    mCalendar: { ka: "კალენდარი", en: "Calendar" },
+    /* calendar */
+    calTitle: { ka: "კალენდარი", en: "Calendar" },
+    calDesc: { ka: "შენი შემოწმებები, ვიზიტები და ციკლი ერთ ხედში.", en: "Your screenings, visits and cycle in one view." },
+    calToday: { ka: "დღეს", en: "Today" },
+    calNoEvents: { ka: "ამ დღეს ღონისძიება არ არის.", en: "No events on this day." },
+    calAddGoogle: { ka: "Google Calendar-ში", en: "Add to Google Calendar" },
+    calAddIcs: { ka: "ჩამოტვირთე .ics", en: "Download .ics" },
+    calLegendScreen: { ka: "შემოწმება", en: "Screening" },
+    calLegendVisit: { ka: "ვიზიტი", en: "Visit" },
+    calLegendPeriod: { ka: "მენსტრუაცია", en: "Period" },
+    calLegendFertile: { ka: "ნაყოფიერი", en: "Fertile" },
     /* women's cycle */
     cyTitle: { ka: "ციკლის ჯანმრთელობა", en: "Cycle health" },
     cyDesc: { ka: "თვალი ადევნე მენსტრუალურ ციკლს — ფაზა, ნაყოფიერი დღეები და პროგნოზი.", en: "Track your menstrual cycle — phase, fertile window and prediction." },
