@@ -631,6 +631,133 @@
       "</svg>";
   }
 
+  /* ===================== CLINICS (finder + booking) ===================== */
+  var clinicCtx = null, clinicSort = "rating";
+  V.openClinics = function (checkupId, title) {
+    clinicCtx = { checkupId: checkupId, category: V.checkupCategory(checkupId), title: title };
+    clinicSort = "rating";
+    V.go("clinics");
+  };
+  V.screens.clinics = function () {
+    if (!clinicCtx) clinicCtx = { checkupId: "general", category: "medical", title: { ka: "ზოგადი ანალიზები", en: "General panel" } };
+    var res = V.clinicsFor(clinicCtx.category, clinicSort);
+
+    function clinicCard(c) {
+      return '<div class="clinic">' +
+        '<div class="clinic__top"><div class="clinic__t"><b>' + esc(c.name) + "</b>" +
+          '<small>' + L(c.district) + " · " + esc(c.address) + "</small></div>" +
+          '<span class="clinic__rate">★ ' + c.rating.toFixed(1) + "</span></div>" +
+        '<div class="clinic__meta">' +
+          '<span>' + V.icon("location") + " " + c.distance + " " + t("clKm") + "</span>" +
+          '<span>' + (c.priceFrom ? "₾" + c.priceFrom + " " + t("clFrom") : t("clFree")) + "</span>" +
+        "</div>" +
+        '<div class="clinic__act">' +
+          '<a class="clinic__call" href="tel:' + c.phone + '">' + V.icon("bell") + " " + t("clCall") + "</a>" +
+          '<button class="btn btn-primary clinic__book" data-book=\'' + JSON.stringify({ id: c.id, name: c.name, phone: c.phone }).replace(/'/g, "&#39;") + '\' style="padding:11px 22px;font-size:15px">' + t("clBook") + "</button>" +
+        "</div></div>";
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("clTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + L(clinicCtx.title) + " · " + t("clDesc") + "</p>" +
+        '<div class="seg" style="margin-bottom:16px">' +
+          ["rating", "price", "distance"].map(function (s) {
+            return '<button data-sort="' + s + '" class="' + (clinicSort === s ? "on" : "") + '">' + t(s === "rating" ? "clSortRating" : s === "price" ? "clSortPrice" : "clSortDist") + "</button>";
+          }).join("") +
+        "</div>" +
+        res.items.map(clinicCard).join("") +
+        '<a class="set-link" href="' + res.vitaUrl + '" target="_blank" rel="noopener" style="justify-content:center;border:0;color:var(--green-dark);font-weight:600;margin-top:6px">' + V.icon("globe") + " " + t("clViewSite") + "</a>" +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("checkup"); });
+        each("[data-sort]", function (b) { b.addEventListener("click", function () { clinicSort = b.getAttribute("data-sort"); V.render(); }); });
+        each("[data-book]", function (b) {
+          b.addEventListener("click", function () { openBookSheet(JSON.parse(b.getAttribute("data-book"))); });
+        });
+      }}
+    );
+
+    function openBookSheet(clinic) {
+      var phone = root.querySelector(".phone");
+      var def = new Date(); def.setDate(def.getDate() + 3);
+      var defISO = def.getFullYear() + "-" + String(def.getMonth() + 1).padStart(2, "0") + "-" + String(def.getDate()).padStart(2, "0");
+      var times = ["09:00", "11:00", "14:00", "16:00"];
+      phone.insertAdjacentHTML("beforeend",
+        '<div class="sheet-overlay on" id="bkSheet"><div class="sheet">' +
+        '<div class="sheet__grab"></div><h3>' + esc(clinic.name) + "</h3>" +
+        '<p class="s-sub" style="margin-bottom:14px">' + t("clPick") + "</p>" +
+        '<div class="field"><input type="date" id="bkDate" value="' + defISO + '"></div>' +
+        '<div class="chips" id="bkTimes" style="margin-bottom:16px">' + times.map(function (tm, i) { return '<button class="chip ' + (i === 1 ? "on" : "") + '" data-time="' + tm + '">' + tm + "</button>"; }).join("") + "</div>" +
+        '<p class="cal-note" style="text-align:left;margin:0 0 14px">' + t("clManualNote") + "</p>" +
+        '<button class="btn btn-primary" id="bkConfirm" style="width:100%">' + t("clConfirm") + "</button>" +
+        "</div></div>");
+      var sheet = root.querySelector("#bkSheet");
+      var time = "11:00";
+      sheet.addEventListener("click", function (e) { if (e.target === sheet) sheet.remove(); });
+      each("#bkTimes .chip", function (c) { c.addEventListener("click", function () {
+        each("#bkTimes .chip", function (x) { x.classList.remove("on"); }); c.classList.add("on"); time = c.getAttribute("data-time");
+      }); });
+      $("#bkConfirm").addEventListener("click", function () {
+        V.book(clinicCtx.checkupId, clinic, $("#bkDate").value, time, clinicCtx.title);
+        sheet.remove();
+        V.go("visits");
+      });
+    }
+  };
+
+  /* ===================== MY VISITS ===================== */
+  V.screens.visits = function () {
+    var bookings = (V.state.bookings || []).slice().sort(function (a, b) { return (a.date || "").localeCompare(b.date || ""); });
+
+    function visitCard(b) {
+      var attended = b.status === "attended";
+      return '<div class="visit ' + (attended ? "done" : "") + '">' +
+        '<div class="visit__top">' + V.iconBox(attended ? "check" : "calendar", attended ? "green" : "blue") +
+          '<div class="visit__t"><b>' + L(b.title || { ka: "ვიზიტი", en: "Visit" }) + "</b><small>" + esc(b.clinic) + " · " + (b.date || "") + " " + (b.time || "") + "</small></div>" +
+          '<span class="tag ' + (attended ? "green" : "blue") + '">' + t(attended ? "vsAttended" : "vsPlanned") + "</span></div>" +
+        '<div class="visit__act">' +
+          (attended
+            ? '<button class="btn btn-primary" data-upload="' + b.checkupId + '" style="flex:1;padding:11px;font-size:15px">' + V.icon("upload") + " " + t("vsUpload") + "</button>"
+            : '<button class="btn btn-primary" data-attend="' + b.id + '" style="flex:1;padding:11px;font-size:15px">' + V.icon("check") + " " + t("vsAttend") + "</button>") +
+          '<button class="visit__cancel" data-cancel="' + b.id + '">' + V.icon("x") + "</button>" +
+        "</div></div>";
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("visitsTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("visitsDesc") + "</p>" +
+        (bookings.length ? bookings.map(visitCard).join("")
+          : '<div class="empty-state"><p class="cal-note">' + t("vsNone") + "</p>" +
+            '<button class="btn btn-primary" data-tocheckup style="margin-top:8px">' + t("vsBook") + "</button></div>") +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        var tc = $("[data-tocheckup]");
+        if (tc) tc.addEventListener("click", function () { V.go("checkup"); });
+        each("[data-attend]", function (b) { b.addEventListener("click", function () { V.confirmVisit(b.getAttribute("data-attend")); V.render(); }); });
+        each("[data-cancel]", function (b) { b.addEventListener("click", function () { V.cancelVisit(b.getAttribute("data-cancel")); V.render(); }); });
+        each("[data-upload]", function (b) {
+          b.addEventListener("click", function () {
+            var cat = V.checkupCategory(b.getAttribute("data-upload"));
+            var panel = { medical: "general", dental: "dental", mental: "mental", aesthetic: "skin" }[cat] || "general";
+            if (V.setResultsPanel) V.setResultsPanel(panel);
+            V.go("results");
+          });
+        });
+      }}
+    );
+  };
+
   /* ===================== CALENDAR (month view) ===================== */
   var calY = null, calM = null, calSel = null;
   V.screens.calendar = function () {
@@ -935,6 +1062,7 @@
           tile("drop", "blue", "mWater", 'data-go="water"'),
           tile("calendar", "green", "mCalendar", 'data-go="calendar"'),
           tile("flask", "pink", "mCheckup", 'data-go="checkup"'),
+          tile("location", "blue", "mVisits", 'data-go="visits"'),
         ]) +
         group("grpAssistant", [
           tile("chat", "blue", "mChat", 'data-go="vita"'),
@@ -1138,6 +1266,7 @@
 
   /* ===================== RESULTS UPLOAD ===================== */
   var ruPanel = "general";   // currently open panel (persists across re-render)
+  V.setResultsPanel = function (p) { ruPanel = p; };
 
   V.screens.results = function () {
     var panels = V.labPanels();

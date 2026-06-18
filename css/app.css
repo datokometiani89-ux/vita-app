@@ -660,6 +660,30 @@
 .sc-row.on .sc-box { background: var(--green); border-color: var(--green); color: #fff; }
 .sc-box svg { width: 16px; height: 16px; }
 
+/* clinics + visits */
+.clinic { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 16px; margin-bottom: 12px; }
+.clinic__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.clinic__t b { font-size: 16.5px; display: block; }
+.clinic__t small { color: var(--muted); font-size: 13px; }
+.clinic__rate { background: var(--green-tint); color: var(--green-dark); font-weight: 700; font-size: 13.5px; padding: 4px 9px; border-radius: 99px; flex: none; }
+[data-theme="dark"] .clinic__rate { color: #5ED694; }
+.clinic__meta { display: flex; gap: 16px; margin: 10px 0 12px; color: var(--ink-2); font-size: 14px; }
+.clinic__meta span { display: inline-flex; align-items: center; gap: 5px; }
+.clinic__meta svg { width: 16px; height: 16px; color: var(--muted); }
+.clinic__act { display: flex; align-items: center; gap: 10px; }
+.clinic__call { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px; border-radius: var(--r-pill); border: 1.5px solid var(--line); color: var(--ink-2); font-weight: 600; font-size: 15px; }
+.clinic__call svg { width: 17px; height: 17px; }
+.visit { background: var(--card); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 16px; margin-bottom: 12px; border: 1.5px solid transparent; }
+.visit.done { border-color: var(--green-tint-2); }
+.visit__top { display: flex; align-items: center; gap: 12px; }
+.visit__t { flex: 1; }
+.visit__t b { font-size: 16px; display: block; }
+.visit__t small { color: var(--muted); font-size: 13px; }
+.visit__act { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.visit__cancel { width: 44px; height: 44px; border-radius: 12px; flex: none; background: var(--field); color: var(--muted); display: inline-flex; align-items: center; justify-content: center; }
+.visit__cancel svg { width: 18px; height: 18px; }
+.empty-state { text-align: center; padding: 30px 0; }
+
 /* calendar month view */
 .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .cal-nav b { font-size: 17px; font-weight: 700; }

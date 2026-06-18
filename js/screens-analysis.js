@@ -269,12 +269,8 @@
         each("[data-cal]", function (b) {
           b.addEventListener("click", function () {
             var id = b.getAttribute("data-cal");
-            var i = V.state.calendar.indexOf(id);
-            if (i >= 0) V.state.calendar.splice(i, 1); else V.state.calendar.push(id);
-            V.save();
-            b.classList.toggle("done");
-            b.innerHTML = V.icon(b.classList.contains("done") ? "check" : "calendar") +
-              (b.classList.contains("done") ? t("cpBooked") : t("cpBook"));
+            var item = plan.filter(function (x) { return x.id === id; })[0];
+            V.openClinics(id, item ? item.title : { ka: "ვიზიტი", en: "Visit" });
           });
         });
         $("[data-next]").addEventListener("click", function () { V.go("goals"); });

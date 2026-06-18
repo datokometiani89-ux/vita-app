@@ -45,6 +45,68 @@ window.VITA = window.VITA || {};
     return items;
   };
 
+  /* ---------- Clinic directory (categories mirror vitaapp.ge) ----------
+     Demo dataset of Tbilisi providers; structured so the real vitaapp.ge data
+     can replace `clinicData` later. vitaUrl deep-links the live site. */
+  var clinicData = {
+    medical: { vitaUrl: "https://vitaapp.ge/clinics/samedicinodawesebulebebi", items: [
+      { name: "NeoLab", district: { ka: "ვაკე", en: "Vake" }, address: "ი. ჭავჭავაძის გამზ. 37", phone: "+995322001234", priceFrom: 35, rating: 4.7, distance: 1.8 },
+      { name: "Aversi Clinic", district: { ka: "საბურთალო", en: "Saburtalo" }, address: "ვაჟა-ფშაველას გამზ. 27", phone: "+995322002345", priceFrom: 40, rating: 4.5, distance: 2.6 },
+      { name: "Evex (Caraps)", district: { ka: "დიდუბე", en: "Didube" }, address: "ცინცაძის ქ. 7", phone: "+995322003456", priceFrom: 30, rating: 4.4, distance: 3.9 },
+      { name: "GPC კლინიკა", district: { ka: "ვაკე", en: "Vake" }, address: "ყიფშიძის ქ. 5", phone: "+995322004567", priceFrom: 45, rating: 4.6, distance: 2.1 },
+    ]},
+    dental: { vitaUrl: "https://vitaapp.ge/clinics/stomatologia", items: [
+      { name: "Dental Art", district: { ka: "ვაკე", en: "Vake" }, address: "აბაშიძის ქ. 24", phone: "+995322010001", priceFrom: 50, rating: 4.8, distance: 1.5 },
+      { name: "Renome", district: { ka: "საბურთალო", en: "Saburtalo" }, address: "ნუცუბიძის ქ. 12", phone: "+995322010002", priceFrom: 40, rating: 4.6, distance: 3.2 },
+      { name: "Astra Dental", district: { ka: "მთაწმინდა", en: "Mtatsminda" }, address: "ლ. ასათიანის ქ. 9", phone: "+995322010003", priceFrom: 55, rating: 4.7, distance: 2.8 },
+    ]},
+    aesthetic: { vitaUrl: "https://vitaapp.ge/clinics/silamazedaestetika", items: [
+      { name: "Skin Clinic", district: { ka: "ვაკე", en: "Vake" }, address: "ი. ჭავჭავაძის გამზ. 50", phone: "+995322020001", priceFrom: 60, rating: 4.6, distance: 1.9 },
+      { name: "DermaLine", district: { ka: "საბურთალო", en: "Saburtalo" }, address: "ფალიაშვილის ქ. 18", phone: "+995322020002", priceFrom: 45, rating: 4.4, distance: 2.7 },
+    ]},
+    mental: { vitaUrl: "https://vitaapp.ge/clinics/mentalurijanmrteloba", items: [
+      { name: "Mindful Center", district: { ka: "ვაკე", en: "Vake" }, address: "კოსტავას ქ. 70", phone: "+995322030001", priceFrom: 70, rating: 4.9, distance: 2.0 },
+      { name: "სტიმული", district: { ka: "ვერა", en: "Vera" }, address: "მელიქიშვილის ქ. 11", phone: "+995322030002", priceFrom: 55, rating: 4.7, distance: 1.6 },
+    ]},
+    pharmacy: { vitaUrl: "https://vitaapp.ge/clinics/aptiakebi", items: [
+      { name: "Aversi (აფთიაქი)", district: { ka: "ვაკე", en: "Vake" }, address: "ჭავჭავაძის გამზ. 19", phone: "+995322040001", priceFrom: 0, rating: 4.5, distance: 0.8 },
+      { name: "PSP", district: { ka: "საბურთალო", en: "Saburtalo" }, address: "ვაჟა-ფშაველას 16", phone: "+995322040002", priceFrom: 0, rating: 4.4, distance: 1.2 },
+      { name: "GPC აფთიაქი", district: { ka: "ვერა", en: "Vera" }, address: "მელიქიშვილის 24", phone: "+995322040003", priceFrom: 0, rating: 4.3, distance: 1.0 },
+    ]},
+  };
+  V.checkupCategory = function (id) {
+    return { glucose: "medical", energy: "medical", lipid: "medical", general: "medical",
+      prostate: "medical", mental: "mental", derm: "aesthetic", dental: "dental" }[id] || "medical";
+  };
+  V.clinicsFor = function (category, sort) {
+    var grp = clinicData[category] || clinicData.medical;
+    var items = grp.items.map(function (c, i) { return Object.assign({ id: category + i }, c); });
+    items.sort(function (a, b) {
+      if (sort === "price") return a.priceFrom - b.priceFrom;
+      if (sort === "distance") return a.distance - b.distance;
+      return b.rating - a.rating;
+    });
+    return { vitaUrl: grp.vitaUrl, items: items };
+  };
+
+  /* ---------- Bookings / visits ---------- */
+  V.book = function (checkupId, clinic, date, time, title) {
+    V.state.bookings = V.state.bookings || [];
+    var id = "bk" + Date.now();
+    V.state.bookings.push({ id: id, checkupId: checkupId, clinic: clinic.name, phone: clinic.phone,
+      date: date, time: time, status: "planned", title: title });
+    V.save();
+    return id;
+  };
+  V.confirmVisit = function (id) {
+    var b = (V.state.bookings || []).filter(function (x) { return x.id === id; })[0];
+    if (b && b.status !== "attended") { b.status = "attended"; V.save(); if (V.awardOnce) V.awardOnce("visit:" + id, V.POINTS.booking, "booking"); }
+  };
+  V.cancelVisit = function (id) {
+    V.state.bookings = (V.state.bookings || []).filter(function (x) { return x.id !== id; });
+    V.save();
+  };
+
   /* ---------- Recommended specialist + sample clinic per checkup (Step 3) ---------- */
   V.checkupExtra = function (id) {
     var m = {
