@@ -38,6 +38,7 @@ window.VITA = window.VITA || {};
     taskLogs: {},         // { "2026-06-12": { t1: {text, photo, voice} } }
     doneMeds: {},         // { "2026-06-12": ["omega3"] }
     doneWorkouts: {},      // { "mon": true } — weekly workout completion
+    reps: {},              // { "squat": 45 } — lifetime camera-tracked reps
     screenings: null,      // selected preventive-screening ids (null → default to recommended)
     waterLog: {},          // { "2026-06-18": 1500 }  ml of water per day
     points: 0,             // spendable VITA reward points

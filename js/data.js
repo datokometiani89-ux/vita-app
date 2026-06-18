@@ -385,6 +385,37 @@ window.VITA = window.VITA || {};
     ];
   };
 
+  /* ---------- Camera rep-tracking config ----------
+     Each trackable move defines which body angle to watch and the
+     thresholds (degrees) that mark the bottom ("down") and top ("up")
+     of one repetition. joints are [a,b,c] landmark indices; the angle
+     is measured at b. MediaPipe Pose landmark indices:
+       11/12 shoulder, 13/14 elbow, 15/16 wrist,
+       23/24 hip, 25/26 knee, 27/28 ankle  (L/R) */
+  V.repMoves = [
+    { id: "squat", name: { ka: "ჩაჯდომები", en: "Squats" }, target: 15,
+      joints: { L: [23, 25, 27], R: [24, 26, 28] }, down: 95, up: 160, tip: { ka: "გვერდულად დადექი კამერასთან", en: "Stand sideways to the camera" } },
+    { id: "pushup", name: { ka: "აზიდვები", en: "Push-ups" }, target: 12,
+      joints: { L: [11, 13, 15], R: [12, 14, 16] }, down: 95, up: 155, tip: { ka: "გვერდულად, სხეული ჩანდეს მთლიანად", en: "Side-on, keep your whole body in frame" } },
+    { id: "lunge", name: { ka: "ნახტომები (lunges)", en: "Lunges" }, target: 10,
+      joints: { L: [23, 25, 27], R: [24, 26, 28] }, down: 100, up: 165, tip: { ka: "გვერდულად დადექი", en: "Stand sideways" } },
+    { id: "bridge", name: { ka: "მენჯის აწევა", en: "Glute bridge" }, target: 15,
+      joints: { L: [11, 23, 25], R: [12, 24, 26] }, down: 130, up: 170, tip: { ka: "დაწექი გვერდულად კამერასთან", en: "Lie sideways to the camera" } },
+    { id: "curl", name: { ka: "ბაიცეფსის მოხრა", en: "Bicep curls" }, target: 12,
+      joints: { L: [11, 13, 15], R: [12, 14, 16] }, down: 55, up: 150, tip: { ka: "გვერდულად, ხელი ჩანდეს", en: "Side-on, keep your arm visible" } },
+  ];
+  V.repMove = function (id) { return V.repMoves.filter(function (m) { return m.id === id; })[0] || null; };
+  // best-effort map a workout exercise name → a trackable move
+  V.repMoveForExercise = function (name) {
+    var en = ((name && name.en) || "").toLowerCase();
+    if (/push-?up/.test(en)) return V.repMove("pushup");
+    if (/lunge/.test(en)) return V.repMove("lunge");
+    if (/bridge/.test(en)) return V.repMove("bridge");
+    if (/curl/.test(en)) return V.repMove("curl");
+    if (/squat/.test(en)) return V.repMove("squat");
+    return null;
+  };
+
   /* ---------- Calendar events (for the month view) ---------- */
   function ymd(y, m, d) { return y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0"); }
   V.calendarEvents = function (year, month) {   // month 1-12

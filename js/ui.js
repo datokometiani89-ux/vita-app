@@ -153,4 +153,15 @@ window.VITA = window.VITA || {};
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   };
+
+  // lightweight transient toast inside the phone frame
+  V.toast = function (msg) {
+    var host = document.querySelector(".phone") || document.body;
+    var el = document.createElement("div");
+    el.className = "vtoast";
+    el.textContent = msg;
+    host.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add("on"); });
+    setTimeout(function () { el.classList.remove("on"); setTimeout(function () { el.remove(); }, 300); }, 2200);
+  };
 })(window.VITA);

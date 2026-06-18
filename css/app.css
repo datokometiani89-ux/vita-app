@@ -615,6 +615,40 @@
 .wo-list { list-style: none; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; }
 .wo-list li { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; font-size: 15px; color: var(--ink-2); }
 .wo-list li b { color: var(--ink); font-weight: 600; font-size: 14px; }
+.wo-cam { margin-left: 10px; flex: 0 0 auto; width: 32px; height: 32px; border-radius: 9px; border: 1.5px solid var(--green); background: color-mix(in srgb, var(--green) 12%, transparent); color: var(--green); display: inline-grid; place-items: center; cursor: pointer; transition: transform .12s, background .12s; }
+.wo-cam svg { width: 17px; height: 17px; }
+.wo-cam:active { transform: scale(.9); }
+.wo-list li b { margin-left: auto; }
+
+/* camera rep counter overlay */
+.rep-overlay { position: absolute; inset: 0; z-index: 60; border-radius: inherit; overflow: hidden; opacity: 0; transition: opacity .2s; background: #0b1411; }
+.rep-overlay.on { opacity: 1; }
+.rep-cam { position: absolute; inset: 0; }
+.rep-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); background: #0b1411; }
+.rep-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.rep-overlay.manual .rep-video, .rep-overlay.manual .rep-canvas { display: none; }
+.rep-overlay.manual .rep-cam { background: linear-gradient(160deg, #103024, #0b1411); }
+.rep-top { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 10px; padding: 16px; z-index: 2; background: linear-gradient(180deg, rgba(0,0,0,.5), transparent); }
+.rep-x { width: 36px; height: 36px; border-radius: 50%; border: none; background: rgba(255,255,255,.18); color: #fff; display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(6px); }
+.rep-x svg { width: 18px; height: 18px; }
+.rep-title { color: #fff; font-weight: 700; font-size: 17px; text-shadow: 0 1px 4px rgba(0,0,0,.5); }
+.rep-status { position: absolute; top: 64px; left: 0; right: 0; text-align: center; color: #d7fbe6; font-size: 14px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,.6); z-index: 2; }
+.rep-count { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; z-index: 2; transition: transform .15s; }
+.rep-count b { display: block; font-size: 96px; font-weight: 800; color: #fff; line-height: .9; text-shadow: 0 3px 16px rgba(0,0,0,.55); }
+.rep-count span { color: rgba(255,255,255,.8); font-size: 22px; font-weight: 700; }
+.rep-count.hit b { color: var(--green); }
+.rep-count.hit { transform: translateY(-50%) scale(1.06); }
+.rep-bar { position: absolute; left: 20px; right: 20px; bottom: 130px; height: 8px; border-radius: 99px; background: rgba(255,255,255,.2); z-index: 2; }
+.rep-bar span { display: block; height: 100%; border-radius: 99px; background: var(--green); transition: width .25s; }
+.rep-actions { position: absolute; left: 16px; right: 16px; bottom: 56px; display: flex; gap: 10px; z-index: 2; }
+.rep-actions .btn { padding: 14px 0; font-size: 16px; border-radius: 14px; }
+.rep-minus, .rep-plus { width: 60px; flex: 0 0 auto; background: rgba(255,255,255,.18); color: #fff; border: none; font-size: 20px; font-weight: 700; }
+.rep-done { flex: 1; }
+.rep-tip { position: absolute; left: 20px; right: 20px; bottom: 22px; text-align: center; color: rgba(255,255,255,.75); font-size: 12.5px; z-index: 2; }
+
+/* toast */
+.vtoast { position: absolute; left: 50%; bottom: 96px; transform: translate(-50%, 16px); z-index: 70; background: rgba(20,28,24,.95); color: #fff; padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.3); opacity: 0; transition: opacity .25s, transform .25s; max-width: 80%; text-align: center; }
+.vtoast.on { opacity: 1; transform: translate(-50%, 0); }
 
 /* annual checkups */
 .freq-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }

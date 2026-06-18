@@ -1118,7 +1118,10 @@
               '<button class="wo-check ' + (isDone ? "on" : "") + '" data-wo="' + d.key + '">' + V.icon("check") + "</button>") +
         "</div>" +
         (d.items.length ? '<ul class="wo-list">' + d.items.map(function (x) {
-          return "<li><span>" + L(x.name) + '</span><b>' + esc(x.scheme) + "</b></li>";
+          var mv = V.repMoveForExercise ? V.repMoveForExercise(x.name) : null;
+          return "<li><span>" + L(x.name) + '</span><b>' + esc(x.scheme) + "</b>" +
+            (mv ? '<button class="wo-cam" data-rep="' + mv.id + '" title="' + t("rcLive") + '">' + V.icon("camera") + "</button>" : "") +
+            "</li>";
         }).join("") + "</ul>" : "") +
         "</div>";
     }
@@ -1145,6 +1148,21 @@
             if (V.state.doneWorkouts[k]) V.awardOnce("wo:" + k, V.POINTS.workout, "workout");
             V.save();
             V.render();
+          });
+        });
+        each("[data-rep]", function (b) {
+          b.addEventListener("click", function () {
+            var mv = V.repMove(b.getAttribute("data-rep"));
+            if (!mv || !V.openRepCounter) return;
+            V.openRepCounter({ move: mv, onDone: function (reps) {
+              if (reps >= Math.ceil(mv.target * 0.6)) {
+                V.state.reps = V.state.reps || {};
+                V.state.reps[mv.id] = (V.state.reps[mv.id] || 0) + reps;
+                V.awardOnce("rep:" + mv.id + ":" + new Date().toISOString().slice(0, 10), V.POINTS.workout, "workout");
+                V.toast && V.toast(t("rcSaved", { n: reps }));
+                V.save();
+              }
+            }});
           });
         });
       }}
