@@ -1,0 +1,4 @@
+# VITA backend dependencies.
+# The FREE Gemini path needs NOTHING here (pure stdlib) — you can leave this empty.
+# Installing anthropic only enables the optional Claude provider:
+anthropic>=0.40.0

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ka" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#27AE60">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <title>VITA — Health AI Assistant</title>
+  <meta name="description" content="VITA Health AI — your personal longevity architect. AI diagnostics, checkup planning and daily care in one holistic ecosystem.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Noto+Sans+Georgian:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+  <div class="ld" id="ld"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+  (function () {
+    var V = window.VITA, t = V.t, esc = V.esc;
+    var L = document.getElementById("ld");
+
+    // landing-only copy
+    var copy = {
+      stepsT: { ka: ["ონბორდინგი","AI ანალიზი","ჩექაფ-გეგმა","შედეგების ატვირთვა","მიზნები","ყოველდღიური ზრუნვა","პროგრესი"],
+                en: ["Onboarding","AI analysis","Checkup plan","Results upload","Goal setting","Daily care","Progress"] },
+      stepsD: {
+        ka: ["ქმნი პროფილს, AI სვამს დამატებით კითხვებს.",
+             "სისტემა აანალიზებს მონაცემებს და გამოყოფს რისკის სფეროებს.",
+             "AI ადგენს დროში გაწერილ, კალენდართან ინტეგრირებულ გეგმას.",
+             "ტვირთავ შედეგებს — AI ინტერპრეტირებს და განაახლებს პროფილს.",
+             "ისახავ მიზნებს — AI ამზადებს ზრუნვის გეგმებს.",
+             "მიჰყვები რეკომენდაციებს და დავალებებს, აღრიცხავ პროგრესს.",
+             "პროგრეს-გრაფიკები წარმატების სადემონსტრაციოდ და მოტივაციისთვის."],
+        en: ["You create a profile; the AI asks a few follow-up questions.",
+             "The system analyses your data and highlights risk areas.",
+             "VITA builds a time-phased plan integrated with your calendar.",
+             "You upload results — the AI interprets them and updates your profile.",
+             "You set goals — the AI generates care plans for each track.",
+             "You follow recommendations and tasks, and log your progress.",
+             "Progress charts show your wins and keep you motivated."] },
+      feats: {
+        ka: [
+          ["heart","ჰოლისტიკური ხედვა","ერთ ეკოსისტემაში — ზოგადი, მენტალური, სხეულის და ესთეტიკური ჯანმრთელობა."],
+          ["brain","პერსონალიზებული AI","რეკომენდაციები შენს მონაცემებზე დაყრდნობით, რომელიც მუდმივად აპდეითდება."],
+          ["calendar","კალენდართან ინტეგრაცია","ჩექაფები და მედიკამენტები ავტომატურად შენს კალენდარში."],
+          ["flask","ლაბ-შედეგების კითხვა","ატვირთე ანალიზები — VITA ახსნის და ნორმებს შეადარებს."],
+          ["sparkle","სილამაზე და ახალგაზრდობა","კანის, თმის და პირის ღრუს მოვლის პერსონალური რუტინები."],
+          ["trend","პროგრესის ტრეკინგი","გრაფიკები წონის, ქულის და სერიების დინამიკით."]],
+        en: [
+          ["heart","Holistic view","General, mental, body and aesthetic health in one ecosystem."],
+          ["brain","Personalised AI","Recommendations grounded in your data that keep updating."],
+          ["calendar","Calendar integration","Checkups and medications added to your calendar automatically."],
+          ["flask","Lab-result reading","Upload your labs — VITA explains them against normal ranges."],
+          ["sparkle","Beauty & longevity","Personal routines for skin, hair and oral care."],
+          ["trend","Progress tracking","Charts for weight, score and streak dynamics."]] },
+    };
+    function C(k){ return copy[k][V.lang()] || copy[k].en; }
+
+    function blob(cls, w, h, top, left, right, delay) {
+      return '<div class="blob ' + cls + '" style="width:'+w+'px;height:'+h+'px;top:'+top+
+        ';'+(left!=null?'left:'+left:'right:'+right)+';opacity:.85;animation:floaty '+(7+delay)+'s ease-in-out infinite '+delay+'s"></div>';
+    }
+
+    function render() {
+      document.documentElement.lang = V.lang();
+      L.innerHTML =
+        '<nav class="ld-nav">' +
+          '<div class="ld-brand">' + V.logo(30) + " VITA</div>" +
+          '<div class="ld-nav__right">' +
+            '<div class="ld-seg"><button data-lang="ka" class="'+(V.lang()==="ka"?"on":"")+'">ქარ</button>' +
+            '<button data-lang="en" class="'+(V.lang()==="en"?"on":"")+'">EN</button></div>' +
+            '<button class="ld-icon-btn" id="themeBtn">'+V.icon(document.documentElement.getAttribute("data-theme")==="dark"?"sun":"moon")+'</button>' +
+            '<a class="btn btn-primary ld-open" style="padding:12px 22px;font-size:15px" href="app.html"><span class="ld-open__full">'+t("ldOpenApp")+'</span><span class="ld-open__short">'+(V.lang()==="ka"?"გახსნა":"Open")+'</span> '+V.icon("next")+'</a>' +
+          "</div></nav>" +
+
+        '<header class="ld-hero">' +
+          '<div class="ld-hero__blobs">' +
+            blob("b-green",150,140,"4%","6%",null,0)+
+            blob("b-yellow",120,112,"54%",null,"4%",1.2)+
+            blob("b-pink",96,90,"70%","12%",null,2)+
+          "</div>" +
+          "<div>" +
+            '<span class="ld-pill">'+V.icon("sparkle")+' VITA Health AI</span>' +
+            "<h1>"+heroTitle()+"</h1>" +
+            "<p>"+t("ldHeroSub")+"</p>" +
+            '<div class="ld-hero__cta">' +
+              '<a class="btn btn-primary" href="app.html">'+t("getStarted")+' '+V.icon("next")+'</a>' +
+              '<a class="btn btn-ghost" href="#how">'+t("ldSteps")+'</a>' +
+            "</div>" +
+            '<div class="ld-stats">' +
+              stat("7", V.lang()==="ka"?"ნაბიჯიანი ჯანმრთელობის გზა":"step health journey") +
+              stat("4", V.lang()==="ka"?"მიმართულება ერთ აპში":"tracks in one app") +
+              stat("AI", V.lang()==="ka"?"პერსონალური ასისტენტი":"personal assistant") +
+            "</div>" +
+          "</div>" +
+          '<div class="ld-phone-wrap"><div class="ld-phone"><div class="ld-phone__notch"></div>'+phoneDemo()+'</div></div>' +
+        "</header>" +
+
+        '<section class="ld-section" id="how"><div class="ld-section__head">' +
+          '<span class="kicker">'+t("ldSteps")+'</span><h2>'+(V.lang()==="ka"?"VITA-ს მუშაობის 7 ნაბიჯი":"The 7-step VITA journey")+'</h2></div>' +
+          '<div class="ld-steps">'+C("stepsT").map(function(title,i){
+            return '<div class="ld-step"><div class="ld-step__n">'+(i+1)+'</div><h3>'+esc(title)+'</h3><p>'+esc(C("stepsD")[i])+'</p></div>';
+          }).join("")+'</div></section>' +
+
+        '<section class="ld-section"><div class="ld-section__head">' +
+          '<span class="kicker">'+t("ldFeatures")+'</span><h2>'+(V.lang()==="ka"?"ერთი აპი, სრული სურათი":"One app, the full picture")+'</h2></div>' +
+          '<div class="ld-features">'+C("feats").map(function(f,i){
+            var tone=["green","blue","pink","yellow","green","blue"][i%6];
+            return '<div class="ld-feat">'+V.iconBox(f[0],tone)+'<h3>'+esc(f[1])+'</h3><p>'+esc(f[2])+'</p></div>';
+          }).join("")+'</div></section>' +
+
+        '<section class="ld-cta">' +
+          '<div class="ld-cta__blob" style="width:200px;height:200px;background:#fff;top:-60px;left:-40px"></div>' +
+          '<div class="ld-cta__blob" style="width:160px;height:160px;background:#fff;bottom:-50px;right:-30px"></div>' +
+          '<h2>'+t("ldCta")+'</h2>' +
+          '<p>'+(V.lang()==="ka"?"შექმენი პროფილი 2 წუთში და მიიღე პერსონალური გეგმა.":"Build your profile in 2 minutes and get a personal plan.")+'</p>' +
+          '<a class="btn btn-primary" href="app.html">'+t("getStarted")+' '+V.icon("next")+'</a>' +
+        "</section>" +
+
+        '<footer class="ld-footer">' +
+          '<div class="ld-brand">'+V.logo(22)+' VITA</div>' +
+          '<span>'+t("ldFooter")+' · © 2026</span>' +
+        "</footer>";
+
+      wire();
+    }
+
+    function heroTitle() {
+      if (V.lang()==="ka") return 'შენი პერსონალური <span class="hl">longevity</span> არქიტექტორი';
+      return 'Your personal <span class="hl">longevity</span> architect';
+    }
+    function stat(b, s){ return '<div class="ld-stat"><b>'+b+'</b><span>'+esc(s)+'</span></div>'; }
+
+    function phoneDemo(){
+      return '<div class="ld-phone__demo">' +
+        '<div class="ld-demo-card"><div class="ld-demo-score">62 <span>/100</span></div>' +
+          '<div class="ld-demo-track"></div>' +
+          '<div style="font-weight:700;margin-top:6px">'+(V.lang()==="ka"?"ჯანმრთელობის ქულა":"Health score")+'</div>' +
+          '<div style="color:var(--muted);font-size:13px">'+(V.lang()==="ka"?"ზომიერი ყურადღება":"Moderate attention")+'</div></div>' +
+        '<div class="ld-demo-card">' +
+          demoRow("drop", V.lang()==="ka"?"შაქარი":"Blood sugar", t("high"), "high") +
+          demoRow("bolt", V.lang()==="ka"?"ენერგია":"Energy", t("high"), "high") +
+          demoRow("heart", V.lang()==="ka"?"ქოლესტერინი":"Cholesterol", t("medium"), "medium") +
+        "</div></div>";
+    }
+    function demoRow(ic, label, sev, cls){
+      return '<div class="ld-demo-row"><span class="ld-demo-ic">'+V.icon(ic)+'</span>' +
+        '<b style="flex:1;font-size:14px">'+esc(label)+'</b>' +
+        '<span class="sev '+cls+'" style="font-size:13px">'+esc(sev)+'</span></div>';
+    }
+
+    function wire(){
+      L.querySelectorAll("[data-lang]").forEach(function(b){
+        b.addEventListener("click", function(){ V.setLang(b.getAttribute("data-lang")); render(); });
+      });
+      var tb = document.getElementById("themeBtn");
+      if (tb) tb.addEventListener("click", function(){
+        var dark = document.documentElement.getAttribute("data-theme")==="dark";
+        document.documentElement.setAttribute("data-theme", dark?"light":"dark");
+        localStorage.setItem("vita.theme", dark?"light":"dark");
+        render();
+      });
+    }
+
+    // init theme from storage
+    if (localStorage.getItem("vita.theme")==="dark") document.documentElement.setAttribute("data-theme","dark");
+    render();
+  })();
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("sw.js").catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>

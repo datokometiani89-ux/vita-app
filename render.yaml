@@ -1,0 +1,19 @@
+# Render.com Blueprint — one free web service that serves the site, the app,
+# AND the AI proxy. Push this repo to GitHub, then in Render: New → Blueprint.
+services:
+  - type: web
+    name: vita-health-ai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python serve.py
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      # Render injects PORT automatically; serve.py reads it.
+      # --- FREE AI (recommended for demos): paste your Google AI Studio key ---
+      - key: GEMINI_API_KEY
+        sync: false
+      # --- Optional: Claude instead (needs Anthropic billing) ---
+      - key: ANTHROPIC_API_KEY
+        sync: false

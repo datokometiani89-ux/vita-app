@@ -1,0 +1,220 @@
+/* ============================================
+   VITA AI — Design System (from Figma "Medical App")
+   ============================================ */
+
+:root {
+  /* Brand */
+  --green: #27AE60;
+  --green-dark: #1E8E4F;
+  --green-deep: #157A40;
+  --green-tint: #E4F4EA;
+  --green-tint-2: #D2EDDD;
+
+  --pink: #ED2E7E;
+  --pink-tint: #FCE6F0;
+  --pink-soft: #F9D8E7;
+
+  --yellow: #F2B83B;
+  --yellow-tint: #FBF0D7;
+
+  --blue: #4169E8;
+  --blue-tint: #E7ECFB;
+
+  /* Neutrals */
+  --ink: #14181F;
+  --ink-2: #3A4350;
+  --muted: #8A94A6;
+  --line: #E6EAF2;
+  --bg: #F2F5FA;
+  --card: #FFFFFF;
+  --field: #F5F7FB;
+
+  /* Shape */
+  --r-xl: 28px;
+  --r-lg: 22px;
+  --r-md: 16px;
+  --r-pill: 999px;
+
+  --shadow-card: 0 2px 10px rgba(20, 24, 31, 0.05);
+  --shadow-pop: 0 12px 32px rgba(20, 24, 31, 0.16);
+
+  --font: "Poppins", "Noto Sans Georgian", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --green-tint: #1C3A2A;
+  --green-tint-2: #21452F;
+  --pink-tint: #3A2230;
+  --pink-soft: #46283A;
+  --yellow-tint: #3C3422;
+  --blue-tint: #232C44;
+
+  --ink: #F2F5F9;
+  --ink-2: #C6CEDA;
+  --muted: #8D97A7;
+  --line: #2A323C;
+  --bg: #11181D;
+  --card: #1B232A;
+  --field: #232C34;
+
+  --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.25);
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font-family: var(--font);
+  border: 0;
+  cursor: pointer;
+  background: none;
+  color: inherit;
+}
+
+input, select, textarea {
+  font-family: var(--font);
+  color: var(--ink);
+}
+
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; }
+
+/* ---------- Shared atoms ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: var(--r-pill);
+  font-weight: 600;
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease, opacity .2s;
+  user-select: none;
+}
+.btn:active { transform: scale(.97); }
+
+.btn-primary {
+  background: var(--green);
+  color: #fff;
+  padding: 16px 30px;
+  font-size: 17px;
+  box-shadow: 0 8px 20px rgba(39, 174, 96, .28);
+}
+.btn-primary:hover { background: var(--green-dark); }
+.btn-primary[disabled] {
+  background: var(--field);
+  color: var(--muted);
+  box-shadow: none;
+  cursor: default;
+}
+
+.btn-ghost {
+  color: var(--ink-2);
+  padding: 16px 22px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 20px;
+  background: var(--field);
+  color: var(--ink-2);
+  border: 1.5px solid transparent;
+  border-radius: var(--r-pill);
+  font-size: 15.5px;
+  font-weight: 500;
+  transition: all .18s ease;
+}
+.chip:hover { border-color: var(--line); }
+.chip.on {
+  background: var(--green-tint);
+  border-color: var(--green);
+  color: var(--green-dark);
+  font-weight: 600;
+}
+[data-theme="dark"] .chip.on { color: #5ED694; }
+
+.card {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.sev {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 14.5px;
+}
+.sev.high   { color: var(--pink); }
+.sev.medium { color: var(--yellow); }
+.sev.low    { color: var(--muted); }
+.sev.good   { color: var(--green); }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: var(--r-pill);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.tag.pink   { background: var(--pink-tint);   color: var(--pink); }
+.tag.blue   { background: var(--blue-tint);   color: var(--blue); }
+.tag.green  { background: var(--green-tint);  color: var(--green-dark); }
+.tag.yellow { background: var(--yellow-tint); color: #B98A1B; }
+.tag.gray   { background: var(--field);       color: var(--ink-2); }
+[data-theme="dark"] .tag.green { color: #5ED694; }
+
+.kicker {
+  font-size: 14px;
+  letter-spacing: .12em;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* Jelly blobs (welcome / hero) */
+.blob {
+  position: absolute;
+  border-radius: 46% 54% 55% 45% / 48% 44% 56% 52%;
+  filter: saturate(1.15);
+  pointer-events: none;
+}
+.blob::after {
+  content: "";
+  position: absolute;
+  inset: 8% 12% 40% 14%;
+  border-radius: inherit;
+  background: linear-gradient(150deg, rgba(255,255,255,.78), rgba(255,255,255,0) 62%);
+}
+.blob.b-green  { background: radial-gradient(circle at 32% 28%, #5fe09a, #119A4E 58%, #06602D); }
+.blob.b-yellow { background: radial-gradient(circle at 34% 30%, #ffe57e, #E8B61F 60%, #9A7106); }
+.blob.b-pink   { background: radial-gradient(circle at 33% 30%, #ff7eb1, #D81B60 62%, #8C0E3C); }
+.blob.b-blue   { background: radial-gradient(circle at 33% 28%, #7ea8ff, #2E5BD7 62%, #14307E); }
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(3deg); }
+}
+
+/* Scrollbar (subtle) */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+::-webkit-scrollbar-track { background: transparent; }

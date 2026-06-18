@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+*.log
+
+# local tooling (Claude Code harness, preview config)
+.claude/
+
+# local working files (not part of the app)
+design/
+serve_full.py
+
+# secrets — never commit your keys
+.env
