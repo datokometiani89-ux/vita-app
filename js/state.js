@@ -40,9 +40,12 @@ window.VITA = window.VITA || {};
     doneWorkouts: {},      // { "mon": true } — weekly workout completion
     screenings: null,      // selected preventive-screening ids (null → default to recommended)
     waterLog: {},          // { "2026-06-18": 1500 }  ml of water per day
-    points: 0,             // VITA reward points
-    elements: {},          // collected brand elements { green: 3, ... }
+    points: 0,             // spendable VITA reward points
+    lifetime: 0,           // total points ever earned (drives element unlocks)
+    elements: {},          // collected brand elements { cross: 3, ... }
     rewardLog: [],         // [{date, pts, reason}]
+    awarded: {},           // per-day award guards { "2026-06-18:task:water": true }
+    redeemed: [],          // [{tier, code, date}]
     cycle: null,           // women's cycle { lastPeriod, cycleLen, periodLen, logs:[] }
     bookings: [],          // [{checkupId, clinicId, date, time, status}]
     calendar: [],         // checkup ids added to calendar

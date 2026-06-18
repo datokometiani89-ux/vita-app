@@ -208,17 +208,33 @@ img, svg { display: block; }
   border-radius: inherit;
   background: linear-gradient(150deg, rgba(255,255,255,.78), rgba(255,255,255,0) 62%);
 }
-.blob.b-green   { background: radial-gradient(circle at 32% 28%, #5fe09a, #119A4E 58%, #06602D); }
-.blob.b-yellow  { background: radial-gradient(circle at 34% 30%, #ffe57e, #E8B61F 60%, #9A7106); }
-.blob.b-pink    { background: radial-gradient(circle at 33% 30%, #ff7eb1, #C2185B 62%, #7A0E3C); }
-.blob.b-blue    { background: radial-gradient(circle at 33% 28%, #7ea8ff, #2E5BD7 62%, #14307E); }
-.blob.b-crimson { background: radial-gradient(circle at 34% 30%, #ff8a8a, #E11D48 60%, #8E0E2E); }
-.blob.b-clear   { background: radial-gradient(circle at 36% 30%, #ffffff, #cdd8e6 62%, #9aa7ba); }
+.blob.b-green,   .jelly.b-green   { background: radial-gradient(circle at 32% 28%, #5fe09a, #119A4E 58%, #06602D); }
+.blob.b-yellow,  .jelly.b-yellow  { background: radial-gradient(circle at 34% 30%, #ffe57e, #E8B61F 60%, #9A7106); }
+.blob.b-pink,    .jelly.b-pink    { background: radial-gradient(circle at 33% 30%, #ff7eb1, #C2185B 62%, #7A0E3C); }
+.blob.b-blue,    .jelly.b-blue    { background: radial-gradient(circle at 33% 28%, #7ea8ff, #2E5BD7 62%, #14307E); }
+.blob.b-crimson, .jelly.b-crimson { background: radial-gradient(circle at 34% 30%, #ff8a8a, #E11D48 60%, #8E0E2E); }
+.blob.b-clear,   .jelly.b-clear   { background: radial-gradient(circle at 36% 30%, #ffffff, #cdd8e6 62%, #9aa7ba); }
 
 @keyframes floaty {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-14px) rotate(3deg); }
 }
+
+/* Brand jelly element — small glossy gummy with an embossed icon */
+.jelly {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 46% 54% 55% 45% / 48% 44% 56% 52%;
+  flex: none;
+  box-shadow: inset 0 3px 6px rgba(255,255,255,.5), inset 0 -5px 10px rgba(0,0,0,.18), 0 3px 8px rgba(20,24,31,.14);
+}
+.jelly::after {
+  content: ""; position: absolute; top: 12%; left: 16%; width: 42%; height: 32%;
+  border-radius: 50%; background: linear-gradient(150deg, rgba(255,255,255,.85), rgba(255,255,255,0) 70%);
+}
+.jelly__ic { position: relative; z-index: 1; width: 46%; height: 46%; color: rgba(255,255,255,.72); display: inline-flex; }
+.jelly__ic svg { width: 100%; height: 100%; }
+.jelly.b-clear .jelly__ic { color: rgba(60,80,110,.55); }
+.jelly.dim { filter: grayscale(.85) opacity(.4); box-shadow: none; }
 
 /* Scrollbar (subtle) */
 ::-webkit-scrollbar { width: 8px; height: 8px; }

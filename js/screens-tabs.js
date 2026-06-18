@@ -28,7 +28,10 @@
           '<div><div class="s-head">' + V.logoBadge(34) + "<h1>" + t("homepage") + "</h1></div>" +
             '<p class="s-sub" style="max-width:210px;margin-bottom:0">' + t("hpCreated") + "</p></div>" +
           '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">' +
-            '<button class="icon-box gray" data-menu>' + V.icon("grid") + "</button>" +
+            '<div style="display:flex;gap:8px;align-items:center">' +
+              '<button class="pts-chip" data-rewards>' + V.icon("sparkle") + (V.state.points || 0) + "</button>" +
+              '<button class="icon-box gray" data-menu>' + V.icon("grid") + "</button>" +
+            "</div>" +
             '<div class="score-bubble">100%</div>' +
           "</div>" +
         "</div>" +
@@ -67,6 +70,8 @@
       { onMount: function () {
         var m = $("[data-menu]");
         if (m) m.addEventListener("click", function () { V.go("menu"); });
+        var rw = $("[data-rewards]");
+        if (rw) rw.addEventListener("click", function () { V.go("rewards"); });
         var ns = $("[data-next-screening]");
         if (ns) ns.addEventListener("click", function () { V.go("annual"); });
       }}
@@ -146,8 +151,10 @@
         tasks.map(function (tk) {
           var d = done.indexOf(tk.id) >= 0;
           var lg = (V.state.taskLogs[today] || {})[tk.id];
+          var jt = { phys: "cross", mental: "stetho", nutrition: "vitamin", skin: "capsule", oral: "syringe" }[tk.cat] || "cross";
           return '<div class="task ' + (d ? "done" : "") + '">' +
             '<button class="task__box" data-toggle="' + tk.id + '">' + V.icon("check") + "</button>" +
+            V.jelly(jt, 30, "task__jelly") +
             '<span class="task__t">' + L(tk.label) + "</span>" +
             (lg && lg.photo ? '<img class="task__thumb" src="' + lg.photo + '" alt="">' : "") +
             '<button class="task__log ' + (lg ? "on" : "") + '" data-log="' + tk.id + '" title="' + t("logTitle") + '">' +
@@ -188,7 +195,7 @@
             var id = el.getAttribute("data-toggle");
             var arr = V.state.doneTasks[today] = V.state.doneTasks[today] || [];
             var i = arr.indexOf(id);
-            if (i >= 0) arr.splice(i, 1); else arr.push(id);
+            if (i >= 0) arr.splice(i, 1); else { arr.push(id); V.awardOnce("task:" + id, 5, "task"); }
             V.save();
             V.render();
           });
@@ -201,7 +208,7 @@
             var id = el.getAttribute("data-med");
             var arr = V.state.doneMeds[today] = V.state.doneMeds[today] || [];
             var i = arr.indexOf(id);
-            if (i >= 0) arr.splice(i, 1); else arr.push(id);
+            if (i >= 0) arr.splice(i, 1); else { arr.push(id); V.awardOnce("med:" + id, 5, "med"); }
             V.save();
             el.classList.toggle("done");
             el.querySelector(".task__box").className = "task__box";
@@ -622,6 +629,90 @@
       "</svg>";
   }
 
+  /* ===================== REWARDS / ELEMENTS ===================== */
+  V.screens.rewards = function () {
+    var pts = V.state.points || 0;
+    var life = V.state.lifetime || 0;
+    var toNext = V.ELEMENT_EVERY - (life % V.ELEMENT_EVERY);
+    var nextPct = Math.round((life % V.ELEMENT_EVERY) / V.ELEMENT_EVERY * 100);
+    var elTotal = V.elementsTotal();
+    var log = V.state.rewardLog || [];
+    var reasonKey = { task: "rwReasonTask", med: "rwReasonMed", workout: "rwReasonWorkout", water: "rwReasonWater", booking: "rwReasonBooking", lab: "rwReasonLab" };
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("rwTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("rwDesc") + "</p>" +
+
+        '<div class="rw-balance">' +
+          '<div class="rw-pts">' + pts + '<span> ' + t("rwPoints") + "</span></div>" +
+          '<div class="rw-next"><div class="rw-next__row"><span>' + toNext + " " + t("rwPoints") + " " + t("rwNext") + "</span><span>" + elTotal + " 🧫</span></div>" +
+            '<div class="rw-next__bar"><span style="width:' + nextPct + '%"></span></div></div>' +
+        "</div>" +
+
+        '<div class="section-head"><h3>' + t("rwElements") + "</h3></div>" +
+        '<div class="rw-elements">' +
+          V.ELEMENT_ORDER.map(function (type) {
+            var n = (V.state.elements || {})[type] || 0;
+            return '<div class="rw-el">' + V.jelly(type, 54, n ? "" : "dim") +
+              '<b>' + n + "</b></div>";
+          }).join("") +
+        "</div>" +
+
+        '<button class="btn btn-primary" data-redeem style="width:100%;margin:8px 0 4px">' + V.icon("sparkle") + " " + t("rwRedeem") + "</button>" +
+
+        '<div class="section-head"><h3>' + t("rwHistory") + "</h3></div>" +
+        (log.length ? '<div class="list-card">' + log.slice(0, 12).map(function (e) {
+          return '<div class="list-row"><span class="sc-dot" style="background:var(--green)"></span>' +
+            '<div class="list-row__t"><b>' + t(reasonKey[e.reason] || "rwReasonTask") + "</b><small>" + e.date + "</small></div>" +
+            '<span class="rw-plus">' + t("rwEarned", { n: e.pts }) + "</span></div>";
+        }).join("") + "</div>" : '<p class="cal-note">—</p>') +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-redeem]").addEventListener("click", openRedeem);
+      }}
+    );
+
+    function openRedeem() {
+      var phone = root.querySelector(".phone");
+      var tiers = V.rewardTiers();
+      var html = '<div class="sheet-overlay on" id="rdSheet"><div class="sheet">' +
+        '<div class="sheet__grab"></div><h3>' + t("rwRedeemTitle") + "</h3>" +
+        tiers.map(function (tr) {
+          var can = pts >= tr.cost;
+          return '<div class="rd-row"><div class="rd-row__t"><b>' + t(tr.key) + "</b><small>" + tr.cost + " " + t("rwPoints") + "</small></div>" +
+            (can ? '<button class="btn btn-primary rd-get" data-tier="' + tr.id + '" style="padding:10px 20px;font-size:15px">' + t("rwGet") + "</button>"
+                 : '<span class="rd-need">' + t("rwNeed", { n: tr.cost - pts }) + "</span>") + "</div>";
+        }).join("") +
+        '<a class="set-link" href="https://vitaapp.ge/" target="_blank" rel="noopener" style="justify-content:center;border:0;color:var(--green-dark);font-weight:600;margin-top:6px">' + V.icon("globe") + " " + t("rwOpenSite") + "</a>" +
+        '<div id="rdResult"></div>' +
+        "</div></div>";
+      phone.insertAdjacentHTML("beforeend", html);
+      var sheet = root.querySelector("#rdSheet");
+      sheet.addEventListener("click", function (e) { if (e.target === sheet) sheet.remove(); });
+      each("[data-tier]", function (b) {
+        b.addEventListener("click", function () {
+          var tr = V.rewardTiers().filter(function (x) { return x.id === b.getAttribute("data-tier"); })[0];
+          if (!tr || (V.state.points || 0) < tr.cost) return;
+          V.state.points -= tr.cost;
+          var code = "VITA-" + Math.random().toString(36).slice(2, 7).toUpperCase();
+          V.state.redeemed = V.state.redeemed || [];
+          V.state.redeemed.push({ tier: tr.id, code: code, date: V.todayISO() });
+          V.save();
+          root.querySelector("#rdResult").innerHTML =
+            '<div class="tag green" style="margin-top:12px;width:100%;justify-content:center">' + t("rwGotCode") + " <b style='margin-left:6px'>" + code + "</b></div>";
+          // refresh the sheet's affordability state
+          setTimeout(function () { var sh = root.querySelector("#rdSheet"); if (sh) sh.remove(); V.render(); }, 1600);
+        });
+      });
+    }
+  };
+
   /* ===================== MENU / HUB ===================== */
   V.screens.menu = function () {
     function tile(icon, tone, labelKey, attr) {
@@ -656,6 +747,7 @@
         group("grpAssistant", [
           tile("chat", "blue", "mChat", 'data-go="vita"'),
           tile("progress", "green", "mProgress", 'data-go="progress"'),
+          tile("sparkle", "yellow", "mRewards", 'data-go="rewards"'),
         ]) +
         group("grpTools", [
           tile("calendar", "blue", "mIcs", 'data-act="ics"'),
@@ -729,6 +821,7 @@
             var k = b.getAttribute("data-wo");
             V.state.doneWorkouts = V.state.doneWorkouts || {};
             V.state.doneWorkouts[k] = !V.state.doneWorkouts[k];
+            if (V.state.doneWorkouts[k]) V.awardOnce("wo:" + k, 15, "workout");
             V.save();
             V.render();
           });
@@ -934,6 +1027,7 @@
           applyResults(values);
           V.state.labResults = [{ date: V.todayISO(), values: values }];
           V.save();
+          V.awardOnce("lab", 25, "lab");
           var box = $("#ruResult");
           box.innerHTML = resultBlock();
           box.scrollIntoView({ behavior: "smooth", block: "start" });

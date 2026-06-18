@@ -109,6 +109,24 @@ window.VITA = window.VITA || {};
     return '<span class="icon ' + (cls || "") + '">' + (V.icons[name] || "") + "</span>";
   };
 
+  /* Brand "jelly element" — glossy gummy in a brand colour with an embossed
+     medical icon. The 6 brand elements (per the guideline). Used as the
+     collectible reward currency and as brand-flavoured category visuals. */
+  V.jellyTypes = {
+    cross:   { c: "b-green",   icon: "plus",    label: { ka: "მწვანე", en: "Green" } },
+    stetho:  { c: "b-blue",    icon: "heart",   label: { ka: "ლურჯი", en: "Blue" } },
+    pill:    { c: "b-crimson", icon: "pill",    label: { ka: "წითელი", en: "Red" } },
+    capsule: { c: "b-pink",    icon: "sparkle", label: { ka: "მაჯენტა", en: "Magenta" } },
+    vitamin: { c: "b-yellow",  icon: "bolt",    label: { ka: "ოქრო", en: "Gold" } },
+    syringe: { c: "b-clear",   icon: "flask",   label: { ka: "გამჭვირვალე", en: "Clear" } },
+  };
+  V.jelly = function (type, size, cls) {
+    var j = V.jellyTypes[type] || V.jellyTypes.cross;
+    size = size || 44;
+    return '<span class="jelly ' + j.c + " " + (cls || "") + '" style="width:' + size + "px;height:" + size + 'px">' +
+      '<span class="jelly__ic">' + (V.icons[j.icon] || "") + "</span></span>";
+  };
+
   /* Tinted icon square (like the Figma list icons) */
   V.iconBox = function (name, tone) {
     return '<span class="icon-box ' + (tone || "gray") + '">' + (V.icons[name] || "") + "</span>";

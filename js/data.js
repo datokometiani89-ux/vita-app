@@ -323,6 +323,50 @@ window.VITA = window.VITA || {};
     ];
   };
 
+  /* ---------- Rewards / brand elements ---------- */
+  V.ELEMENT_ORDER = ["cross", "stetho", "pill", "capsule", "vitamin", "syringe"];
+  V.ELEMENT_EVERY = 100;          // lifetime points per collected element
+
+  V.award = function (pts, reason) {
+    var s = V.state;
+    s.points = (s.points || 0) + pts;
+    s.lifetime = (s.lifetime || 0) + pts;
+    s.rewardLog = s.rewardLog || [];
+    s.rewardLog.unshift({ date: V.todayISO(), ts: Date.now(), pts: pts, reason: reason });
+    if (s.rewardLog.length > 60) s.rewardLog.length = 60;
+    // unlock brand elements every ELEMENT_EVERY lifetime points
+    s.elements = s.elements || {};
+    var have = 0; Object.keys(s.elements).forEach(function (k) { have += s.elements[k]; });
+    var should = Math.floor(s.lifetime / V.ELEMENT_EVERY);
+    while (have < should) {
+      var t = V.ELEMENT_ORDER[have % V.ELEMENT_ORDER.length];
+      s.elements[t] = (s.elements[t] || 0) + 1;
+      have++;
+    }
+    V.save();
+  };
+  // award once per action-id per day (avoids double-award on re-toggle)
+  V.awardOnce = function (key, pts, reason) {
+    var s = V.state;
+    s.awarded = s.awarded || {};
+    var k = V.todayISO() + ":" + key;
+    if (s.awarded[k]) return;
+    s.awarded[k] = true;
+    V.award(pts, reason);
+  };
+  V.elementsTotal = function () {
+    var s = V.state.elements || {}, n = 0;
+    Object.keys(s).forEach(function (k) { n += s[k]; });
+    return n;
+  };
+  V.rewardTiers = function () {
+    return [
+      { id: "t1", cost: 300, key: "rwTier1" },
+      { id: "t2", cost: 800, key: "rwTier2" },
+      { id: "t3", cost: 2000, key: "rwTier3" },
+    ];
+  };
+
   /* ---------- Water tracker ---------- */
   V.WATER_GLASS = 250;            // ml per glass
   V.waterGoal = function () { return 2500; };   // ml/day target (2–2.5L)
@@ -334,7 +378,7 @@ window.VITA = window.VITA || {};
     V.state.waterLog[d] = now;
     V.save();
     // reward: first time hitting the daily goal
-    if (was < V.waterGoal() && now >= V.waterGoal() && V.award) V.award(10, "water");
+    if (was < V.waterGoal() && now >= V.waterGoal() && V.awardOnce) V.awardOnce("water", 10, "water");
     return now;
   };
   V.waterSeries = function (days) {

@@ -660,6 +660,27 @@
 .sc-row.on .sc-box { background: var(--green); border-color: var(--green); color: #fff; }
 .sc-box svg { width: 16px; height: 16px; }
 
+/* rewards / elements */
+.pts-chip { display: inline-flex; align-items: center; gap: 4px; padding: 7px 12px; border-radius: 99px; background: var(--yellow-tint); color: #B98A1B; font-weight: 700; font-size: 14px; }
+.pts-chip svg { width: 16px; height: 16px; }
+.rw-balance { background: linear-gradient(135deg, var(--green), #1f9a52); color: #fff; border-radius: var(--r-lg); padding: 20px; margin-bottom: 6px; box-shadow: 0 10px 24px rgba(43,169,76,.28); }
+.rw-pts { font-size: 40px; font-weight: 800; }
+.rw-pts span { font-size: 17px; opacity: .9; font-weight: 600; }
+.rw-next { margin-top: 12px; }
+.rw-next__row { display: flex; justify-content: space-between; font-size: 13px; opacity: .95; margin-bottom: 6px; }
+.rw-next__bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.3); overflow: hidden; }
+.rw-next__bar > span { display: block; height: 100%; background: #fff; border-radius: 99px; transition: width .4s; }
+.rw-elements { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+.rw-el { background: var(--card); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 16px 0 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.rw-el b { font-size: 17px; }
+.rw-plus { color: var(--green-dark); font-weight: 700; font-size: 14px; }
+[data-theme="dark"] .rw-plus { color: #5ED694; }
+.rd-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--line); gap: 12px; }
+.rd-row__t b { font-size: 16px; display: block; }
+.rd-row__t small { color: var(--muted); font-size: 13.5px; }
+.rd-need { color: var(--muted); font-size: 14px; }
+.task__jelly { margin-right: 2px; }
+
 /* water tracker */
 .water-hero { display: flex; align-items: center; gap: 18px; background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 20px; margin-bottom: 16px; }
 .water-bottle { flex: none; }
