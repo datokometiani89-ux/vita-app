@@ -146,7 +146,8 @@
           '<div style="flex:1;text-align:left"><b>' + t("plAnnual") + "</b><small>" + t("plAnnualSub") + "</small></div>" +
           '<span class="cplan__chev">' + V.icon("next") + "</span></button>" +
 
-        '<div class="section-head"><h3>' + t("plTasks") + '</h3><small>' + done.length + "/" + tasks.length + "</small></div>" +
+        '<div class="section-head"><h3>' + t("plTasks") + '</h3><small>' + done.length + "/" + tasks.length + " · " +
+          '<span style="color:#B98A1B">' + ((tasks.length - done.length) * V.POINTS.task) + " " + t("rwPoints") + " " + t("plPtsLeft") + "</span></small></div>" +
         '<div class="track"><span style="width:' + pct + '%"></span></div>' +
         tasks.map(function (tk) {
           var d = done.indexOf(tk.id) >= 0;
@@ -159,7 +160,7 @@
             (lg && lg.photo ? '<img class="task__thumb" src="' + lg.photo + '" alt="">' : "") +
             '<button class="task__log ' + (lg ? "on" : "") + '" data-log="' + tk.id + '" title="' + t("logTitle") + '">' +
               V.icon(lg ? "check" : "camera") + "</button>" +
-            '<span class="tag ' + V.catTone(tk.cat) + '">' + t(V.catKey(tk.cat)) + "</span></div>";
+            '<span class="pts-badge ' + (d ? "earned" : "") + '">' + (d ? "✓ " : "+") + V.POINTS.task + "</span></div>";
         }).join("") +
 
         (meds.length ? '<div class="section-head"><h3>' + t("plMeds") + '</h3><small>' + t("plDoctor") + "</small></div>" +
@@ -195,7 +196,7 @@
             var id = el.getAttribute("data-toggle");
             var arr = V.state.doneTasks[today] = V.state.doneTasks[today] || [];
             var i = arr.indexOf(id);
-            if (i >= 0) arr.splice(i, 1); else { arr.push(id); V.awardOnce("task:" + id, 5, "task"); }
+            if (i >= 0) arr.splice(i, 1); else { arr.push(id); V.awardOnce("task:" + id, V.POINTS.task, "task"); }
             V.save();
             V.render();
           });
@@ -208,7 +209,7 @@
             var id = el.getAttribute("data-med");
             var arr = V.state.doneMeds[today] = V.state.doneMeds[today] || [];
             var i = arr.indexOf(id);
-            if (i >= 0) arr.splice(i, 1); else { arr.push(id); V.awardOnce("med:" + id, 5, "med"); }
+            if (i >= 0) arr.splice(i, 1); else { arr.push(id); V.awardOnce("med:" + id, V.POINTS.med, "med"); }
             V.save();
             el.classList.toggle("done");
             el.querySelector(".task__box").className = "task__box";
@@ -313,6 +314,7 @@
     return '<div class="med task ' + (d ? "done" : "") + '" data-med="' + m.id + '" style="box-shadow:var(--shadow-card);border:0">' +
       '<span class="task__box">' + V.icon("check") + "</span>" +
       '<div class="med__t"><b>' + L(m.name) + "</b><small>" + L(m.purpose) + "</small></div>" +
+      '<span class="pts-badge ' + (d ? "earned" : "") + '">' + (d ? "✓ " : "+") + V.POINTS.med + "</span>" +
       '<span class="med__dose">' + m.dose + "</span></div>";
   }
 
@@ -843,6 +845,15 @@
 
         '<button class="btn btn-primary" data-redeem style="width:100%;margin:8px 0 4px">' + V.icon("sparkle") + " " + t("rwRedeem") + "</button>" +
 
+        '<div class="section-head"><h3>' + t("rwHowTo") + "</h3></div>" +
+        '<div class="list-card">' +
+          [["task", "check"], ["water", "drop"], ["med", "pill"], ["workout", "bolt"], ["booking", "calendar"], ["lab", "flask"]].map(function (r) {
+            return '<div class="list-row">' + V.iconBox(r[1], "gray") +
+              '<div class="list-row__t"><b>' + t(reasonKey[r[0]] || "rwReasonTask") + "</b></div>" +
+              '<span class="pts-badge earned">+' + V.POINTS[r[0]] + "</span></div>";
+          }).join("") +
+        "</div>" +
+
         '<div class="section-head"><h3>' + t("rwHistory") + "</h3></div>" +
         (log.length ? '<div class="list-card">' + log.slice(0, 12).map(function (e) {
           return '<div class="list-row"><span class="sc-dot" style="background:var(--green)"></span>' +
@@ -975,7 +986,8 @@
           '<div style="flex:1"><b>' + V.dayName(d.key) + (isToday ? ' · <span style="color:var(--green)">' + V.t("today") + "</span>" : "") + "</b>" +
             "<small>" + L(d.focus) + "</small></div>" +
           (d.type === "rest" ? '<span class="tag gray">' + V.t("woRest") + "</span>"
-            : '<button class="wo-check ' + (isDone ? "on" : "") + '" data-wo="' + d.key + '">' + V.icon("check") + "</button>") +
+            : '<span class="pts-badge ' + (isDone ? "earned" : "") + '" style="margin-right:8px">' + (isDone ? "✓ " : "+") + V.POINTS.workout + "</span>" +
+              '<button class="wo-check ' + (isDone ? "on" : "") + '" data-wo="' + d.key + '">' + V.icon("check") + "</button>") +
         "</div>" +
         (d.items.length ? '<ul class="wo-list">' + d.items.map(function (x) {
           return "<li><span>" + L(x.name) + '</span><b>' + esc(x.scheme) + "</b></li>";
@@ -1002,7 +1014,7 @@
             var k = b.getAttribute("data-wo");
             V.state.doneWorkouts = V.state.doneWorkouts || {};
             V.state.doneWorkouts[k] = !V.state.doneWorkouts[k];
-            if (V.state.doneWorkouts[k]) V.awardOnce("wo:" + k, 15, "workout");
+            if (V.state.doneWorkouts[k]) V.awardOnce("wo:" + k, V.POINTS.workout, "workout");
             V.save();
             V.render();
           });
@@ -1208,7 +1220,7 @@
           applyResults(values);
           V.state.labResults = [{ date: V.todayISO(), values: values }];
           V.save();
-          V.awardOnce("lab", 25, "lab");
+          V.awardOnce("lab", V.POINTS.lab, "lab");
           var box = $("#ruResult");
           box.innerHTML = resultBlock();
           box.scrollIntoView({ behavior: "smooth", block: "start" });

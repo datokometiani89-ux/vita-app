@@ -428,6 +428,7 @@ window.VITA = window.VITA || {};
   };
 
   /* ---------- Rewards / brand elements ---------- */
+  V.POINTS = { task: 5, med: 5, workout: 15, water: 10, lab: 25, booking: 20 };
   V.ELEMENT_ORDER = ["cross", "stetho", "pill", "capsule", "vitamin", "syringe"];
   V.ELEMENT_EVERY = 100;          // lifetime points per collected element
 
@@ -482,7 +483,7 @@ window.VITA = window.VITA || {};
     V.state.waterLog[d] = now;
     V.save();
     // reward: first time hitting the daily goal
-    if (was < V.waterGoal() && now >= V.waterGoal() && V.awardOnce) V.awardOnce("water", 10, "water");
+    if (was < V.waterGoal() && now >= V.waterGoal() && V.awardOnce) V.awardOnce("water", V.POINTS.water, "water");
     return now;
   };
   V.waterSeries = function (days) {

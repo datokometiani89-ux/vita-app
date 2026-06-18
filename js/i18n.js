@@ -357,6 +357,8 @@ window.VITA = window.VITA || {};
     logVoiceDone: { ka: "ვოისი ჩაწერილია", en: "Voice recorded" },
     logSave: { ka: "შენახვა და მონიშვნა", en: "Save & complete" },
     logged: { ka: "დადასტურებულია", en: "Logged" },
+    plPtsLeft: { ka: "დარჩა", en: "left" },
+    rwHowTo: { ka: "როგორ დააგროვო ქულები", en: "How to earn points" },
     plCarePlans: { ka: "ზრუნვის გეგმები", en: "Care plans" },
     plCarePlansSub: { ka: "შენი ჰოლისტიკური გეგმა 6 მიმართულებით", en: "Your holistic plan across 6 tracks" },
     plWorkouts: { ka: "ვარჯიშები", en: "Workouts" },
