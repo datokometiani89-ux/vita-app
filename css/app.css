@@ -660,6 +660,15 @@
 .sc-row.on .sc-box { background: var(--green); border-color: var(--green); color: #fff; }
 .sc-box svg { width: 16px; height: 16px; }
 
+/* women's cycle */
+.cycle-card { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 18px; margin-bottom: 14px; display: flex; flex-direction: column; align-items: center; }
+.cycle-svg { width: 200px; height: 200px; }
+.cycle-phase { font-size: 18px; font-weight: 800; margin-top: 6px; }
+.cycle-pred { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.cycle-pred__item { display: flex; align-items: center; gap: 10px; background: var(--card); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 14px; }
+.cycle-pred__item b { font-size: 14.5px; display: block; }
+.cycle-pred__item small { color: var(--muted); font-size: 13px; }
+
 /* rewards / elements */
 .pts-chip { display: inline-flex; align-items: center; gap: 4px; padding: 7px 12px; border-radius: 99px; background: var(--yellow-tint); color: #B98A1B; font-weight: 700; font-size: 14px; }
 .pts-chip svg { width: 16px; height: 16px; }

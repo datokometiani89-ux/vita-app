@@ -323,6 +323,53 @@ window.VITA = window.VITA || {};
     ];
   };
 
+  /* ---------- Women's cycle ---------- */
+  function dISO(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function addDays(iso, n) { var d = new Date(iso); d.setDate(d.getDate() + n); return d; }
+
+  V.cycleDefault = function () {
+    return { lastPeriod: dISO(addDays(V.todayISO(), -8)), cycleLen: 28, periodLen: 5, logs: {} };
+  };
+  V.cycle = function () {
+    if (!V.state.cycle) { V.state.cycle = V.cycleDefault(); V.save(); }
+    return V.state.cycle;
+  };
+  // current phase + predictions
+  V.cycleInfo = function () {
+    var c = V.cycle();
+    var len = c.cycleLen || 28, plen = c.periodLen || 5;
+    var ms = new Date(V.todayISO()) - new Date(c.lastPeriod);
+    var elapsed = Math.floor(ms / 86400000);
+    var day = ((elapsed % len) + len) % len + 1;      // 1..len
+    var ovDay = len - 14;                              // ovulation day
+    var phase;
+    if (day <= plen) phase = "menstruation";
+    else if (day >= ovDay - 1 && day <= ovDay + 1) phase = "ovulation";
+    else if (day < ovDay - 1) phase = "follicular";
+    else phase = "luteal";
+    var nextIn = (len - day + 1);
+    return {
+      day: day, len: len, plen: plen, phase: phase, ovDay: ovDay,
+      nextIn: nextIn,
+      nextDate: dISO(addDays(V.todayISO(), nextIn)),
+      fertileStart: Math.max(1, ovDay - 4), fertileEnd: ovDay + 1,
+    };
+  };
+  V.cyclePhaseColor = function (p) {
+    return { menstruation: "var(--pink)", follicular: "var(--green)", ovulation: "var(--blue)", luteal: "var(--yellow)" }[p] || "var(--green)";
+  };
+  V.cyclePhaseTip = function (p) {
+    return {
+      menstruation: { ka: "დაისვენე, რკინით მდიდარი საკვები, მსუბუქი მოძრაობა; ჰიდრატაცია ტკივილს ამცირებს.", en: "Rest, iron-rich food, light movement; hydration eases cramps." },
+      follicular: { ka: "ენერგია მატულობს — კარგი დროა ინტენსიური ვარჯიშისა და ახალი მიზნებისთვის.", en: "Energy rising — great time for intense workouts and new goals." },
+      ovulation: { ka: "პიკური ენერგია და ნაყოფიერება; ცილა და ჰიდრატაცია მნიშვნელოვანია.", en: "Peak energy and fertility; prioritise protein and hydration." },
+      luteal: { ka: "PMS შესაძლებელია — მაგნიუმი, ძილი, ნაკლები კოფეინი/შაქარი.", en: "PMS possible — magnesium, sleep, less caffeine/sugar." },
+    }[p];
+  };
+  V.cycleSymptoms = function () {
+    return ["symCramps", "symMood", "symHeadache", "symFatigue", "symBloating", "symAcne"];
+  };
+
   /* ---------- Rewards / brand elements ---------- */
   V.ELEMENT_ORDER = ["cross", "stetho", "pill", "capsule", "vitamin", "syringe"];
   V.ELEMENT_EVERY = 100;          // lifetime points per collected element

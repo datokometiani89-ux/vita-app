@@ -629,6 +629,103 @@
       "</svg>";
   }
 
+  /* ===================== WOMEN'S CYCLE ===================== */
+  V.screens.cycle = function () {
+    var c = V.cycle();
+    var info = V.cycleInfo();
+    var today = V.todayISO();
+    var todayLog = (c.logs && c.logs[today]) || [];
+    var tip = V.cyclePhaseTip(info.phase);
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("cyTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("cyDesc") + "</p>" +
+
+        '<div class="cycle-card">' + cycleRing(info) + "</div>" +
+
+        '<div class="cycle-pred">' +
+          '<div class="cycle-pred__item"><span class="sc-dot" style="background:var(--pink)"></span>' +
+            "<div><b>" + t("cyNextPeriod") + "</b><small>" + V.monthName(parseInt(info.nextDate.slice(5, 7))) + " " + parseInt(info.nextDate.slice(8)) + " · " + t("cyInDays", { n: info.nextIn }) + "</small></div></div>" +
+          '<div class="cycle-pred__item"><span class="sc-dot" style="background:var(--blue)"></span>' +
+            "<div><b>" + t("cyFertile") + "</b><small>" + t("cyDay") + " " + info.fertileStart + "–" + info.fertileEnd + "</small></div></div>" +
+        "</div>" +
+
+        '<div class="list-card" style="padding:14px 16px;margin-bottom:16px"><div style="display:flex;gap:10px;align-items:flex-start">' +
+          V.iconBox("sparkle", "pink") + "<div><b style='display:block;font-size:15px'>" + t("cyTip") + "</b><small style='color:var(--muted);font-size:14px'>" + L(tip) + "</small></div></div></div>" +
+
+        '<button class="btn btn-primary" data-period style="width:100%;margin-bottom:18px">' + V.icon("drop") + " " + t("cyLogStart") + "</button>" +
+
+        '<div class="section-head"><h3>' + t("cySymptoms") + "</h3></div>" +
+        '<div class="chips" data-symwrap>' +
+          V.cycleSymptoms().map(function (s) {
+            var on = todayLog.indexOf(s) >= 0;
+            return '<button class="chip ' + (on ? "on" : "") + '" data-sym="' + s + '">' + t(s) + "</button>";
+          }).join("") +
+        "</div>" +
+
+        '<div class="section-head"><h3>' + t("cySettings") + "</h3></div>" +
+        '<div class="field"><label>' + t("cyLen") + '</label><input id="cyLen" type="number" inputmode="numeric" value="' + (c.cycleLen || 28) + '"></div>' +
+        '<div class="field"><label>' + t("cyPeriodLen") + '</label><input id="cyPlen" type="number" inputmode="numeric" value="' + (c.periodLen || 5) + '"></div>' +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-period]").addEventListener("click", function () {
+          V.state.cycle.lastPeriod = V.todayISO(); V.save(); V.render();
+        });
+        each("[data-sym]", function (b) {
+          b.addEventListener("click", function () {
+            var s = b.getAttribute("data-sym");
+            V.state.cycle.logs = V.state.cycle.logs || {};
+            var arr = V.state.cycle.logs[today] = V.state.cycle.logs[today] || [];
+            var i = arr.indexOf(s);
+            if (i >= 0) arr.splice(i, 1); else arr.push(s);
+            V.save(); b.classList.toggle("on");
+          });
+        });
+        function saveLen() {
+          var l = parseInt($("#cyLen").value) || 28, p = parseInt($("#cyPlen").value) || 5;
+          V.state.cycle.cycleLen = Math.min(40, Math.max(20, l));
+          V.state.cycle.periodLen = Math.min(10, Math.max(2, p));
+          V.save();
+        }
+        $("#cyLen").addEventListener("change", function () { saveLen(); V.render(); });
+        $("#cyPlen").addEventListener("change", function () { saveLen(); V.render(); });
+      }}
+    );
+  };
+
+  function cycleRing(info) {
+    var R = 78, cx = 100, cy = 100, C = 2 * Math.PI * R;
+    // phase segments as arc dashes
+    var segs = [
+      { from: 0, to: info.plen, color: "var(--pink)" },
+      { from: info.plen, to: info.ovDay - 1, color: "var(--green)" },
+      { from: info.ovDay - 1, to: info.ovDay + 1, color: "var(--blue)" },
+      { from: info.ovDay + 1, to: info.len, color: "var(--yellow)" },
+    ];
+    var ring = segs.map(function (s) {
+      var len = (s.to - s.from) / info.len * C;
+      var off = -(s.from / info.len) * C;
+      return '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="none" stroke="' + s.color + '" stroke-width="14" ' +
+        'stroke-dasharray="' + len + " " + (C - len) + '" stroke-dashoffset="' + off + '" transform="rotate(-90 ' + cx + " " + cy + ')"/>';
+    }).join("");
+    var ang = (info.day - 1) / info.len * 2 * Math.PI - Math.PI / 2;
+    var mx = cx + R * Math.cos(ang), my = cy + R * Math.sin(ang);
+    var phaseName = t("cyPhase" + info.phase.charAt(0).toUpperCase() + info.phase.slice(1));
+    return '<svg viewBox="0 0 200 200" class="cycle-svg">' + ring +
+      '<circle cx="' + mx + '" cy="' + my + '" r="9" fill="#fff" stroke="' + V.cyclePhaseColor(info.phase) + '" stroke-width="4"/>' +
+      '<text x="100" y="92" text-anchor="middle" font-size="15" fill="var(--muted)">' + t("cyDay") + "</text>" +
+      '<text x="100" y="120" text-anchor="middle" font-size="40" font-weight="800" fill="var(--ink)">' + info.day + "</text>" +
+      '<text x="100" y="140" text-anchor="middle" font-size="13" fill="var(--muted)">/ ' + info.len + " " + t("cyOf") + "</text>" +
+      "</svg>" +
+      '<div class="cycle-phase" style="color:' + V.cyclePhaseColor(info.phase) + '">' + phaseName + "</div>";
+  }
+
   /* ===================== REWARDS / ELEMENTS ===================== */
   V.screens.rewards = function () {
     var pts = V.state.points || 0;
@@ -736,7 +833,7 @@
           tile("calendar", "pink", "mAnnual", 'data-go="annual"'),
           tile("shield", "blue", "mBody", 'data-go="bodymap"'),
           tile("flask", "yellow", "mResults", 'data-go="results"'),
-        ]) +
+        ].concat(V.state.profile.sex === "woman" ? [tile("heart", "pink", "mCycle", 'data-go="cycle"')] : [])) +
         group("grpCare", [
           tile("plan", "green", "mPlan", 'data-go="plan"'),
           tile("heart", "green", "mCare", 'data-go="careplans"'),
