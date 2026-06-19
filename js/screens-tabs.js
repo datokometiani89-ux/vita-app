@@ -330,9 +330,20 @@
       V.state.chat.push({ role: "vita", text: t("chHello").replace("{name}", nm) });
       V.save();
     }
-    var quicks = V.lang() === "ka"
-      ? ["შაქარი როგორ დავწიო?", "წონაში ჩამოვიდე", "ენერგია მაკლია", "კანის მოვლა"]
-      : ["Lower my blood sugar", "Help me lose weight", "I have low energy", "Skincare tips"];
+    // context-aware quick replies derived from the user's actual focus areas
+    var lng = V.lang(), pick = function (o) { return o[lng] || o.en; };
+    var concernQ = {
+      sugar:  { ka: "შაქარი როგორ დავწიო?", en: "Lower my blood sugar" },
+      weight: { ka: "წონაში ჩამოვიდე", en: "Help me lose weight" },
+      energy: { ka: "ენერგია მაკლია", en: "I have low energy" },
+      heart:  { ka: "გული გავიჯანსაღო", en: "Improve my heart health" },
+      chol:   { ka: "ქოლესტერინი დავწიო", en: "Lower my cholesterol" },
+      mental: { ka: "სტრესი და ძილი", en: "Stress & sleep" },
+      skin:   { ka: "კანის მოვლა", en: "Skincare tips" },
+    };
+    var conc = (V.concerns ? V.concerns() : []).map(function (c) { return concernQ[c.id]; }).filter(Boolean);
+    var quicks = (conc.length ? conc : [concernQ.sugar, concernQ.weight, concernQ.energy, concernQ.skin]).slice(0, 4).map(pick);
+    var hasUserMsg = V.state.chat.some(function (m) { return m.role === "user"; });
 
     V.mount(
       V.statusbar() +
@@ -342,14 +353,15 @@
             ? (V.lang() === "ka" ? (V.api.provider() === "gemini" ? "Gemini-ით გაძლიერებული" : "Claude-ით გაძლიერებული")
                                  : "Powered by " + (V.api.provider() === "gemini" ? "Gemini" : "Claude"))
             : t("chSub")) + "</small></div>" +
+          (V.state.chat.length > 1 ? '<button class="icon-box gray" data-newchat aria-label="' + t("chNew") + '">' + V.icon("edit") + "</button>" : "") +
           '<button class="icon-box gray" data-open-settings>' + V.icon("settings") + "</button></div>" +
         (V.api.aiOn() ? "" : '<div class="chat-hint">' + V.icon("info") + " " + t("chOffline") + "</div>") +
         '<div class="chat-body" id="chatBody">' +
           V.state.chat.map(msgHTML).join("") +
         "</div>" +
-        '<div class="quick-row" id="quicks">' +
+        (hasUserMsg ? "" : '<div class="quick-row" id="quicks">' +
           quicks.map(function (q) { return '<button class="quick" data-q="' + esc(q) + '">' + esc(q) + "</button>"; }).join("") +
-        "</div>" +
+        "</div>") +
         '<div class="chat-input"><input id="chatInput" placeholder="' + t("chPlaceholder") + '">' +
           '<button class="chat-send" id="chatSend">' + V.icon("send") + "</button></div>" +
       "</div>" +
@@ -373,6 +385,7 @@
           if (!text) return;
           V.state.chat.push({ role: "user", text: text });
           input.value = "";
+          var qr = $("#quicks"); if (qr) qr.remove(); // quick replies are first-message only
           body.insertAdjacentHTML("beforeend", msgHTML({ role: "user", text: text }));
           body.insertAdjacentHTML("beforeend", '<div class="typing" id="typing"><i></i><i></i><i></i></div>');
           scroll();
@@ -408,6 +421,11 @@
         $("#chatSend").addEventListener("click", function () { send(); });
         input.addEventListener("keydown", function (e) { if (e.key === "Enter") send(); });
         each("[data-q]", function (b) { b.addEventListener("click", function () { send(b.getAttribute("data-q")); }); });
+        var nc = $("[data-newchat]");
+        if (nc) nc.addEventListener("click", function () {
+          if (!confirm(t("chNewConfirm"))) return;
+          V.state.chat = []; V.save(); V.render();
+        });
       }}
     );
   };

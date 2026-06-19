@@ -849,6 +849,8 @@ window.VITA = window.VITA || {};
     chTitle: { ka: "ვიტა", en: "VITA" },
     chSub: { ka: "შენი AI ჯანმრთელობის ასისტენტი", en: "Your AI health assistant" },
     chPlaceholder: { ka: "მისწერე ვიტას…", en: "Message VITA…" },
+    chNew: { ka: "ახალი საუბარი", en: "New chat" },
+    chNewConfirm: { ka: "ახალი საუბრის დაწყება? მიმდინარე ჩატი წაიშლება.", en: "Start a new chat? This clears the current conversation." },
     chOffline: {
       ka: "ოფლაინ რეჟიმი — ცოცხალი AI-სთვის გაუშვი serve.py გასაღებით (უფასო: GEMINI_API_KEY).",
       en: "Offline mode — run serve.py with a key for live AI (free: GEMINI_API_KEY).",
