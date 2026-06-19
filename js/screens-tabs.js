@@ -1263,18 +1263,48 @@
         '" style="left:' + xy.x + "%;top:" + xy.y + "%;--mkc:" + V.catColor(g.cat) + '"></button>';
     }).join("");
 
-    function row(s, selectable) {
-      var on = sel.indexOf(s.id) >= 0;
-      var dot = '<span class="sc-dot" style="background:' + V.catColor(s.cat) + '"></span>';
-      var meta = L(s.freq ? V.freqLabel(s.freq) : { ka: "", en: "" }) + " · " + V.regionLabel(s.region);
-      if (!selectable) {
-        return '<div class="sc-row muted" data-rg="' + s.region + '">' + dot +
-          '<div class="sc-row__t"><b>' + L(s.name) + "</b><small>" + meta + " · " + t("scFromAge", { age: s.fromAge }) + "</small></div></div>";
+    var catTone = { cardio: "pink", metabolic: "yellow", cancer: "blue", mental: "blue", general: "green" };
+    var catOrder = ["cardio", "metabolic", "cancer", "mental", "general"];
+    var riskCount = rec.now.filter(function (s) { return s.risk; }).length;
+    var upcoming = byMonth.filter(function (mo) { return mo.month >= curMonth; });
+    var nextMonth = (upcoming[0] || byMonth[0] || {}).month;
+
+    // expandable, selectable recommended row (tap = info, checkbox = add to plan, book = clinics)
+    function row(s) {
+      var on = sel.indexOf(s.id) >= 0, why = V.screeningWhy(s.id);
+      return '<div class="sc-item' + (on ? " on" : "") + '" data-rg="' + s.region + '">' +
+        '<div class="sc-item__head" data-expand>' +
+          '<span class="sc-dot" style="background:' + V.catColor(s.cat) + '"></span>' +
+          '<div class="sc-item__t"><b>' + L(s.name) + "</b>" + (s.risk ? ' <span class="sc-risk">' + V.icon("warn") + " " + t("scRisk") + "</span>" : "") +
+            "<small>" + L(V.freqLabel(s.freq)) + " · " + V.regionLabel(s.region) + "</small></div>" +
+          '<button class="sc-box" data-sc="' + s.id + '" aria-label="select">' + V.icon("check") + "</button>" +
+          '<span class="sc-chev">' + V.icon("next") + "</span>" +
+        "</div>" +
+        '<div class="sc-detail">' +
+          (why ? '<p class="sc-why">' + L(why) + "</p>" : "") +
+          '<p class="sc-basis2">' + t("scSrc") + ": " + L(s.basis) + "</p>" +
+          '<button class="btn btn-primary sc-book" data-book="' + s.id + '">' + V.icon("calendar") + " " + t("scBook") + "</button>" +
+        "</div></div>";
+    }
+
+    var grouped = catOrder.map(function (cat) {
+      var items = rec.now.filter(function (s) { return s.cat === cat; });
+      if (!items.length) return "";
+      var ci = V.screenCats[cat];
+      return '<div class="sc-cat">' + V.iconBox(ci.icon, catTone[cat]) + "<b>" + L(ci.label) + '</b><i>' + items.length + "</i></div>" +
+        items.map(row).join("");
+    }).join("");
+
+    function yearStrip() {
+      var map = {}; byMonth.forEach(function (mo) { map[mo.month] = mo.items; });
+      var cells = "";
+      for (var m = 1; m <= 12; m++) {
+        var items = map[m] || [];
+        var dots = items.slice(0, 4).map(function (s) { return '<span class="ys-dot" style="background:' + V.catColor(s.cat) + '"></span>'; }).join("");
+        cells += '<div class="ys-cell' + (m === curMonth ? " cur" : "") + (items.length ? " has" : "") + '" data-ym="' + m + '">' +
+          "<b>" + V.monthShort(m) + "</b><div class='ys-dots'>" + (dots || "<span class='ys-empty'></span>") + "</div></div>";
       }
-      return '<div class="sc-row ' + (on ? "on" : "") + '" data-sc="' + s.id + '" data-rg="' + s.region + '">' + dot +
-        '<div class="sc-row__t"><b>' + L(s.name) + "</b><small>" + meta + "</small>" +
-          '<small class="sc-basis">' + t("scSrc") + ": " + L(s.basis) + "</small></div>" +
-        '<span class="sc-box">' + V.icon("check") + "</span></div>";
+      return '<div class="year-strip">' + cells + "</div>";
     }
 
     V.mount(
@@ -1284,24 +1314,36 @@
           '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
         '<p class="s-sub">' + t("scBasis", { age: p.age || 36 }) + "</p>" +
 
+        '<div class="an-summary">' +
+          '<div class="an-stat"><b>' + rec.now.length + "</b><small>" + t("scRecCount") + "</small></div>" +
+          '<div class="an-stat"><b>' + sel.length + "</b><small>" + t("scSelected") + "</small></div>" +
+          '<div class="an-stat"><b>' + (nextMonth ? V.monthShort(nextMonth) : "—") + "</b><small>" + t("scNext") + "</small></div>" +
+        "</div>" +
+        (riskCount ? '<div class="an-riskline">' + V.icon("warn") + " " + t("scRiskCount", { n: riskCount }) + "</div>" : "") +
+
         '<div class="scbody-card"><div class="scbody">' + screeningBody() + markers + "</div></div>" +
 
         '<div class="section-head"><h3>' + t("scRecommended") + '</h3><small>' + sel.length + " " + t("scSelected") + "</small></div>" +
-        '<p class="s-sub" style="margin:-6px 0 12px">' + t("scTapHint") + "</p>" +
-        rec.now.map(function (s) { return row(s, true); }).join("") +
+        '<p class="s-sub" style="margin:-6px 0 12px">' + t("scTapHint2") + "</p>" +
+        grouped +
 
         (rec.later.length ? '<div class="section-head"><h3>' + t("scLater") + "</h3></div>" +
-          rec.later.map(function (s) { return row(s, false); }).join("") : "") +
+          rec.later.map(function (s) {
+            return '<div class="sc-item muted" data-rg="' + s.region + '"><div class="sc-item__head" style="cursor:default">' +
+              '<span class="sc-dot" style="background:' + V.catColor(s.cat) + '"></span>' +
+              '<div class="sc-item__t"><b>' + L(s.name) + "</b><small>" + V.regionLabel(s.region) + " · " + t("scFromAge", { age: s.fromAge }) + "</small></div></div></div>";
+          }).join("") : "") +
 
-        '<div class="section-head"><h3>' + t("scSchedule") + "</h3></div>" +
+        '<div class="section-head"><h3>' + t("scYear") + "</h3></div>" +
         '<div class="freq-legend">' + ["q", "b", "a"].map(function (f) { return "<span>" + L(V.freqLabel(f)) + "</span>"; }).join("") + "</div>" +
-        (byMonth.length ? byMonth.map(function (mo) {
-          return '<div class="amonth ' + (mo.month === curMonth ? "cur" : "") + '">' +
+        (byMonth.length ? yearStrip() + byMonth.map(function (mo) {
+          return '<div class="amonth ' + (mo.month === curMonth ? "cur" : "") + '" data-month="' + mo.month + '">' +
             '<div class="amonth__h"><b>' + V.monthName(mo.month) + "</b>" +
               (mo.month === curMonth ? '<span class="tag green">' + (V.lang() === "ka" ? "მიმდინარე" : "Now") + "</span>" : "") + "</div>" +
             mo.items.map(function (s) {
               return '<div class="arow"><span class="sc-dot" style="background:' + V.catColor(s.cat) + '"></span>' +
-                '<div style="flex:1"><b>' + L(s.name) + "</b><small>" + L(V.freqLabel(s.freq)) + "</small></div></div>";
+                '<div style="flex:1"><b>' + L(s.name) + "</b><small>" + L(V.freqLabel(s.freq)) + "</small></div>" +
+                '<button class="arow__book" data-book="' + s.id + '">' + V.icon("calendar") + "</button></div>";
             }).join("") +
           "</div>";
         }).join("") : '<p class="cal-note">' + t("scNonePicked") + "</p>") +
@@ -1316,12 +1358,33 @@
           V.save(); V.render();
         }
         each("[data-sc]", function (el) {
-          el.addEventListener("click", function () { toggle(el.getAttribute("data-sc")); });
+          el.addEventListener("click", function (e) { e.stopPropagation(); toggle(el.getAttribute("data-sc")); });
+        });
+        each("[data-expand]", function (h) {
+          h.addEventListener("click", function (e) {
+            if (e.target.closest("[data-sc]")) return;
+            h.parentNode.classList.toggle("open");
+          });
+        });
+        each("[data-book]", function (b) {
+          b.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var id = b.getAttribute("data-book");
+            var cat = V.screeningCatalog().filter(function (x) { return x.id === id; })[0];
+            if (V.openClinics) V.openClinics(V.screeningCheckup(id), cat ? cat.name : { ka: "ვიზიტი", en: "Visit" }); else V.go("clinics");
+          });
+        });
+        each("[data-ym]", function (c) {
+          c.addEventListener("click", function () {
+            var m = c.getAttribute("data-ym");
+            var card = root.querySelector('.amonth[data-month="' + m + '"]');
+            if (card) { card.scrollIntoView({ behavior: "smooth", block: "center" }); card.classList.add("flash"); setTimeout(function () { card.classList.remove("flash"); }, 1200); }
+          });
         });
         each("[data-region]", function (mk) {
           mk.addEventListener("click", function () {
             var r = mk.getAttribute("data-region");
-            var first = root.querySelector('[data-sc][data-rg="' + r + '"]') || root.querySelector('[data-rg="' + r + '"]');
+            var first = root.querySelector('[data-rg="' + r + '"]');
             if (first) {
               first.scrollIntoView({ behavior: "smooth", block: "center" });
               first.classList.add("flash");

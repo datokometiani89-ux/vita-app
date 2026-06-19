@@ -273,41 +273,78 @@ window.VITA = window.VITA || {};
   };
 
   V.screeningCatalog = function () {
-    // cat: cardio | metabolic | cancer | general | mental
+    // cat: cardio | metabolic | cancer | general | mental ; book = clinics checkupId ; why = one-line purpose
     return [
-      { id: "bp", region: "heart", cat: "cardio", sex: "any", min: 18, max: 120, freq: "a",
-        name: { ka: "არტერიული წნევა", en: "Blood pressure" }, basis: { ka: "USPSTF — ყველა ზრდასრული", en: "USPSTF — all adults" } },
-      { id: "diabetes", region: "abdomen", cat: "metabolic", sex: "any", min: 35, max: 70, freq: "b", riskFreq: "q",
-        name: { ka: "შაქარი + HbA1c", en: "Blood sugar + HbA1c" }, basis: { ka: "USPSTF/ADA — 35–70, ჭარბწონა", en: "USPSTF/ADA — 35–70, overweight" }, riskAnyAge: true },
-      { id: "lipids", region: "heart", cat: "cardio", sex: "any", min: 40, max: 75, freq: "b",
-        name: { ka: "ლიპიდები (ქოლესტერინი)", en: "Lipid panel (cholesterol)" }, basis: { ka: "USPSTF — 40–75", en: "USPSTF — 40–75" }, riskAnyAge: true },
-      { id: "colorectal", region: "colon", cat: "cancer", sex: "any", min: 45, max: 75, freq: "a",
-        name: { ka: "კოლორექტალური სკრინინგი", en: "Colorectal cancer" }, basis: { ka: "USPSTF — 45–75 (FIT/კოლონოსკოპია)", en: "USPSTF — 45–75 (FIT/colonoscopy)" } },
-      { id: "cervical", region: "pelvis", cat: "cancer", sex: "woman", min: 21, max: 65, freq: "3y",
-        name: { ka: "საშვილოსნოს ყელი (PAP/HPV)", en: "Cervical (Pap/HPV)" }, basis: { ka: "USPSTF — ქალი 21–65", en: "USPSTF — women 21–65" } },
-      { id: "breast", region: "chest", cat: "cancer", sex: "woman", min: 40, max: 74, freq: "b",
-        name: { ka: "ძუძუ (მამოგრაფია)", en: "Breast (mammogram)" }, basis: { ka: "USPSTF — ქალი 40–74", en: "USPSTF — women 40–74" } },
-      { id: "prostate", region: "pelvis", cat: "cancer", sex: "man", min: 50, max: 69, freq: "b", riskMin: 45,
-        name: { ka: "პროსტატა (PSA, განხილვა)", en: "Prostate (PSA, discuss)" }, basis: { ka: "USPSTF — კაცი 50–69 (განხილვა)", en: "USPSTF — men 50–69 (shared decision)" } },
-      { id: "lung", region: "lungs", cat: "cancer", sex: "any", min: 50, max: 80, freq: "a", needsSmoker: true,
-        name: { ka: "ფილტვის სკრინინგი (LDCT)", en: "Lung cancer (LDCT)" }, basis: { ka: "USPSTF — მწეველი 50–80", en: "USPSTF — smokers 50–80" } },
-      { id: "aaa", region: "abdomen", cat: "cardio", sex: "man", min: 65, max: 75, freq: "once", needsSmoker: true,
-        name: { ka: "აორტის ანევრიზმა (ექო)", en: "Aortic aneurysm (US)" }, basis: { ka: "USPSTF — კაცი 65–75, ყოფ. მწეველი", en: "USPSTF — men 65–75, ever smoked" } },
-      { id: "osteo", region: "bone", cat: "general", sex: "woman", min: 65, max: 120, freq: "a",
-        name: { ka: "ოსტეოპოროზი (DEXA)", en: "Osteoporosis (DEXA)" }, basis: { ka: "USPSTF — ქალი 65+", en: "USPSTF — women 65+" } },
-      { id: "depression", region: "head", cat: "mental", sex: "any", min: 18, max: 120, freq: "a",
-        name: { ka: "დეპრესია (PHQ-9)", en: "Depression (PHQ-9)" }, basis: { ka: "USPSTF — ყველა ზრდასრული", en: "USPSTF — all adults" } },
-      { id: "hepc", region: "liver", cat: "general", sex: "any", min: 18, max: 79, freq: "once",
-        name: { ka: "ჰეპატიტი C", en: "Hepatitis C" }, basis: { ka: "USPSTF — 18–79, ერთხელ", en: "USPSTF — 18–79, once" } },
-      { id: "dental", region: "mouth", cat: "general", sex: "any", min: 18, max: 120, freq: "b",
-        name: { ka: "სტომატოლოგი", en: "Dental" }, basis: { ka: "ADA — ყოველ 6–12 თვეში", en: "ADA — every 6–12 months" } },
-      { id: "eye", region: "head", cat: "general", sex: "any", min: 40, max: 120, freq: "b",
-        name: { ka: "მხედველობა (ოფთალმოლოგი)", en: "Eye exam" }, basis: { ka: "AAO — 40+ პერიოდული", en: "AAO — 40+ periodic" } },
-      { id: "thyroid", region: "neck", cat: "general", sex: "any", min: 35, max: 120, freq: "a", riskOnly: true,
-        name: { ka: "ფარისებრი (TSH)", en: "Thyroid (TSH)" }, basis: { ka: "რისკ/სიმპტომ-დაფუძნებული", en: "Risk/symptom-based" } },
-      { id: "skin", region: "skin", cat: "cancer", sex: "any", min: 18, max: 120, freq: "a", riskOnly: true,
-        name: { ka: "კანის შემოწმება", en: "Skin check" }, basis: { ka: "რისკ-დაფუძნებული", en: "Risk-based" } },
+      { id: "bp", region: "heart", cat: "cardio", sex: "any", min: 18, max: 120, freq: "a", book: "lipid",
+        name: { ka: "არტერიული წნევა", en: "Blood pressure" }, basis: { ka: "USPSTF — ყველა ზრდასრული", en: "USPSTF — all adults" },
+        why: { ka: "მაღალი წნევა ხშირად უსიმპტომოა — ადრე გამოვლენა გულსა და თირკმელს იცავს.", en: "High BP is usually silent — catching it early protects your heart and kidneys." } },
+      { id: "diabetes", region: "abdomen", cat: "metabolic", sex: "any", min: 35, max: 70, freq: "b", riskFreq: "q", book: "glucose",
+        name: { ka: "შაქარი + HbA1c", en: "Blood sugar + HbA1c" }, basis: { ka: "USPSTF/ADA — 35–70, ჭარბწონა", en: "USPSTF/ADA — 35–70, overweight" }, riskAnyAge: true,
+        why: { ka: "პრედიაბეტი ხშირად შექცევადია ცხოვრების წესით — თუ დროზე გამოვლინდა.", en: "Pre-diabetes is often reversible with lifestyle — if caught in time." } },
+      { id: "lipids", region: "heart", cat: "cardio", sex: "any", min: 40, max: 75, freq: "b", book: "lipid",
+        name: { ka: "ლიპიდები (ქოლესტერინი)", en: "Lipid panel (cholesterol)" }, basis: { ka: "USPSTF — 40–75", en: "USPSTF — 40–75" }, riskAnyAge: true,
+        why: { ka: "ქოლესტერინი განსაზღვრავს ინფარქტის რისკს და მკურნალობადია.", en: "Cholesterol drives heart-attack risk — and it's treatable." } },
+      { id: "colorectal", region: "colon", cat: "cancer", sex: "any", min: 45, max: 75, freq: "a", book: "general",
+        name: { ka: "კოლორექტალური სკრინინგი", en: "Colorectal cancer" }, basis: { ka: "USPSTF — 45–75 (FIT/კოლონოსკოპია)", en: "USPSTF — 45–75 (FIT/colonoscopy)" },
+        why: { ka: "პოლიპის მოცილება კიბომდე — სკრინინგი სიკვდილიანობას ამცირებს.", en: "Removing polyps prevents cancer — screening cuts mortality." } },
+      { id: "cervical", region: "pelvis", cat: "cancer", sex: "woman", min: 21, max: 65, freq: "3y", book: "general",
+        name: { ka: "საშვილოსნოს ყელი (PAP/HPV)", en: "Cervical (Pap/HPV)" }, basis: { ka: "USPSTF — ქალი 21–65", en: "USPSTF — women 21–65" },
+        why: { ka: "HPV/უჯრედული ცვლილებების ადრე გამოვლენით თითქმის სრულად პრევენცირდება.", en: "Detecting HPV/cell changes early makes it highly preventable." } },
+      { id: "breast", region: "chest", cat: "cancer", sex: "woman", min: 40, max: 74, freq: "b", book: "general",
+        name: { ka: "ძუძუ (მამოგრაფია)", en: "Breast (mammogram)" }, basis: { ka: "USPSTF — ქალი 40–74", en: "USPSTF — women 40–74" },
+        why: { ka: "ადრეული ძუძუს კიბო პატარაა და გაცილებით უკეთ იკურნება.", en: "Early breast cancer is small and far more treatable." } },
+      { id: "prostate", region: "pelvis", cat: "cancer", sex: "man", min: 50, max: 69, freq: "b", riskMin: 45, book: "prostate",
+        name: { ka: "პროსტატა (PSA, განხილვა)", en: "Prostate (PSA, discuss)" }, basis: { ka: "USPSTF — კაცი 50–69 (განხილვა)", en: "USPSTF — men 50–69 (shared decision)" },
+        why: { ka: "PSA-ს ექიმთან განხილვა — პროსტატის კიბოს ადრე გამოსავლენად.", en: "Discuss PSA with your doctor to catch prostate cancer early." } },
+      { id: "lung", region: "lungs", cat: "cancer", sex: "any", min: 50, max: 80, freq: "a", needsSmoker: true, book: "general",
+        name: { ka: "ფილტვის სკრინინგი (LDCT)", en: "Lung cancer (LDCT)" }, basis: { ka: "USPSTF — მწეველი 50–80", en: "USPSTF — smokers 50–80" },
+        why: { ka: "მწეველებში დაბალ-დოზიანი CT ფილტვის კიბოს ადრე პოულობს.", en: "Low-dose CT finds lung cancer early in smokers." } },
+      { id: "aaa", region: "abdomen", cat: "cardio", sex: "man", min: 65, max: 75, freq: "once", needsSmoker: true, book: "general",
+        name: { ka: "აორტის ანევრიზმა (ექო)", en: "Aortic aneurysm (US)" }, basis: { ka: "USPSTF — კაცი 65–75, ყოფ. მწეველი", en: "USPSTF — men 65–75, ever smoked" },
+        why: { ka: "აორტის ანევრიზმა უსიმპტომოა — ერთი ექო სიცოცხლეს არჩენს.", en: "An aortic aneurysm is silent — one ultrasound can be life-saving." } },
+      { id: "osteo", region: "bone", cat: "general", sex: "woman", min: 65, max: 120, freq: "a", book: "general",
+        name: { ka: "ოსტეოპოროზი (DEXA)", en: "Osteoporosis (DEXA)" }, basis: { ka: "USPSTF — ქალი 65+", en: "USPSTF — women 65+" },
+        why: { ka: "ძვლის სიმკვრივის შემოწმება მოტეხილობამდე — DEXA პრევენციას იძლევა.", en: "Check bone density before a fracture — DEXA enables prevention." } },
+      { id: "depression", region: "head", cat: "mental", sex: "any", min: 18, max: 120, freq: "a", book: "mental",
+        name: { ka: "დეპრესია (PHQ-9)", en: "Depression (PHQ-9)" }, basis: { ka: "USPSTF — ყველა ზრდასრული", en: "USPSTF — all adults" },
+        why: { ka: "დეპრესია ხშირად შეუმჩნეველია — მოკლე სკრინინგი ადრე ეხმარება.", en: "Depression often goes unnoticed — a short screen helps catch it early." } },
+      { id: "hepc", region: "liver", cat: "general", sex: "any", min: 18, max: 79, freq: "once", book: "general",
+        name: { ka: "ჰეპატიტი C", en: "Hepatitis C" }, basis: { ka: "USPSTF — 18–79, ერთხელ", en: "USPSTF — 18–79, once" },
+        why: { ka: "ჰეპატიტი C წლების მანძილზე ჩუმად აზიანებს ღვიძლს — და ახლა იკურნება.", en: "Hepatitis C silently harms the liver for years — and is now curable." } },
+      { id: "dental", region: "mouth", cat: "general", sex: "any", min: 18, max: 120, freq: "b", book: "dental",
+        name: { ka: "სტომატოლოგი", en: "Dental" }, basis: { ka: "ADA — ყოველ 6–12 თვეში", en: "ADA — every 6–12 months" },
+        why: { ka: "კარიესი და ღრძილების დაავადება მეტაბოლურ ჯანმრთელობასაც უკავშირდება.", en: "Cavities and gum disease also link to metabolic health." } },
+      { id: "eye", region: "head", cat: "general", sex: "any", min: 40, max: 120, freq: "b", book: "general",
+        name: { ka: "მხედველობა (ოფთალმოლოგი)", en: "Eye exam" }, basis: { ka: "AAO — 40+ პერიოდული", en: "AAO — 40+ periodic" },
+        why: { ka: "მხედველობა და თვალის წნევა (გლაუკომა) — უსიმპტომო დაკარგვის პრევენცია.", en: "Vision and eye pressure (glaucoma) — prevent silent vision loss." } },
+      { id: "thyroid", region: "neck", cat: "general", sex: "any", min: 35, max: 120, freq: "a", riskOnly: true, book: "energy",
+        name: { ka: "ფარისებრი (TSH)", en: "Thyroid (TSH)" }, basis: { ka: "რისკ/სიმპტომ-დაფუძნებული", en: "Risk/symptom-based" },
+        why: { ka: "ფარისებრის დისბალანსი ენერგიასა და წონაზე მოქმედებს.", en: "A thyroid imbalance affects your energy and weight." } },
+      { id: "skin", region: "skin", cat: "cancer", sex: "any", min: 18, max: 120, freq: "a", riskOnly: true, book: "derm",
+        name: { ka: "კანის შემოწმება", en: "Skin check" }, basis: { ka: "რისკ-დაფუძნებული", en: "Risk-based" },
+        why: { ka: "ახალი ან ცვალებადი ხალები — მელანომის ადრე გამოვლენა.", en: "New or changing moles — early detection of melanoma." } },
     ];
+  };
+
+  // screening category metadata (icon + label) for grouping
+  V.screenCats = {
+    cardio:    { icon: "heart",  label: { ka: "გული და სისხლძარღვები", en: "Heart & vessels" } },
+    metabolic: { icon: "drop",   label: { ka: "მეტაბოლიზმი", en: "Metabolic" } },
+    cancer:    { icon: "shield", label: { ka: "ონკო-სკრინინგი", en: "Cancer screening" } },
+    mental:    { icon: "brain",  label: { ka: "მენტალური ჯანმრთელობა", en: "Mental health" } },
+    general:   { icon: "flask",  label: { ka: "ზოგადი შემოწმება", en: "General checks" } },
+  };
+  // map a screening to a clinics-booking checkupId
+  V.screeningCheckup = function (idOrItem) {
+    var id = typeof idOrItem === "string" ? idOrItem : (idOrItem && idOrItem.id);
+    var s = V.screeningCatalog().filter(function (x) { return x.id === id; })[0];
+    return (s && s.book) || "general";
+  };
+  // lookup the catalog `why` for an item/id
+  V.screeningWhy = function (idOrItem) {
+    var id = typeof idOrItem === "string" ? idOrItem : (idOrItem && idOrItem.id);
+    var s = V.screeningCatalog().filter(function (x) { return x.id === id; })[0];
+    return s && s.why;
   };
 
   function hasRisk(s, p) {

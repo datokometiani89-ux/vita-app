@@ -1055,6 +1055,46 @@
 .sc-row.on .sc-box { background: var(--green); border-color: var(--green); color: #fff; }
 .sc-box svg { width: 16px; height: 16px; }
 
+/* ===== annual checkups — redesigned ===== */
+.an-summary { display: flex; gap: 10px; margin-bottom: 12px; }
+.an-stat { flex: 1; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 14px 8px; text-align: center; }
+.an-stat b { display: block; font-size: 24px; font-weight: 800; color: var(--green); line-height: 1; }
+.an-stat small { color: var(--muted); font-size: 12px; }
+.an-riskline { display: flex; align-items: center; gap: 8px; background: #fdf0e8; color: #9a3412; border-radius: var(--r-md); padding: 10px 14px; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+.an-riskline svg { width: 16px; height: 16px; flex: none; }
+.sc-cat { display: flex; align-items: center; gap: 10px; margin: 18px 0 10px; }
+.sc-cat b { font-size: 16px; font-weight: 700; flex: 1; }
+.sc-cat i { font-style: normal; font-size: 13px; font-weight: 700; color: var(--muted); background: var(--field); border-radius: 99px; padding: 2px 10px; }
+.sc-item { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); margin-bottom: 9px; overflow: hidden; transition: border-color .15s; }
+.sc-item.on { border-color: var(--green); }
+.sc-item.muted { opacity: .62; }
+.sc-item.flash { animation: rowflash 1.2s ease; }
+.sc-item__head { display: flex; align-items: center; gap: 12px; padding: 13px 14px; cursor: pointer; }
+.sc-item__t { flex: 1; min-width: 0; }
+.sc-item__t b { font-size: 15px; display: inline; }
+.sc-item__t small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.sc-risk { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #9a3412; background: #fdf0e8; padding: 2px 8px; border-radius: 99px; vertical-align: middle; }
+.sc-risk svg { width: 11px; height: 11px; }
+.sc-chev { color: var(--muted); display: inline-flex; transition: transform .2s; }
+.sc-chev svg { width: 16px; height: 16px; transform: rotate(90deg); }
+.sc-item.open .sc-chev { transform: rotate(180deg); }
+.sc-detail { max-height: 0; opacity: 0; padding: 0 14px; overflow: hidden; transition: max-height .25s ease, opacity .2s, padding .25s; }
+.sc-item.open .sc-detail { max-height: 260px; opacity: 1; padding: 0 14px 14px; }
+.sc-why { font-size: 14px; line-height: 1.55; color: var(--ink-2); margin: 0 0 8px; }
+.sc-basis2 { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+.sc-book { width: 100%; }
+.year-strip { display: flex; gap: 5px; overflow-x: auto; padding: 4px 0 10px; margin-bottom: 6px; }
+.ys-cell { flex: 1 0 7%; min-width: 42px; background: var(--field); border: 1.5px solid transparent; border-radius: 10px; padding: 8px 2px; text-align: center; }
+.ys-cell.has { cursor: pointer; }
+.ys-cell.cur { border-color: var(--green); background: var(--green-tint); }
+.ys-cell b { font-size: 12px; font-weight: 700; color: var(--muted); }
+.ys-cell.has b, .ys-cell.cur b { color: var(--ink); }
+.ys-dots { display: flex; justify-content: center; flex-wrap: wrap; gap: 2px; margin-top: 5px; min-height: 8px; }
+.ys-dot { width: 6px; height: 6px; border-radius: 50%; }
+.ys-empty { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+.arow__book { margin-left: auto; background: var(--green-tint); border: none; color: var(--green); border-radius: 9px; padding: 7px; cursor: pointer; display: inline-flex; }
+.arow__book svg { width: 16px; height: 16px; }
+
 /* clinics + visits */
 .clinic { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 16px; margin-bottom: 12px; }
 .clinic__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }

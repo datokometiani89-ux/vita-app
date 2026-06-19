@@ -777,6 +777,13 @@ window.VITA = window.VITA || {};
     scSelected: { ka: "არჩეული", en: "selected" },
     scSrc: { ka: "წყარო", en: "Basis" },
     scNonePicked: { ka: "მონიშნე ერთი მაინც, რომ გაწერა გამოჩნდეს.", en: "Pick at least one to see the schedule." },
+    scRecCount: { ka: "რეკომენდებული", en: "recommended" },
+    scNext: { ka: "უახლოესი", en: "next up" },
+    scRisk: { ka: "შენი რისკი", en: "your risk" },
+    scRiskCount: { ka: "{n} შემოწმება მონიშნულია შენი რისკ-ფაქტორების გამო.", en: "{n} screening(s) flagged by your risk factors." },
+    scBook: { ka: "ჩაეწერე ვიზიტზე", en: "Book a visit" },
+    scYear: { ka: "წლის გეგმა ერთ ხედში", en: "Year at a glance" },
+    scTapHint2: { ka: "შეეხე დეტალებისთვის (რატომ მნიშვნელოვანია + ჩაწერა) · ☑ დაამატე გეგმაში.", en: "Tap for details (why it matters + booking) · ☑ to add to your plan." },
     /* body regions */
     regHead: { ka: "თავი", en: "Head" },
     regNeck: { ka: "კისერი / ფარისებრი", en: "Neck / thyroid" },

@@ -139,6 +139,11 @@ window.VITA = window.VITA || {};
     var en = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     return (V.lang && V.lang() === "ka" ? ka : en)[(m - 1) % 12];
   };
+  V.monthShort = function (m) {
+    var ka = ["იან","თებ","მარ","აპრ","მაი","ივნ","ივლ","აგვ","სექ","ოქტ","ნოე","დეკ"];
+    var en = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return (V.lang && V.lang() === "ka" ? ka : en)[(m - 1) % 12];
+  };
   V.dayName = function (key) {
     var ka = { mon: "ორშაბათი", tue: "სამშაბათი", wed: "ოთხშაბათი", thu: "ხუთშაბათი", fri: "პარასკევი", sat: "შაბათი", sun: "კვირა" };
     var en = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
