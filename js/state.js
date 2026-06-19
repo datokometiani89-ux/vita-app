@@ -55,6 +55,16 @@ window.VITA = window.VITA || {};
     chat: [],             // [{role:"user"|"vita", text}]
     vitaAccount: { connected: false, email: "", plan: "" }, // link to vitaapp.ge
     auth: null,           // { provider:"google"|"facebook"|"email", name, email, connected }
+    wellness: {           // wellness micro-tools
+      eyeLog: {},         // { "2026-06-19": true } days an eye session was completed
+      amsler: null,       // { date, result:"normal"|"distortion" }
+      breatheLog: {},     // { "2026-06-19": n } breathing sessions per day
+      hr: [],             // [{date, bpm}] resting heart-rate readings
+      bp: [],             // [{date, sys, dia}] blood-pressure log
+      mood: {},           // { "2026-06-19": {score:1..5, note, tags:[]} }
+      phq: [],            // [{date, score, severity}]
+      gad: [],            // [{date, score, severity}]
+    },
   };
 
   function load() {
@@ -66,6 +76,8 @@ window.VITA = window.VITA || {};
       var out = JSON.parse(JSON.stringify(defaults));
       Object.keys(s).forEach(function (k) { out[k] = s[k]; });
       out.profile = Object.assign({}, defaults.profile, s.profile || {});
+      out.wellness = Object.assign({}, defaults.wellness, s.wellness || {});
+      out.vitaAccount = Object.assign({}, defaults.vitaAccount, s.vitaAccount || {});
       return out;
     } catch (e) {
       return JSON.parse(JSON.stringify(defaults));

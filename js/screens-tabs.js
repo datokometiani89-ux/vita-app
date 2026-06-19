@@ -1067,6 +1067,7 @@
         group("grpAssistant", [
           tile("chat", "blue", "mChat", 'data-go="vita"'),
           tile("progress", "green", "mProgress", 'data-go="progress"'),
+          tile("eye", "blue", "mWellness", 'data-go="wellness"'),
           tile("sparkle", "yellow", "mRewards", 'data-go="rewards"'),
           tile("globe", "green", "mVitaapp", 'data-go="vitaapp"'),
         ]) +

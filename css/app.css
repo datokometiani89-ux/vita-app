@@ -670,6 +670,51 @@
 .vtoast { position: absolute; left: 50%; bottom: 96px; transform: translate(-50%, 16px); z-index: 70; background: rgba(20,28,24,.95); color: #fff; padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.3); opacity: 0; transition: opacity .25s, transform .25s; max-width: 80%; text-align: center; }
 .vtoast.on { opacity: 1; transform: translate(-50%, 0); }
 
+/* ===== wellness hub ===== */
+.well-grid { display: grid; gap: 11px; }
+.well-tile { display: flex; align-items: center; gap: 13px; width: 100%; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 14px; cursor: pointer; text-align: left; transition: border-color .15s, transform .1s; }
+.well-tile:active { transform: scale(.99); }
+.well-tile:hover { border-color: var(--green); }
+.well-tile__t { flex: 1; }
+.well-tile__t b { display: block; font-size: 15.5px; }
+.well-tile__t small { color: var(--muted); font-size: 12.5px; }
+.well-tile > svg:last-child { color: var(--muted); width: 18px; transform: rotate(180deg); }
+
+/* ===== eye care ===== */
+.eye-card { padding: 14px; }
+.eye-stage { position: relative; height: 240px; border-radius: 16px; overflow: hidden; background: radial-gradient(circle at 50% 45%, #0d2a3f, #071521); }
+.eye-stage.far { background: radial-gradient(circle at 50% 35%, #123a2a, #07150f); }
+.eye-dot { position: absolute; top: 0; left: 0; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 0 16px 4px rgba(120,200,255,.9); opacity: 0; transition: opacity .3s; will-change: transform; }
+.eye-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: rgba(0,0,0,.25); }
+.eye-stage.running .eye-overlay { background: transparent; }
+.eye-done { color: var(--green); font-weight: 700; font-size: 14px; }
+.eye-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+.eye-meta b { font-size: 15px; }
+.eye-meta span { color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; }
+.amsler-wrap { display: flex; justify-content: center; margin: 4px 0 14px; }
+.amsler { border-radius: 8px; box-shadow: var(--shadow-card); max-width: 280px; height: auto; }
+.amsler-act { display: flex; gap: 10px; }
+.amsler-act .btn { flex: 1; padding: 12px; font-size: 14px; }
+.btn-ghost.danger { color: #c2410c; border-color: #f3c9b3; }
+.note-ok, .note-warn { display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px; border-radius: 12px; font-size: 13.5px; margin-top: 12px; line-height: 1.5; }
+.note-ok { background: color-mix(in srgb, var(--green) 12%, transparent); color: var(--green-dark, #1c7a37); }
+.note-ok svg, .note-warn svg { width: 17px; height: 17px; flex: 0 0 auto; margin-top: 1px; }
+.note-warn { background: #fdf0e8; color: #9a3412; }
+.link-btn { background: none; border: none; color: var(--green); font-weight: 700; cursor: pointer; padding: 0; font-size: 13.5px; }
+
+/* ===== breathing ===== */
+.breathe-screen .pad-lg { display: flex; flex-direction: column; min-height: 100%; }
+.breathe-stage { position: relative; flex: 1; min-height: 280px; display: grid; place-items: center; margin: 8px 0; }
+.breathe-rings { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.breathe-rings span { position: absolute; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--green) 30%, transparent); }
+.breathe-rings span:nth-child(1) { width: 220px; height: 220px; }
+.breathe-rings span:nth-child(2) { width: 270px; height: 270px; opacity: .6; }
+.breathe-rings span:nth-child(3) { width: 320px; height: 320px; opacity: .3; }
+.breathe-orb { width: 200px; height: 200px; border-radius: 50%; display: grid; place-items: center; text-align: center; color: #fff; transform: scale(.55); background: radial-gradient(circle at 35% 30%, #5fe09a, #2BA94C 60%, #1c7a37); box-shadow: 0 16px 40px rgba(43,169,76,.4), inset 0 -8px 24px rgba(0,0,0,.15), inset 0 8px 20px rgba(255,255,255,.35); }
+.breathe-orb b { font-size: 21px; font-weight: 700; }
+.breathe-orb span { display: block; font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.breathe-meta { text-align: center; color: var(--muted); font-weight: 600; margin: 6px 0 14px; }
+
 /* vitaapp.ge account / integration */
 .va-hero { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow-card); }
 .va-hero.on { border-color: var(--green); background: linear-gradient(160deg, color-mix(in srgb, var(--green) 8%, var(--card)), var(--card)); }

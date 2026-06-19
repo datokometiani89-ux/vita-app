@@ -103,6 +103,8 @@ window.VITA = window.VITA || {};
     smile: P('<circle cx="12" cy="12" r="9"/><path d="M8.5 14a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/>'),
     globe: P('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a13 13 0 0 1 0 18 13 13 0 0 1 0-18Z"/>'),
     grid: P('<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>'),
+    lungs: P('<path d="M12 4v8"/><path d="M12 8c-1-2-3-2.5-4-1.5C6.6 7.8 6 11 6 14a3 3 0 0 0 5.2 2.1c.5-.5.8-1.2.8-2V8Z"/><path d="M12 8c1-2 3-2.5 4-1.5C17.4 7.8 18 11 18 14a3 3 0 0 1-5.2 2.1c-.5-.5-.8-1.2-.8-2V8Z"/>'),
+    stethoscope: P('<path d="M5 4v5a4 4 0 0 0 8 0V4"/><path d="M5 4H4M13 4h1"/><path d="M9 13v2a5 5 0 0 0 5 5 4 4 0 0 0 4-4v-2.5"/><circle cx="18" cy="11" r="2.2"/>'),
   };
 
   V.icon = function (name, cls) {
