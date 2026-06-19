@@ -40,6 +40,7 @@ window.VITA = window.VITA || {};
     doneWorkouts: {},      // { "mon": true } — weekly workout completion
     reps: {},              // { "squat": 45 } — lifetime camera-tracked reps
     screenings: null,      // selected preventive-screening ids (null → default to recommended)
+    screeningDone: {},     // { "2026": ["bp","lipids"] } screenings completed per year
     waterLog: {},          // { "2026-06-18": 1500 }  ml of water per day
     points: 0,             // spendable VITA reward points
     lifetime: 0,           // total points ever earned (drives element unlocks)

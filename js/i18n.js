@@ -784,6 +784,12 @@ window.VITA = window.VITA || {};
     scBook: { ka: "ჩაეწერე ვიზიტზე", en: "Book a visit" },
     scYear: { ka: "წლის გეგმა ერთ ხედში", en: "Year at a glance" },
     scTapHint2: { ka: "შეეხე დეტალებისთვის (რატომ მნიშვნელოვანია + ჩაწერა) · ☑ დაამატე გეგმაში.", en: "Tap for details (why it matters + booking) · ☑ to add to your plan." },
+    scYearProg: { ka: "წლის პროგრესი", en: "Year progress" },
+    scDoneYear: { ka: "შესრულდა წელს", en: "done this year" },
+    scProgHint: { ka: "მონიშნე ჩატარებული შემოწმებები „შესრულდა“-თი.", en: "Mark each completed screening as done." },
+    scAllDone: { ka: "ყველა შემოწმება შესრულდა წელს! 🎉", en: "All screenings done this year! 🎉" },
+    scMarkDone: { ka: "შესრულდა", en: "Mark done" },
+    scDoneBadge: { ka: "შესრულდა ✓", en: "Done ✓" },
     /* body regions */
     regHead: { ka: "თავი", en: "Head" },
     regNeck: { ka: "კისერი / ფარისებრი", en: "Neck / thyroid" },

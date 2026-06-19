@@ -1265,17 +1265,18 @@
 
     var catTone = { cardio: "pink", metabolic: "yellow", cancer: "blue", mental: "blue", general: "green" };
     var catOrder = ["cardio", "metabolic", "cancer", "mental", "general"];
+    var prog = V.screeningProgress();
     var riskCount = rec.now.filter(function (s) { return s.risk; }).length;
     var upcoming = byMonth.filter(function (mo) { return mo.month >= curMonth; });
     var nextMonth = (upcoming[0] || byMonth[0] || {}).month;
 
     // expandable, selectable recommended row (tap = info, checkbox = add to plan, book = clinics)
     function row(s) {
-      var on = sel.indexOf(s.id) >= 0, why = V.screeningWhy(s.id);
-      return '<div class="sc-item' + (on ? " on" : "") + '" data-rg="' + s.region + '">' +
+      var on = sel.indexOf(s.id) >= 0, why = V.screeningWhy(s.id), done = V.isScreeningDone(s.id);
+      return '<div class="sc-item' + (on ? " on" : "") + (done ? " done" : "") + '" data-rg="' + s.region + '">' +
         '<div class="sc-item__head" data-expand>' +
-          '<span class="sc-dot" style="background:' + V.catColor(s.cat) + '"></span>' +
-          '<div class="sc-item__t"><b>' + L(s.name) + "</b>" + (s.risk ? ' <span class="sc-risk">' + V.icon("warn") + " " + t("scRisk") + "</span>" : "") +
+          (done ? '<span class="sc-doneflag">' + V.icon("check") + "</span>" : '<span class="sc-dot" style="background:' + V.catColor(s.cat) + '"></span>') +
+          '<div class="sc-item__t"><b>' + L(s.name) + "</b>" + (s.risk && !done ? ' <span class="sc-risk">' + V.icon("warn") + " " + t("scRisk") + "</span>" : "") +
             "<small>" + L(V.freqLabel(s.freq)) + " · " + V.regionLabel(s.region) + "</small></div>" +
           '<button class="sc-box" data-sc="' + s.id + '" aria-label="select">' + V.icon("check") + "</button>" +
           '<span class="sc-chev">' + V.icon("next") + "</span>" +
@@ -1283,7 +1284,10 @@
         '<div class="sc-detail">' +
           (why ? '<p class="sc-why">' + L(why) + "</p>" : "") +
           '<p class="sc-basis2">' + t("scSrc") + ": " + L(s.basis) + "</p>" +
-          '<button class="btn btn-primary sc-book" data-book="' + s.id + '">' + V.icon("calendar") + " " + t("scBook") + "</button>" +
+          '<div class="sc-detail__act">' +
+            '<button class="btn btn-primary sc-book" data-book="' + s.id + '">' + V.icon("calendar") + " " + t("scBook") + "</button>" +
+            '<button class="btn ' + (done ? "btn-primary" : "btn-ghost") + ' sc-donebtn" data-done="' + s.id + '">' + V.icon("check") + " " + t(done ? "scDoneBadge" : "scMarkDone") + "</button>" +
+          "</div>" +
         "</div></div>";
     }
 
@@ -1314,6 +1318,13 @@
           '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
         '<p class="s-sub">' + t("scBasis", { age: p.age || 36 }) + "</p>" +
 
+        '<div class="an-prog-card">' +
+          '<div class="an-prog-ring" style="--p:' + prog.pct + '"><b>' + prog.pct + "%</b></div>" +
+          '<div class="an-prog__t"><b>' + t("scYearProg") + " " + new Date().getFullYear() + "</b>" +
+            "<small>" + prog.done + " / " + prog.total + " " + t("scDoneYear") + "</small>" +
+            '<p class="an-prog__hint">' + (prog.total && prog.done >= prog.total ? t("scAllDone") : t("scProgHint")) + "</p></div>" +
+        "</div>" +
+
         '<div class="an-summary">' +
           '<div class="an-stat"><b>' + rec.now.length + "</b><small>" + t("scRecCount") + "</small></div>" +
           '<div class="an-stat"><b>' + sel.length + "</b><small>" + t("scSelected") + "</small></div>" +
@@ -1341,7 +1352,9 @@
             '<div class="amonth__h"><b>' + V.monthName(mo.month) + "</b>" +
               (mo.month === curMonth ? '<span class="tag green">' + (V.lang() === "ka" ? "მიმდინარე" : "Now") + "</span>" : "") + "</div>" +
             mo.items.map(function (s) {
-              return '<div class="arow"><span class="sc-dot" style="background:' + V.catColor(s.cat) + '"></span>' +
+              var dn = V.isScreeningDone(s.id);
+              return '<div class="arow' + (dn ? " done" : "") + '">' +
+                (dn ? '<span class="sc-doneflag sm">' + V.icon("check") + "</span>" : '<span class="sc-dot" style="background:' + V.catColor(s.cat) + '"></span>') +
                 '<div style="flex:1"><b>' + L(s.name) + "</b><small>" + L(V.freqLabel(s.freq)) + "</small></div>" +
                 '<button class="arow__book" data-book="' + s.id + '">' + V.icon("calendar") + "</button></div>";
             }).join("") +
@@ -1374,6 +1387,13 @@
             if (V.openClinics) V.openClinics(V.screeningCheckup(id), cat ? cat.name : { ka: "ვიზიტი", en: "Visit" }); else V.go("clinics");
           });
         });
+        each("[data-done]", function (b) {
+          b.addEventListener("click", function (e) {
+            e.stopPropagation();
+            V.toggleScreeningDone(b.getAttribute("data-done"));
+            V.render();
+          });
+        });
         each("[data-ym]", function (c) {
           c.addEventListener("click", function () {
             var m = c.getAttribute("data-ym");
@@ -1399,7 +1419,7 @@
   // smooth front-facing human body for the screening map
   function screeningBody() {
     return '' +
-'<svg viewBox="0 0 200 360" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">' +
+'<svg viewBox="0 8 200 268" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">' +
 '<defs><linearGradient id="scBodyG" x1="0" y1="0" x2="0" y2="1">' +
 '<stop offset="0" stop-color="#BDEBD0"/><stop offset="1" stop-color="#7FD3A5"/></linearGradient></defs>' +
 '<g fill="url(#scBodyG)">' +

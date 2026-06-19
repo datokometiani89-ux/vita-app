@@ -264,12 +264,12 @@ window.VITA = window.VITA || {};
     return m[r] ? V.t(m[r]) : r;
   };
 
-  // body-map coordinates per region (% of the body SVG box)
+  // body-map coordinates per region (% of the body SVG box; calibrated to viewBox "0 8 200 268")
   V.regionXY = {
-    head: { x: 50, y: 11 }, mouth: { x: 50, y: 17 }, neck: { x: 50, y: 21 },
-    chest: { x: 50, y: 31 }, heart: { x: 43, y: 33 }, lungs: { x: 58, y: 30 },
-    liver: { x: 60, y: 45 }, abdomen: { x: 50, y: 47 }, colon: { x: 44, y: 53 },
-    pelvis: { x: 50, y: 61 }, bone: { x: 38, y: 64 }, skin: { x: 76, y: 46 },
+    head: { x: 50, y: 11.8 }, mouth: { x: 50, y: 19.9 }, neck: { x: 50, y: 25.2 },
+    chest: { x: 50, y: 38.7 }, heart: { x: 43, y: 41.3 }, lungs: { x: 58, y: 37.3 },
+    liver: { x: 60, y: 57.5 }, abdomen: { x: 50, y: 60.1 }, colon: { x: 44, y: 68.2 },
+    pelvis: { x: 50, y: 78.9 }, bone: { x: 38, y: 83 }, skin: { x: 76, y: 58.8 },
   };
 
   V.screeningCatalog = function () {
@@ -340,6 +340,27 @@ window.VITA = window.VITA || {};
     var s = V.screeningCatalog().filter(function (x) { return x.id === id; })[0];
     return (s && s.book) || "general";
   };
+  // ---- yearly screening completion tracking ----
+  V.screeningYear = function () { return String(new Date().getFullYear()); };
+  V.screeningDoneIds = function () {
+    var y = V.screeningYear();
+    V.state.screeningDone = V.state.screeningDone || {};
+    return V.state.screeningDone[y] || (V.state.screeningDone[y] = []);
+  };
+  V.isScreeningDone = function (id) { return V.screeningDoneIds().indexOf(id) >= 0; };
+  V.toggleScreeningDone = function (id) {
+    var arr = V.screeningDoneIds(), i = arr.indexOf(id);
+    if (i >= 0) arr.splice(i, 1); else arr.push(id);
+    V.save();
+  };
+  // progress over the SELECTED screenings for the current year
+  V.screeningProgress = function () {
+    var sel = V.selectedScreenings(), doneIds = V.screeningDoneIds();
+    var done = sel.filter(function (id) { return doneIds.indexOf(id) >= 0; }).length;
+    var total = sel.length;
+    return { done: done, total: total, pct: total ? Math.round(done / total * 100) : 0 };
+  };
+
   // lookup the catalog `why` for an item/id
   V.screeningWhy = function (idOrItem) {
     var id = typeof idOrItem === "string" ? idOrItem : (idOrItem && idOrItem.id);
