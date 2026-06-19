@@ -60,20 +60,21 @@ All new modules live in `js/screens-wellness.js`, grouped under a **"Wellness to
 (`V.screens.wellness`, reachable from the menu tile `mWellness` and route `#/wellness`).
 `V.wellnessTools` lists the hub tiles; `state.wellness` holds their data (see `js/state.js`).
 
-**Done & committed** (last commit `bb972eb`):
+**All 6 hub tiles now built & verified in preview (v17):**
 - ✅ Wellness hub (6 tiles) + menu entry
 - ✅ Eye care — `#/eyecare`: 20-20-20 guided dot exercise (self-cleaning rAF) + Amsler grid self-test
 - ✅ Breathing — `#/breathe`: box-breathing 4-4-4-4 animated orb
-- ⚠️ Eye + breathe code is written but their **interactive flows were not yet driven in preview** — verify first (drive the Start buttons, watch the animation, confirm points award + no console errors).
+- ✅ Symptom checker — `#/symptom`: rule-based triage (`SYMPTOM_RULES` + red-flag/crisis detection) → urgency band + specialist + advice → deep-link `V.openClinics(checkupId, spec)`. Offline-first (no backend needed). Self-harm input → 116 123 / 112 crisis card.
+- ✅ Heart rate — `#/heartrate`: camera PPG (rear cam + torch, center-patch red sampling, detrended peak count) → live waveform + BPM → `state.wellness.hr`; graceful no-camera + manual entry fallback. Camera path needs a real device to fully drive (verified manual + graceful-fail in preview).
+- ✅ Mental tests — `#/mindtests`: PHQ-9 + GAD-7 (`PHQ9`/`GAD7` arrays), per-question flow w/ Back, scoring + severity bands → `state.wellness.phq/gad`. PHQ-9 Q9>0 surfaces crisis note; elevated scores deep-link mental clinics.
+- ✅ Mood journal — `#/mood`: 1–5 emoji mood + tags + note → `state.wellness.mood`, 14-day bar chart, day-streak.
 
-**Still to build** (each its own screen in `js/screens-wellness.js`, brand-styled, points + optional reminder, then commit):
-1. 🤖 Symptom checker — `#/symptom`: AI triage (reuse `js/api.js` chat w/ offline fallback) → suggest specialist + urgency → deep-link `V.openClinics(checkupId, title)`.
-2. ❤️ Heart rate — `#/heartrate`: PPG from rear-camera red-channel variation (getUserMedia + canvas sampling), live waveform + BPM → `state.wellness.hr`, manual fallback.
-3. 🧠 Mental tests — `#/mindtests`: PHQ-9 + GAD-7 questionnaires, scoring + severity bands + recommendation → `state.wellness.phq/gad`, deep-link mental clinics.
-4. 🙂 Mood journal — `#/mood`: daily mood (1–5 + note/tags) → `state.wellness.mood`, history chart, streak.
-5. (later) 🧍 Posture coach (reuse `js/rep-counter.js` Pose) · 😴 sleep diary · 🚭 smoking-cessation · ⏱ fasting timer · 🩺 BP log (`state.wellness.bp`) · risk calculators.
+All four award `V.POINTS.task` once/day via `awardOnce`. i18n keys live in `js/i18n.js` (search `syTitle`/`hrTitle`/`mtTitle`/`moTitle`); styles in `css/app.css` (search `.sy-`/`.hr-`/`.mt-`/`.mo-` and shared `.card-soft`).
+
+**Still to build** (later — each its own screen, brand-styled, points + optional reminder, then commit):
+- 🧍 Posture coach (reuse `js/rep-counter.js` Pose) · 😴 sleep diary · 🚭 smoking-cessation · ⏱ fasting timer · 🩺 BP log (`state.wellness.bp` schema already exists) · risk calculators.
 
 Add each new tool's tile to `V.wellnessTools` only once its screen exists, so the hub never links to a dead route.
 
 ### How to verify (preview)
-Per the mirror workflow above: rsync to `/tmp/vita-preview`, bump `?v=NN` + `sw.js` CACHE, reload with a `?cb=` query, then drive the UI and check `preview_console_logs` for errors. Currently at **v16**.
+Per the mirror workflow above: rsync to `/tmp/vita-preview`, bump `?v=NN` + `sw.js` CACHE, reload with a `?cb=` query, then drive the UI and check `preview_console_logs` for errors. Currently at **v17**. Preview launch config: `.claude/launch.json` (`python3 -m http.server` on the mirror, port 8011).
