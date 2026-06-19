@@ -1263,25 +1263,85 @@
   };
   // anim = CSS class (.ox-*). Each move's emoji + motion is its own visualization.
   var OFFICE_EX = [
-    { id: "neck-tilt",   area: "neck", emoji: "🙆", anim: "ox-sway", secs: 30, name: { ka: "კისრის გვერდითი დახრა", en: "Neck side tilt" }, desc: { ka: "ყური ნელა მხრისკენ დახარე, თითო მხარეს 5 წმ დაიჭირე.", en: "Slowly tilt your ear toward each shoulder, hold 5s per side." } },
-    { id: "neck-turn",   area: "neck", emoji: "🙆", anim: "ox-twist", secs: 30, name: { ka: "კისრის შემოტრიალება", en: "Neck turns" }, desc: { ka: "ნელა მოატრიალე თავი მარცხნივ, შემდეგ მარჯვნივ.", en: "Slowly turn your head left, then right." } },
-    { id: "chin-tuck",   area: "neck", emoji: "😌", anim: "ox-nod", secs: 25, name: { ka: "ნიკაპის ჩაწევა", en: "Chin tucks" }, desc: { ka: "ნიკაპი უკან ჩაიწიე, თითქოს „ორმაგ ნიკაპს“ აკეთებ.", en: "Draw your chin straight back, making a 'double chin'." } },
-    { id: "shoulder-roll", area: "shoulders", emoji: "🤷", anim: "ox-roll", secs: 30, name: { ka: "მხრების ტრიალი", en: "Shoulder rolls" }, desc: { ka: "მხრები დიდი წრეებით ატრიალე უკან.", en: "Roll your shoulders backward in big circles." } },
-    { id: "shoulder-shrug", area: "shoulders", emoji: "🤷", anim: "ox-bob", secs: 25, name: { ka: "მხრების აწევა", en: "Shoulder shrugs" }, desc: { ka: "მხრები ყურებამდე ასწიე, 3 წმ დაიჭირე, ჩამოუშვი.", en: "Lift shoulders to your ears, hold 3s, release." } },
-    { id: "chest-open",  area: "shoulders", emoji: "🧘", anim: "ox-stretch", secs: 30, name: { ka: "გულმკერდის გახსნა", en: "Chest opener" }, desc: { ka: "ხელები ზურგს უკან გადააჯვარედინე და გულმკერდი გახსენი.", en: "Clasp your hands behind you and open your chest." } },
-    { id: "upper-back",  area: "back", emoji: "🙇", anim: "ox-lean", secs: 30, name: { ka: "ზედა ზურგის გაჭიმვა", en: "Upper-back stretch" }, desc: { ka: "ხელები წინ გაიწიე და ზედა ზურგი მოამრგვალე.", en: "Reach your arms forward and round your upper back." } },
-    { id: "torso-twist", area: "back", emoji: "🧍", anim: "ox-twist", secs: 30, name: { ka: "ტანის შემოტრიალება", en: "Seated torso twist" }, desc: { ka: "სკამზე მჯდომი ნელა შემოტრიალდი თითო მხარეს.", en: "Sitting tall, slowly twist your torso to each side." } },
-    { id: "side-stretch", area: "back", emoji: "🙆", anim: "ox-sway", secs: 30, name: { ka: "გვერდითი გაჭიმვა", en: "Seated side stretch" }, desc: { ka: "ერთი ხელი მაღლა ასწიე და ტანი გვერდზე დახარე.", en: "Raise one arm overhead and lean to the side." } },
-    { id: "wrist-circles", area: "wrists", emoji: "🤚", anim: "ox-roll", secs: 25, name: { ka: "მაჯების ტრიალი", en: "Wrist circles" }, desc: { ka: "მაჯები ორივე მიმართულებით ნელა ატრიალე.", en: "Circle your wrists slowly in both directions." } },
-    { id: "wrist-stretch", area: "wrists", emoji: "🤚", anim: "ox-pulse", secs: 25, name: { ka: "მაჯის გაჭიმვა", en: "Wrist stretch" }, desc: { ka: "ხელი წინ გაშალე, თითები მეორე ხელით ნაზად უკან გაჭიმე.", en: "Extend an arm, gently pull the fingers back with the other hand." } },
-    { id: "finger-stretch", area: "wrists", emoji: "✋", anim: "ox-pulse", secs: 20, name: { ka: "თითების გაშლა", en: "Finger spread" }, desc: { ka: "თითები ფართოდ გაშალე, შემდეგ მუშტად მოკუმე — გაიმეორე.", en: "Spread your fingers wide, then make a fist — repeat." } },
-    { id: "leg-raise",   area: "legs", emoji: "🦵", anim: "ox-bob", secs: 30, name: { ka: "ფეხის აწევა", en: "Seated leg raises" }, desc: { ka: "სკამზე მჯდომი თითო ფეხი გაასწორე და 3 წმ დაიჭირე.", en: "Sitting down, straighten one leg and hold 3s." } },
-    { id: "ankle-circles", area: "legs", emoji: "🦶", anim: "ox-roll", secs: 25, name: { ka: "ტერფების ტრიალი", en: "Ankle circles" }, desc: { ka: "ფეხი ასწიე და ტერფი ორივე მიმართულებით ატრიალე.", en: "Lift a foot and circle the ankle both ways." } },
-    { id: "calf-raise",  area: "legs", emoji: "🦵", anim: "ox-bob", secs: 30, name: { ka: "წვივების აწევა", en: "Calf raises" }, desc: { ka: "წამოდექი და ცერებზე ნელა ადი-ჩამოდი.", en: "Stand and slowly rise onto your toes and back down." } },
-    { id: "hip-march",   area: "legs", emoji: "🚶", anim: "ox-bob", secs: 30, name: { ka: "ადგილზე ნაბიჯი", en: "Seated marching" }, desc: { ka: "სკამზე მჯდომი მონაცვლეობით ასწიე მუხლები.", en: "Sitting tall, lift your knees alternately like marching." } },
-    { id: "stand-reach", area: "full", emoji: "🙆", anim: "ox-stretch", secs: 25, name: { ka: "წამოდექი და გაიწიე", en: "Stand & reach" }, desc: { ka: "წამოდექი, ხელები მაღლა გაიწიე და მთელი სხეული გაჭიმე.", en: "Stand up, reach overhead and stretch your whole body tall." } },
-    { id: "deep-breath", area: "full", emoji: "😮‍💨", anim: "ox-breathe", secs: 30, name: { ka: "ღრმა სუნთქვა", en: "Deep breathing" }, desc: { ka: "4 წმ ჩაისუნთქე ცხვირით, 4 წმ ნელა ამოისუნთქე.", en: "Breathe in through the nose 4s, exhale slowly 4s." } },
+    { id: "neck-tilt",   area: "neck", fig: "headTilt", secs: 30, name: { ka: "კისრის გვერდითი დახრა", en: "Neck side tilt" }, desc: { ka: "ყური ნელა მხრისკენ დახარე, თითო მხარეს 5 წმ დაიჭირე.", en: "Slowly tilt your ear toward each shoulder, hold 5s per side." } },
+    { id: "neck-turn",   area: "neck", fig: "headTurn", secs: 30, name: { ka: "კისრის შემოტრიალება", en: "Neck turns" }, desc: { ka: "ნელა მოატრიალე თავი მარცხნივ, შემდეგ მარჯვნივ.", en: "Slowly turn your head left, then right." } },
+    { id: "chin-tuck",   area: "neck", fig: "headTuck", secs: 25, name: { ka: "ნიკაპის ჩაწევა", en: "Chin tucks" }, desc: { ka: "ნიკაპი უკან ჩაიწიე, თითქოს „ორმაგ ნიკაპს“ აკეთებ.", en: "Draw your chin straight back, making a 'double chin'." } },
+    { id: "shoulder-roll", area: "shoulders", fig: "shoulderRoll", secs: 30, name: { ka: "მხრების ტრიალი", en: "Shoulder rolls" }, desc: { ka: "მხრები დიდი წრეებით ატრიალე უკან.", en: "Roll your shoulders backward in big circles." } },
+    { id: "shoulder-shrug", area: "shoulders", fig: "shrug", secs: 25, name: { ka: "მხრების აწევა", en: "Shoulder shrugs" }, desc: { ka: "მხრები ყურებამდე ასწიე, 3 წმ დაიჭირე, ჩამოუშვი.", en: "Lift shoulders to your ears, hold 3s, release." } },
+    { id: "chest-open",  area: "shoulders", fig: "armsBack", secs: 30, name: { ka: "გულმკერდის გახსნა", en: "Chest opener" }, desc: { ka: "ხელები ზურგს უკან გადააჯვარედინე და გულმკერდი გახსენი.", en: "Clasp your hands behind you and open your chest." } },
+    { id: "upper-back",  area: "back", fig: "leanForward", secs: 30, name: { ka: "ზედა ზურგის გაჭიმვა", en: "Upper-back stretch" }, desc: { ka: "ხელები წინ გაიწიე და ზედა ზურგი მოამრგვალე.", en: "Reach your arms forward and round your upper back." } },
+    { id: "torso-twist", area: "back", fig: "twist", secs: 30, name: { ka: "ტანის შემოტრიალება", en: "Seated torso twist" }, desc: { ka: "სკამზე მჯდომი ნელა შემოტრიალდი თითო მხარეს.", en: "Sitting tall, slowly twist your torso to each side." } },
+    { id: "side-stretch", area: "back", fig: "sideStretch", secs: 30, name: { ka: "გვერდითი გაჭიმვა", en: "Seated side stretch" }, desc: { ka: "ერთი ხელი მაღლა ასწიე და ტანი გვერდზე დახარე.", en: "Raise one arm overhead and lean to the side." } },
+    { id: "wrist-circles", area: "wrists", fig: "wristCircle", secs: 25, name: { ka: "მაჯების ტრიალი", en: "Wrist circles" }, desc: { ka: "მაჯები ორივე მიმართულებით ნელა ატრიალე.", en: "Circle your wrists slowly in both directions." } },
+    { id: "wrist-stretch", area: "wrists", fig: "handsPulse", secs: 25, name: { ka: "მაჯის გაჭიმვა", en: "Wrist stretch" }, desc: { ka: "ხელი წინ გაშალე, თითები მეორე ხელით ნაზად უკან გაჭიმე.", en: "Extend an arm, gently pull the fingers back with the other hand." } },
+    { id: "finger-stretch", area: "wrists", fig: "handsPulse", secs: 20, name: { ka: "თითების გაშლა", en: "Finger spread" }, desc: { ka: "თითები ფართოდ გაშალე, შემდეგ მუშტად მოკუმე — გაიმეორე.", en: "Spread your fingers wide, then make a fist — repeat." } },
+    { id: "leg-raise",   area: "legs", fig: "legRaise", secs: 30, name: { ka: "ფეხის აწევა", en: "Seated leg raises" }, desc: { ka: "სკამზე მჯდომი თითო ფეხი გაასწორე და 3 წმ დაიჭირე.", en: "Sitting down, straighten one leg and hold 3s." } },
+    { id: "ankle-circles", area: "legs", fig: "ankleCircle", secs: 25, name: { ka: "ტერფების ტრიალი", en: "Ankle circles" }, desc: { ka: "ფეხი ასწიე და ტერფი ორივე მიმართულებით ატრიალე.", en: "Lift a foot and circle the ankle both ways." } },
+    { id: "calf-raise",  area: "legs", fig: "calfRaise", secs: 30, name: { ka: "წვივების აწევა", en: "Calf raises" }, desc: { ka: "წამოდექი და ცერებზე ნელა ადი-ჩამოდი.", en: "Stand and slowly rise onto your toes and back down." } },
+    { id: "hip-march",   area: "legs", fig: "march", secs: 30, name: { ka: "ადგილზე ნაბიჯი", en: "Seated marching" }, desc: { ka: "სკამზე მჯდომი მონაცვლეობით ასწიე მუხლები.", en: "Sitting tall, lift your knees alternately like marching." } },
+    { id: "stand-reach", area: "full", fig: "reachUp", secs: 25, name: { ka: "წამოდექი და გაიწიე", en: "Stand & reach" }, desc: { ka: "წამოდექი, ხელები მაღლა გაიწიე და მთელი სხეული გაჭიმე.", en: "Stand up, reach overhead and stretch your whole body tall." } },
+    { id: "deep-breath", area: "full", fig: "breathe", secs: 30, name: { ka: "ღრმა სუნთქვა", en: "Deep breathing" }, desc: { ka: "4 წმ ჩაისუნთქე ცხვირით, 4 წმ ნელა ამოისუნთქე.", en: "Breathe in through the nose 4s, exhale slowly 4s." } },
   ];
+
+  /* ---------- human SVG figure builder — one animated pose per motion ---------- */
+  var OXC = { sk: "#e9b78c", sk2: "#f0c8a0", gr: "#2BA94C", gr2: "#1f8a3f", hr: "#4a3526", shoe: "#2f3640", eye: "#3a2a20" };
+  function oxP(d, c, w) { return '<path d="' + d + '" stroke="' + c + '" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'; }
+  function oxShoe(x, y) { return '<ellipse cx="' + x + '" cy="' + y + '" rx="8" ry="5" fill="' + OXC.shoe + '"/>'; }
+  function oxLegs() { return oxP("M54 98 L50 138", OXC.sk, 11) + oxP("M66 98 L70 138", OXC.sk, 11) + oxShoe(49, 140) + oxShoe(71, 140); }
+  function oxShorts() { return '<rect x="46" y="82" width="28" height="18" rx="7" fill="' + OXC.gr2 + '"/>'; }
+  function oxTorso(cls) { return '<rect ' + (cls ? 'class="' + cls + '" ' : "") + 'x="44" y="54" width="32" height="36" rx="14" fill="' + OXC.gr + '"/>'; }
+  function oxHead() { return '<rect x="55" y="48" width="10" height="9" rx="4" fill="' + OXC.sk + '"/><circle cx="60" cy="34" r="15" fill="' + OXC.sk2 + '"/><path d="M46 32 a14 14 0 0 1 28 0 l-3 -2 a12 12 0 0 0 -22 0 z" fill="' + OXC.hr + '"/><circle cx="55" cy="35" r="1.8" fill="' + OXC.eye + '"/><circle cx="65" cy="35" r="1.8" fill="' + OXC.eye + '"/>'; }
+  function oxArmsDown() { return oxP("M48 60 L40 86", OXC.sk, 9) + oxP("M72 60 L80 86", OXC.sk, 9); }
+  // animateTransform: smooth eased loop (or linear for continuous circles)
+  function oxAT(type, vals, dur, linear) {
+    if (linear) return '<animateTransform attributeName="transform" type="' + type + '" values="' + vals + '" dur="' + dur + 's" repeatCount="indefinite" calcMode="linear"/>';
+    var n = vals.split(";").length - 1, ks = [];
+    for (var i = 0; i < n; i++) ks.push("0.4 0 0.6 1");
+    return '<animateTransform attributeName="transform" type="' + type + '" values="' + vals + '" dur="' + dur + 's" repeatCount="indefinite" calcMode="spline" keySplines="' + ks.join(";") + '"/>';
+  }
+  function oxG(anim, inner) { return "<g>" + anim + inner + "</g>"; }
+
+  var OX_FIG = {
+    headTilt: function () { return oxLegs() + oxShorts() + oxArmsDown() + oxTorso() + oxG(oxAT("rotate", "-12 60 53;-12 60 53;12 60 53;12 60 53;-12 60 53", 3.4), oxHead()); },
+    headTurn: function () { return oxLegs() + oxShorts() + oxArmsDown() + oxTorso() + '<g class="ox-turn">' + oxHead() + "</g>"; },
+    headTuck: function () { return oxLegs() + oxShorts() + oxArmsDown() + oxTorso() + oxG(oxAT("rotate", "8 60 52;8 60 52;-7 60 52;8 60 52;8 60 52", 2.8), oxHead()); },
+    shoulderRoll: function () { return oxLegs() + oxShorts() + oxTorso() + oxHead() + oxG(oxAT("translate", "0 -3;3 0;0 4;-3 0;0 -3", 2.8, true), oxP("M47 59 L43 76 L48 90", OXC.sk, 9) + oxP("M73 59 L77 76 L72 90", OXC.sk, 9)); },
+    shrug: function () { return oxLegs() + oxShorts() + oxTorso() + oxHead() + oxG(oxAT("translate", "0 3;0 3;0 -5;0 -5;0 3", 2.4), oxArmsDown()); },
+    armsBack: function () { return oxLegs() + oxShorts() +
+      oxG(oxAT("rotate", "0 50 58;0 50 58;20 50 58;0 50 58;0 50 58", 2.8), oxP("M50 58 L40 82", OXC.sk, 9)) +
+      oxG(oxAT("rotate", "0 70 58;0 70 58;-20 70 58;0 70 58;0 70 58", 2.8), oxP("M70 58 L80 82", OXC.sk, 9)) +
+      oxTorso() + oxHead(); },
+    leanForward: function () { return oxLegs() + oxShorts() + oxG(oxAT("rotate", "0 60 92;0 60 92;12 60 92;12 60 92;0 60 92", 3),
+      oxP("M50 60 L58 82", OXC.sk, 9) + oxP("M70 60 L62 82", OXC.sk, 9) + oxTorso() + oxHead()); },
+    twist: function () { return oxLegs() + oxShorts() + '<g class="ox-twist">' + oxArmsDown() + oxTorso() + oxHead() + "</g>"; },
+    sideStretch: function () { return oxLegs() + oxShorts() + oxG(oxAT("rotate", "0 60 96;0 60 96;13 60 96;13 60 96;0 60 96", 3.6),
+      oxP("M48 58 L42 84", OXC.sk, 9) + oxP("M72 56 L82 26", OXC.sk, 9) + oxTorso() + oxHead()); },
+    wristCircle: function () { return oxLegs() + oxShorts() + oxTorso() + oxHead() +
+      oxP("M48 60 L50 78", OXC.sk, 9) + oxP("M72 60 L70 78", OXC.sk, 9) +
+      oxG(oxAT("rotate", "0 50 78;360 50 78", 2.6, true), oxP("M50 78 L57 67", OXC.sk, 8)) +
+      oxG(oxAT("rotate", "0 70 78;360 70 78", 2.6, true), oxP("M70 78 L63 67", OXC.sk, 8)); },
+    handsPulse: function () { return oxLegs() + oxShorts() + oxTorso() + oxHead() +
+      '<g class="ox-pulse-c">' + oxP("M48 60 L52 78 L60 72", OXC.sk, 9) + oxP("M72 60 L68 78 L60 72", OXC.sk, 9) + "</g>"; },
+    legRaise: function () { return oxArmsDown() + oxTorso() + oxHead() + oxShorts() + oxP("M54 98 L50 138", OXC.sk, 11) + oxShoe(49, 140) +
+      oxG(oxAT("rotate", "0 64 96;0 64 96;-34 64 96;0 64 96;0 64 96", 3.2), oxP("M64 96 L70 134", OXC.sk, 11) + oxShoe(71, 140)); },
+    ankleCircle: function () { return oxArmsDown() + oxTorso() + oxHead() + oxShorts() + oxP("M54 98 L50 138", OXC.sk, 11) + oxShoe(49, 140) +
+      oxP("M66 98 L70 126", OXC.sk, 11) + oxG(oxAT("rotate", "0 70 128;360 70 128", 2.4, true), oxShoe(70, 134)); },
+    calfRaise: function () { return '<ellipse cx="49" cy="143" rx="8" ry="4" fill="' + OXC.shoe + '" opacity="0.28"/><ellipse cx="71" cy="143" rx="8" ry="4" fill="' + OXC.shoe + '" opacity="0.28"/>' +
+      oxG(oxAT("translate", "0 0;0 0;0 -11;0 0;0 0", 2), oxLegs() + oxShorts() + oxArmsDown() + oxTorso() + oxHead()); },
+    march: function () { return oxArmsDown() + oxTorso() + oxHead() + oxShorts() +
+      oxG(oxAT("translate", "0 0;0 -9;0 0;0 0;0 0", 1.7), oxP("M54 98 L50 138", OXC.sk, 11) + oxShoe(49, 140)) +
+      oxG(oxAT("translate", "0 0;0 0;0 0;0 -9;0 0", 1.7), oxP("M66 98 L70 138", OXC.sk, 11) + oxShoe(71, 140)); },
+    reachUp: function () { return oxLegs() + oxShorts() + oxG(oxAT("translate", "0 2;0 2;0 -3;0 2;0 2", 3),
+      oxP("M48 58 L53 24", OXC.sk, 9) + oxP("M72 58 L67 24", OXC.sk, 9) + oxTorso() + oxHead()); },
+    breathe: function () { return oxLegs() + oxShorts() +
+      oxG(oxAT("rotate", "0 60 60;0 60 60;-13 60 60;0 60 60;0 60 60", 4.5), oxP("M50 60 L41 83", OXC.sk, 9)) +
+      oxG(oxAT("rotate", "0 60 60;0 60 60;13 60 60;0 60 60;0 60 60", 4.5), oxP("M70 60 L79 83", OXC.sk, 9)) +
+      oxTorso("ox-breathe-c") + oxHead(); },
+  };
+  function figureSVG(kind) {
+    var build = OX_FIG[kind] || OX_FIG.headTilt;
+    return '<svg viewBox="0 0 120 150" class="ox-fig" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' + build() + "</svg>";
+  }
 
   V.screens.posture = function () {
     var w = W(); w.posture = w.posture || {};
@@ -1303,7 +1363,7 @@
           byArea[a].map(function (i) {
             var ex = OFFICE_EX[i];
             return '<button class="ox-card" data-ex="' + i + '">' +
-              '<span class="ox-vis"><span class="ox-emoji ' + ex.anim + '">' + ex.emoji + "</span></span>" +
+              '<span class="ox-vis">' + figureSVG(ex.fig) + "</span>" +
               '<span class="ox-card__t"><b>' + L(ex.name) + "</b><small>" + ex.secs + " " + t("poSecs") + " · " + L(OFFICE_AREAS[ex.area]) + "</small></span>" +
               V.icon("back") + "</button>";
           }).join("");
@@ -1342,7 +1402,7 @@
             head("walk", "pink", "poTitle") +
             '<div class="ox-player">' +
               (routine ? '<p class="ox-qmeta">' + (idx + 1) + " / " + queue.length + "</p>" : "") +
-              '<div class="ox-stage"><span class="ox-emoji-lg ' + ex.anim + '" id="oxFig">' + ex.emoji + "</span></div>" +
+              '<div class="ox-stage" id="oxFig">' + figureSVG(ex.fig) + "</div>" +
               '<h2 class="ox-name">' + L(ex.name) + "</h2>" +
               '<p class="ox-desc">' + L(ex.desc) + "</p>" +
               '<div class="ox-timer" id="oxTimer">' + ex.secs + "</div>" +
