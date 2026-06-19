@@ -91,6 +91,10 @@
 | 4 | კალენდრის ვიზუალი + add-to-calendar | საშუალო | ✅ (OAuth — seam) |
 | 5 | კლინიკები + ვიზიტის ფლოუ + post-visit upload | დიდი | ✅ manual; integrated — seam |
 | 6 | კამერით კინეტიკური ვარჯიში | დიდი | ✅ on-device; სიზუსტე მოწყობილობაზე |
-| 7 | vitaapp.ge ბმულები/რეგისტრაცია | მცირე | ⏳ საჭიროა რეალური URL/კონტენტი |
+| 7 | vitaapp.ge ბმულები/რეგისტრაცია | მცირე | ✅ deep-links + account link (seam) |
 
-> საჭიროა შენგან: (ა) vitaapp.ge რეალური მისამართი/კონტენტი; (ბ) კლინიკები ინტეგრირებულია თუ არა (ახლა — manual + seam); (გ) კამერა-ვარჯიში — რეალური pose-დათვლა (MediaPipe) თუ უბრალოდ კამერა+მანუალური დადასტურება.
+> ყველა 7 ფიჩერი აგებულია. დარჩენილი seam-ები (რეალური ინტეგრაციისთვის):
+> (ა) clinics — vitaapp.ge API (ახლა: რეალური თბილისის დემო-კლინიკები + deep-links + `V.clinicsFor` seam);
+> (ბ) კალენდარი — Google OAuth (ახლა: `gcalLink` + `.ics`);
+> (გ) vitaapp.ge — რეალური რეგისტრაცია/SSO (ახლა: deep-link `/register` + email-only account link, `V.linkVitaAccount`);
+> (დ) კამერა-ვარჯიში — MediaPipe Pose on-device (მუშაობს; სიზუსტე მოწყობილობაზეა დამოკიდებული) + manual fallback.
