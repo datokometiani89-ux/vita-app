@@ -185,6 +185,25 @@ window.VITA = window.VITA || {};
     moTSocial: { ka: "სოციალური", en: "Social" },
     moTMoney: { ka: "ფინანსები", en: "Money" },
 
+    /* VITA garden — quests + companion */
+    quTitle: { ka: "ჩემი ბაღი", en: "My garden" },
+    quSub: { ka: "ყოველდღიური ქვესთები ზრდის შენს მცენარეს. შეასრულე და ნახე როგორ აყვავდება.", en: "Daily quests grow your plant. Complete them and watch it flourish." },
+    quQuests: { ka: "დღის ქვესთები", en: "Daily quests" },
+    quNext: { ka: "შემდეგ დონემდე", en: "to next stage" },
+    quMaxed: { ka: "სრულად აყვავებული!", en: "Fully grown!" },
+    quAllDone: { ka: "დღევანდელი ყველა ქვესთი შესრულდა! 🎉", en: "All of today's quests done! 🎉" },
+    quMood: { ka: "ჩაინიშნე განწყობა", en: "Log your mood" },
+    quWater: { ka: "დალიე წყალი", en: "Drink water" },
+    quBreathe: { ka: "სუნთქვის ვარჯიში", en: "Do a breathing exercise" },
+    quMove: { ka: "ოფისის ვარჯიში", en: "Do an office workout" },
+    quTask: { ka: "შეასრულე დღის ამოცანა", en: "Complete a daily task" },
+    quS0: { ka: "თესლი", en: "Seed" },
+    quS1: { ka: "აღმონაცენი", en: "Sprout" },
+    quS2: { ka: "ნერგი", en: "Seedling" },
+    quS3: { ka: "ახალგაზრდა მცენარე", en: "Young plant" },
+    quS4: { ka: "ხე", en: "Tree" },
+    quS5: { ka: "აყვავებული ხე", en: "Blooming tree" },
+
     /* blood-pressure log */
     bpTitle: { ka: "წნევის დღიური", en: "Blood pressure" },
     bpSub: { ka: "ჩაიწერე არტერიული წნევა და პულსი. გაუნძრევლად დაჯექი 5 წუთით გაზომვამდე.", en: "Log your blood pressure and pulse. Sit still for 5 minutes before measuring." },

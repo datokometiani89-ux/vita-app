@@ -820,6 +820,38 @@
 .hm-hist { margin-left: auto; background: none; border: none; color: var(--green); font-weight: 700; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
 .hm-hist svg { width: 15px; height: 15px; }
 
+/* ===== VITA garden — quests + companion ===== */
+.gp-svg { display: block; width: 100%; height: 100%; }
+.gp-sway { transform-box: view-box; transform-origin: 60px 106px; animation: gpSway 4.5s ease-in-out infinite; }
+@keyframes gpSway { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+.garden-card { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 16px; margin-bottom: 18px; background-image: linear-gradient(170deg, color-mix(in srgb, var(--green) 9%, var(--card)), var(--card)); }
+.garden-stage { width: 116px; height: 128px; flex: none; }
+.garden-meta { flex: 1; }
+.garden-meta b { font-size: 18px; display: block; margin-bottom: 8px; }
+.garden-prog { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin-bottom: 6px; }
+.garden-prog span { display: block; height: 100%; background: var(--green); border-radius: 99px; transition: width .4s; }
+.garden-meta small { color: var(--muted); font-size: 13px; }
+.garden-max { color: var(--green) !important; font-weight: 700; }
+.qu-list { display: grid; gap: 9px; }
+.qu-row { display: flex; align-items: center; gap: 13px; width: 100%; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; cursor: pointer; text-align: left; transition: border-color .15s, transform .1s, background .15s; }
+.qu-row:hover { border-color: var(--green); } .qu-row:active { transform: scale(.99); }
+.qu-row.on { background: var(--green-tint); border-color: color-mix(in srgb, var(--green) 35%, var(--line)); }
+.qu-row__t { flex: 1; } .qu-row__t b { font-size: 15px; font-weight: 600; }
+.qu-row.on .qu-row__t b { color: var(--green-dark, #1c7a37); }
+.qu-check { color: var(--green); display: inline-flex; } .qu-check svg { width: 22px; height: 22px; }
+.qu-cta { color: var(--muted); display: inline-flex; } .qu-cta svg { width: 18px; height: 18px; transform: rotate(180deg); }
+
+/* home garden card */
+.garden-home { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 18px; cursor: pointer; background-image: linear-gradient(170deg, color-mix(in srgb, var(--green) 9%, var(--card)), var(--card)); transition: border-color .15s, transform .1s; }
+.garden-home:hover { border-color: var(--green); } .garden-home:active { transform: scale(.99); }
+.garden-home__plant { width: 56px; height: 62px; flex: none; }
+.garden-home__t { flex: 1; }
+.garden-home__t b { display: block; font-size: 15px; }
+.garden-home__t small { color: var(--muted); font-size: 12.5px; }
+.garden-home__bar { display: block; height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+.garden-home__bar span { display: block; height: 100%; background: var(--green); border-radius: 99px; }
+.garden-home > svg:last-child { color: var(--muted); width: 18px; transform: rotate(180deg); flex: none; }
+
 /* ===== blood pressure + shared inputs ===== */
 .bp-row { display: flex; gap: 12px; }
 .bp-field { flex: 1; display: block; }

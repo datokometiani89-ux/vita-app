@@ -55,6 +55,10 @@ window.VITA = window.VITA || {};
     chat: [],             // [{role:"user"|"vita", text}]
     vitaAccount: { connected: false, email: "", plan: "" }, // link to vitaapp.ge
     auth: null,           // { provider:"google"|"facebook"|"email", name, email, connected }
+    companion: {          // VITA garden — daily quests grow a virtual plant
+      grow: 0,            // lifetime growth points (each completed daily quest +1)
+      credited: {},       // per-day guards { "2026-06-20:mood": true, "2026-06-20:__all": true }
+    },
     wellness: {           // wellness micro-tools
       eyeLog: {},         // { "2026-06-19": true } days an eye session was completed
       amsler: null,       // { date, result:"normal"|"distortion" }

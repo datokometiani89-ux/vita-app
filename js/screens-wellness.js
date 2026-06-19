@@ -1555,6 +1555,132 @@
     renderList();
   };
 
+  /* ===================== VITA GARDEN — daily quests + growing plant ===================== */
+  var GROW_THRESH = [0, 3, 8, 15, 25, 40]; // grow points needed to reach each of 6 stages
+
+  function companion() { return (V.state.companion = V.state.companion || { grow: 0, credited: {} }); }
+
+  // today's daily quests, completion derived from existing app state (no double-tracking)
+  V.dailyQuests = function () {
+    var d = today(), w = V.state.wellness || {};
+    return [
+      { id: "mood",    icon: "smile", key: "quMood",    route: "mood",    done: !!(w.mood && w.mood[d]) },
+      { id: "water",   icon: "drop",  key: "quWater",   route: "plan",    done: (V.waterToday ? V.waterToday() : 0) > 0 },
+      { id: "breathe", icon: "lungs", key: "quBreathe", route: "breathe", done: !!(w.breatheLog && w.breatheLog[d]) },
+      { id: "move",    icon: "walk",  key: "quMove",    route: "posture", done: (Number((w.posture || {})[d]) || 0) > 0 },
+      { id: "task",    icon: "check", key: "quTask",    route: "plan",    done: ((V.state.doneTasks || {})[d] || []).length > 0 },
+    ];
+  };
+  // accrue plant growth for any newly-completed quests; daily all-done bonus once
+  V.creditQuests = function () {
+    var c = companion(); c.credited = c.credited || {};
+    var d = today(), changed = false, quests = V.dailyQuests();
+    quests.forEach(function (q) {
+      var k = d + ":" + q.id;
+      if (q.done && !c.credited[k]) { c.credited[k] = true; c.grow = (c.grow || 0) + 1; changed = true; }
+    });
+    if (quests.every(function (q) { return q.done; }) && !c.credited[d + ":__all"]) {
+      c.credited[d + ":__all"] = true;
+      V.awardOnce && V.awardOnce("quests:" + d, V.POINTS.task, "task");
+      changed = true;
+    }
+    if (changed) V.save();
+    return c;
+  };
+  V.companionStage = function () {
+    var g = companion().grow || 0, s = 0;
+    for (var i = 0; i < GROW_THRESH.length; i++) if (g >= GROW_THRESH[i]) s = i;
+    return s;
+  };
+  V.companionProgress = function () {
+    var g = companion().grow || 0, s = V.companionStage();
+    if (s >= GROW_THRESH.length - 1) return { stage: s, max: true };
+    return { stage: s, cur: g - GROW_THRESH[s], need: GROW_THRESH[s + 1] - GROW_THRESH[s], max: false };
+  };
+
+  function leaf(x, y, d) { return '<path d="M' + x + " " + y + " q" + (d * 11) + " -5 " + (d * 17) + " -1 q" + (d * -5) + " 7 " + (d * -17) + ' 1 z" fill="#3cb85f"/>'; }
+  function flower(x, y) { return '<circle cx="' + x + '" cy="' + y + '" r="3.6" fill="#f4c542"/><circle cx="' + x + '" cy="' + y + '" r="1.5" fill="#e89a3c"/>'; }
+  function plantSVG(stage) {
+    var spec = [
+      { h: 8,  pairs: 1, canopy: 0 }, { h: 22, pairs: 1, canopy: 0 }, { h: 36, pairs: 2, canopy: 0 },
+      { h: 48, pairs: 3, canopy: 0 }, { h: 50, pairs: 0, canopy: 1 }, { h: 54, pairs: 1, canopy: 2 },
+    ][stage] || { h: 8, pairs: 1, canopy: 0 };
+    var topY = 106 - spec.h, inner = "";
+    inner += '<path d="M60 106 V' + topY + '" stroke="#1f8a3f" stroke-width="' + (stage >= 4 ? 5 : 3) + '" stroke-linecap="round" fill="none"/>';
+    for (var i = 0; i < spec.pairs; i++) {
+      var ly = 102 - (i + 1) * (spec.h / (spec.pairs + 1));
+      inner += leaf(60, ly, -1) + leaf(60, ly, 1);
+    }
+    if (spec.canopy) {
+      inner += '<circle cx="50" cy="' + (topY + 6) + '" r="12" fill="#2BA94C"/><circle cx="70" cy="' + (topY + 6) + '" r="12" fill="#2BA94C"/><circle cx="60" cy="' + (topY - 3) + '" r="16" fill="#3cb85f"/>';
+      if (spec.canopy > 1) inner += flower(51, topY - 2) + flower(68, topY) + flower(60, topY - 12) + flower(60, topY + 8);
+    } else if (stage >= 1) {
+      inner += '<circle cx="60" cy="' + topY + '" r="3.6" fill="#3cb85f"/>';
+    }
+    return '<svg viewBox="0 0 120 132" class="gp-svg" aria-hidden="true">' +
+      '<ellipse cx="60" cy="124" rx="30" ry="5" fill="#000" opacity="0.06"/>' +
+      '<g class="gp-sway">' + inner + "</g>" +
+      '<path d="M45 110 L75 110 L71 127 Q71 129 69 129 L51 129 Q49 129 49 127 Z" fill="#c97b4a"/>' +
+      '<rect x="42" y="104" width="36" height="8" rx="3" fill="#d98a58"/>' +
+      '<ellipse cx="60" cy="106" rx="15" ry="2.6" fill="#5b3a29"/></svg>';
+  }
+
+  V.screens.quests = function () {
+    V.creditQuests();
+    var stage = V.companionStage(), prog = V.companionProgress(), quests = V.dailyQuests();
+    var doneN = quests.filter(function (q) { return q.done; }).length;
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("quTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("quSub") + "</p>" +
+        '<div class="garden-card">' +
+          '<div class="garden-stage">' + plantSVG(stage) + "</div>" +
+          '<div class="garden-meta"><b>' + t("quS" + stage) + "</b>" +
+            (prog.max ? '<small class="garden-max">🌿 ' + t("quMaxed") + "</small>"
+              : '<div class="garden-prog"><span style="width:' + Math.round(prog.cur / prog.need * 100) + '%"></span></div>' +
+                '<small>' + prog.cur + " / " + prog.need + " " + t("quNext") + "</small>") +
+          "</div>" +
+        "</div>" +
+        '<div class="section-head"><h3>' + t("quQuests") + "</h3><small>" + doneN + " / " + quests.length + "</small></div>" +
+        (doneN === quests.length ? '<div class="note-ok" style="margin-bottom:12px">' + V.icon("check") + " " + t("quAllDone") + "</div>" : "") +
+        '<div class="qu-list">' + quests.map(function (q) {
+          return '<button class="qu-row' + (q.done ? " on" : "") + '" data-q-go="' + q.route + '">' +
+            V.iconBox(q.icon, q.done ? "green" : "gray") +
+            '<div class="qu-row__t"><b>' + t(q.key) + "</b></div>" +
+            (q.done ? '<span class="qu-check">' + V.icon("check") + "</span>" : '<span class="qu-cta">' + V.icon("next") + "</span>") +
+            "</button>";
+        }).join("") + "</div>" +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        var b = $("[data-x]"); if (b) b.addEventListener("click", function () { V.go("home"); });
+        each("[data-q-go]", function (r) { r.addEventListener("click", function () { V.go(r.getAttribute("data-q-go")); }); });
+      }}
+    );
+  };
+
+  // compact home card linking to the garden
+  V.gardenHomeCard = function () {
+    V.creditQuests();
+    var stage = V.companionStage(), prog = V.companionProgress(), quests = V.dailyQuests();
+    var doneN = quests.filter(function (q) { return q.done; }).length;
+    var pct = prog.max ? 100 : Math.round(prog.cur / prog.need * 100);
+    return '<button class="card-soft garden-home" id="gardenHome">' +
+      '<span class="garden-home__plant">' + plantSVG(stage) + "</span>" +
+      '<span class="garden-home__t"><b>' + t("quTitle") + " · " + t("quS" + stage) + "</b>" +
+        "<small>" + doneN + " / " + quests.length + " " + t("quQuests") + "</small>" +
+        '<span class="garden-home__bar"><span style="width:' + pct + '%"></span></span></span>' +
+      V.icon("next") + "</button>";
+  };
+  V.wireGardenHome = function () {
+    var c = document.getElementById("gardenHome");
+    if (c) c.addEventListener("click", function () { V.go("quests"); });
+  };
+
   /* ---------- small shared helpers for the new screens ---------- */
   function head(icon, tone, titleKey) {
     return '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' +

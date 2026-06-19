@@ -54,6 +54,7 @@
             '<div class="metric__sub">' + (bmiSt === "good" ? t("normal") : t("caution")) + "</div></div>" +
         "</div>" +
         (V.moodHomeCard ? '<div class="kicker" style="margin:22px 0 10px">' + t("moHome") + "</div>" + V.moodHomeCard() : "") +
+        (V.gardenHomeCard ? V.gardenHomeCard() : "") +
         nextScreeningCard() +
         '<div class="kicker" style="margin:22px 0 10px">' + t("areas") + "</div>" +
         '<div class="list-card">' +
@@ -76,6 +77,7 @@
         var ns = $("[data-next-screening]");
         if (ns) ns.addEventListener("click", function () { V.go("annual"); });
         if (V.wireMoodHome) V.wireMoodHome();
+        if (V.wireGardenHome) V.wireGardenHome();
       }}
     );
 
