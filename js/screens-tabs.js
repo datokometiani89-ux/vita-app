@@ -53,6 +53,7 @@
             '<div class="metric__lbl">' + t("bmi") + '</div>' +
             '<div class="metric__sub">' + (bmiSt === "good" ? t("normal") : t("caution")) + "</div></div>" +
         "</div>" +
+        (V.readinessHomeCard ? '<div class="kicker" style="margin:22px 0 10px">' + t("rdHome") + "</div>" + V.readinessHomeCard() : "") +
         (V.moodHomeCard ? '<div class="kicker" style="margin:22px 0 10px">' + t("moHome") + "</div>" + V.moodHomeCard() : "") +
         (V.gardenHomeCard ? V.gardenHomeCard() : "") +
         nextScreeningCard() +
@@ -76,6 +77,7 @@
         if (rw) rw.addEventListener("click", function () { V.go("rewards"); });
         var ns = $("[data-next-screening]");
         if (ns) ns.addEventListener("click", function () { V.go("annual"); });
+        if (V.wireReadinessHome) V.wireReadinessHome();
         if (V.wireMoodHome) V.wireMoodHome();
         if (V.wireGardenHome) V.wireGardenHome();
       }}

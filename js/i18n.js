@@ -204,6 +204,25 @@ window.VITA = window.VITA || {};
     quS4: { ka: "ხე", en: "Tree" },
     quS5: { ka: "აყვავებული ხე", en: "Blooming tree" },
 
+    /* readiness — daily score + baseline insights */
+    rdTitle: { ka: "მზადყოფნა", en: "Readiness" },
+    rdHome: { ka: "დღევანდელი მზადყოფნა", en: "Today's readiness" },
+    rdSub: { ka: "დღევანდელი მდგომარეობა შენი მონაცემებით — ძილი, განწყობა, აქტივობა, გულისცემა.", en: "Today's state from your data — sleep, mood, activity, heart rate." },
+    rdReady: { ka: "მზად ხარ", en: "Ready" },
+    rdModerate: { ka: "ზომიერი", en: "Moderate" },
+    rdRecover: { ka: "დაისვენე", en: "Recover" },
+    rdFactors: { ka: "რა მოქმედებს", en: "What's affecting it" },
+    rdSleep: { ka: "ძილი", en: "Sleep" },
+    rdMood: { ka: "განწყობა", en: "Mood" },
+    rdActivity: { ka: "აქტივობა", en: "Activity" },
+    rdHR: { ka: "მოსვენებული გულისცემა", en: "Resting heart rate" },
+    rdInsights: { ka: "შენს ნორმასთან შედარება", en: "Vs your baseline" },
+    rdBaseline: { ka: "ნორმა", en: "baseline" },
+    rdAbove: { ka: "ნორმაზე მაღლა", en: "above usual" },
+    rdBelow: { ka: "ნორმაზე დაბლა", en: "below usual" },
+    rdNormal: { ka: "ნორმის ფარგლებში", en: "Within usual" },
+    rdDisc: { ka: "ეს wellness შეფასებაა, არა სამედიცინო დიაგნოზი.", en: "This is a wellness estimate, not a medical diagnosis." },
+
     /* blood-pressure log */
     bpTitle: { ka: "წნევის დღიური", en: "Blood pressure" },
     bpSub: { ka: "ჩაიწერე არტერიული წნევა და პულსი. გაუნძრევლად დაჯექი 5 წუთით გაზომვამდე.", en: "Log your blood pressure and pulse. Sit still for 5 minutes before measuring." },

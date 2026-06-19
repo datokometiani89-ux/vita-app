@@ -1681,6 +1681,86 @@
     if (c) c.addEventListener("click", function () { V.go("quests"); });
   };
 
+  /* ===================== READINESS — daily score + baseline insights ===================== */
+  function avg(nums) { return nums.length ? nums.reduce(function (a, b) { return a + b; }, 0) / nums.length : null; }
+  // baseline = personal usual, computed from the prior readings (excludes the latest one)
+  V.hrBaseline = function () { var a = (W().hr || []).slice(0, -1).slice(-14); return a.length ? Math.round(avg(a.map(function (x) { return x.bpm; }))) : null; };
+  V.sleepBaseline = function () { var a = (W().sleep || []).slice(0, -1).slice(-14); return a.length ? Math.round(avg(a.map(function (x) { return x.hours; })) * 10) / 10 : null; };
+  V.bpBaseline = function () { var a = (W().bp || []).slice(0, -1).slice(-14); return a.length ? { sys: Math.round(avg(a.map(function (x) { return x.sys; }))), dia: Math.round(avg(a.map(function (x) { return x.dia; }))) } : null; };
+
+  // composite daily readiness (0-100) from whatever today's data exists
+  V.readiness = function () {
+    var w = W(), d = today(), score = 70, factors = [];
+    function add(key, icon, adj, val) { score += adj; factors.push({ key: key, icon: icon, adj: Math.round(adj), val: val }); }
+    var sl = (w.sleep || []).slice(-1)[0];
+    if (sl) { var h = sl.hours, a = h >= 7 && h <= 9 ? 12 : h >= 6 ? 4 : h >= 5 ? -6 : -14; a += (sl.quality - 3) * 2.5; add("rdSleep", "moon", a, h + t("slHours")); }
+    var mo = (w.mood || {})[d];
+    if (mo) add("rdMood", "smile", (mo.score - 3) * 5, null);
+    var q = V.dailyQuests ? V.dailyQuests().filter(function (x) { return x.done; }).length : 0;
+    add("rdActivity", "walk", (q - 2) * 3, q + "/5");
+    var hrArr = (w.hr || []), hrLast = hrArr.length ? hrArr[hrArr.length - 1].bpm : null, hrBase = V.hrBaseline();
+    if (hrLast && hrBase) { var dev = hrLast - hrBase, a2 = dev <= 3 ? 4 : dev <= 8 ? -3 : -9; add("rdHR", "heart", a2, (dev >= 0 ? "+" : "") + dev + " bpm"); }
+    score = Math.max(25, Math.min(99, Math.round(score)));
+    var band = score >= 75 ? { k: "rdReady", tone: "green" } : score >= 50 ? { k: "rdModerate", tone: "yellow" } : { k: "rdRecover", tone: "crimson" };
+    return { score: score, band: band, factors: factors };
+  };
+
+  // baseline-deviation rows for the detail screen (only metrics with ≥2 logs)
+  function rdInsights() {
+    var w = W(), rows = [];
+    var hr = (w.hr || []);
+    if (hr.length >= 2) { var hl = hr[hr.length - 1].bpm, hb = V.hrBaseline(); rows.push({ icon: "heart", label: "rdHR", last: hl + " bpm", base: hb + " bpm", dev: hl - hb, worseHigh: true, thr: 5 }); }
+    var s = (w.sleep || []);
+    if (s.length >= 2) { var ll = s[s.length - 1].hours, lb = V.sleepBaseline(); rows.push({ icon: "moon", label: "rdSleep", last: ll + t("slHours"), base: lb + t("slHours"), dev: Math.round((ll - lb) * 10) / 10, worseHigh: false, thr: 0.8 }); }
+    var b = (w.bp || []);
+    if (b.length >= 2) { var bl = b[b.length - 1], bb = V.bpBaseline(); rows.push({ icon: "drop", label: "bpTitle", last: bl.sys + "/" + bl.dia, base: bb.sys + "/" + bb.dia, dev: bl.sys - bb.sys, worseHigh: true, thr: 8 }); }
+    return rows;
+  }
+
+  V.screens.readiness = function () {
+    var r = V.readiness(), rows = rdInsights();
+    function devBadge(o) {
+      if (Math.abs(o.dev) < o.thr) return '<span class="rd-dev ok">' + t("rdNormal") + "</span>";
+      var up = o.dev > 0, bad = up === o.worseHigh;
+      return '<span class="rd-dev ' + (bad ? "bad" : "good") + '">' + (up ? "↑" : "↓") + " " + Math.abs(o.dev) + " " + t(up ? "rdAbove" : "rdBelow") + "</span>";
+    }
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("bolt", r.band.tone) + "<h1>" + t("rdTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("rdSub") + "</p>" +
+        '<div class="rd-hero"><div class="rd-ring rd-big rd-tone-' + r.band.tone + '"><b>' + r.score + "</b><small>/100</small></div>" +
+          '<div class="rd-hero__b rd-text-' + r.band.tone + '">' + t(r.band.k) + "</div></div>" +
+        '<div class="section-head"><h3>' + t("rdFactors") + "</h3></div>" +
+        '<div class="rd-factors-list">' + r.factors.map(function (f) {
+          return '<div class="rd-frow">' + V.iconBox(f.icon, f.adj >= 0 ? "green" : "gray") +
+            '<div class="rd-frow__t"><b>' + t(f.key) + "</b>" + (f.val ? "<small>" + f.val + "</small>" : "") + "</div>" +
+            '<span class="rd-adj ' + (f.adj >= 0 ? "pos" : "neg") + '">' + (f.adj >= 0 ? "+" : "") + f.adj + "</span></div>";
+        }).join("") + "</div>" +
+        (rows.length ? '<div class="section-head"><h3>' + t("rdInsights") + "</h3></div>" +
+          '<div class="rd-ins-list">' + rows.map(function (o) {
+            return '<div class="rd-irow">' + V.iconBox(o.icon, "blue") +
+              '<div class="rd-irow__t"><b>' + t(o.label) + "</b><small>" + o.last + " · " + t("rdBaseline") + " " + o.base + "</small></div>" +
+              devBadge(o) + "</div>";
+          }).join("") + "</div>" : "") +
+        '<p class="sy-disc">' + t("rdDisc") + "</p>" +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () { var b = $("[data-x]"); if (b) b.addEventListener("click", function () { V.go("home"); }); } }
+    );
+  };
+
+  V.readinessHomeCard = function () {
+    var r = V.readiness();
+    return '<button class="card-soft rd-home" id="rdHome">' +
+      '<span class="rd-ring rd-tone-' + r.band.tone + '"><b>' + r.score + "</b></span>" +
+      '<span class="rd-home__t"><small>' + t("rdHome") + '</small><b class="rd-text-' + r.band.tone + '">' + t(r.band.k) + "</b></span>" +
+      V.icon("next") + "</button>";
+  };
+  V.wireReadinessHome = function () { var c = document.getElementById("rdHome"); if (c) c.addEventListener("click", function () { V.go("readiness"); }); };
+
   /* ---------- small shared helpers for the new screens ---------- */
   function head(icon, tone, titleKey) {
     return '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' +
