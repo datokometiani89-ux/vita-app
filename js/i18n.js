@@ -870,6 +870,8 @@ window.VITA = window.VITA || {};
     pgWeek: { ka: "კვირა", en: "Week" },
     pgWellness: { ka: "კეთილდღეობის მონაცემები", en: "Your wellness data" },
     pgMoodTrend: { ka: "განწყობის დინამიკა (14 დღე)", en: "Mood trend (14 days)" },
+    pgSleepTrend: { ka: "ძილის დინამიკა", en: "Sleep trend" },
+    chAvg: { ka: "საშ.", en: "avg" },
 
     /* ---------- settings ---------- */
     setTitle: { ka: "პარამეტრები", en: "Settings" },

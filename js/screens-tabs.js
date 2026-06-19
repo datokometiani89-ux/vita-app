@@ -470,19 +470,20 @@
         '<div class="kicker" style="margin:6px 0 10px">' + t("pgWellness") + "</div>" +
         '<div class="pg-grid">' + cards.join("") + "</div>" +
 
-        (moodDates.length ? '<div class="chart-card"><h3>' + t("pgMoodTrend") + "</h3>" +
-          '<div class="mo-chart">' + moodDates.map(function (iso) {
-            var e = ws.mood[iso], m = V.MOODS[(e.score || 1) - 1];
-            return '<div class="mo-bar" title="' + iso + '"><span class="mo-bar__fill tone-' + m.tone + '" style="height:' + (e.score / 5 * 100) + '%"></span><i>' + iso.slice(8) + "</i></div>";
-          }).join("") + "</div></div>" : "") +
+        '<div class="chart-card"><h3>' + t("pgScore") + "</h3>" +
+          '<div class="cap">' + sSeries[0] + " → " + sSeries[weeks - 1] + " · " + t("pgWeek") + " 1–" + weeks + "</div>" +
+          barChart(sSeries) + "</div>" +
 
         '<div class="chart-card"><h3>' + t("pgWeight") + "</h3>" +
           '<div class="cap">' + startW + t("kg") + " → " + curW + t("kg") + "  ·  " + t("target") + " " + tgtW + t("kg") + "</div>" +
           lineChart(wSeries, "#27AE60", tgtW) + "</div>" +
 
-        '<div class="chart-card"><h3>' + t("pgScore") + "</h3>" +
-          '<div class="cap">' + sSeries[0] + " → " + sSeries[weeks - 1] + "</div>" +
-          barChart(sSeries) + "</div>" +
+        (moodDates.length ? '<div class="chart-card"><h3>' + t("pgMoodTrend") + "</h3>" +
+          moodChart(moodDates, ws.mood) + "</div>" : "") +
+
+        (sleepArr.length ? '<div class="chart-card"><h3>' + t("pgSleepTrend") + "</h3>" +
+          '<div class="cap">' + sleepAvg + t("slHours") + " · " + t("slAvg") + "</div>" +
+          sleepChart(sleepArr.slice(-7)) + "</div>" : "") +
       "</div>" +
       V.tabbar("progress") +
       "</div>",
@@ -504,37 +505,87 @@
     return streak;
   }
 
+  // faint horizontal gridlines
+  function chGrid(w, top, bot, padX) {
+    return [0.25, 0.5, 0.75].map(function (f) {
+      var gy = top + f * (bot - top);
+      return '<line x1="' + padX + '" y1="' + gy + '" x2="' + (w - padX) + '" y2="' + gy + '" stroke="var(--line)" stroke-width="1" opacity=".5"/>';
+    }).join("");
+  }
+
   function lineChart(series, color, targetVal) {
-    var w = 320, h = 150, pad = 14;
-    var min = Math.min.apply(null, series.concat([targetVal])) - 2;
-    var max = Math.max.apply(null, series) + 2;
-    var sx = function (i) { return pad + (i / (series.length - 1)) * (w - 2 * pad); };
-    var sy = function (v) { return pad + (1 - (v - min) / (max - min)) * (h - 2 * pad); };
-    var pts = series.map(function (v, i) { return sx(i) + "," + sy(v); }).join(" ");
-    var area = "M" + sx(0) + "," + sy(series[0]) + " L" + pts.replace(/ /g, " L") + " L" + sx(series.length - 1) + "," + (h - pad) + " L" + sx(0) + "," + (h - pad) + " Z";
-    var ty = sy(targetVal);
-    return '<svg viewBox="0 0 ' + w + " " + h + '">' +
-      '<defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + color + '" stop-opacity=".25"/><stop offset="1" stop-color="' + color + '" stop-opacity="0"/></linearGradient></defs>' +
+    var w = 320, h = 156, padX = 16, padTop = 22, padBot = 16;
+    var min = Math.min.apply(null, series.concat([targetVal])) - 1.5;
+    var max = Math.max.apply(null, series.concat([targetVal])) + 1.5;
+    var sx = function (i) { return padX + (i / (series.length - 1)) * (w - 2 * padX); };
+    var sy = function (v) { return padTop + (1 - (v - min) / (max - min)) * (h - padTop - padBot); };
+    var pts = series.map(function (v, i) { return { x: sx(i), y: sy(v) }; });
+    var d = "M" + pts[0].x + "," + pts[0].y;
+    for (var i = 0; i < pts.length - 1; i++) { var cx = (pts[i].x + pts[i + 1].x) / 2; d += " C" + cx + "," + pts[i].y + " " + cx + "," + pts[i + 1].y + " " + pts[i + 1].x + "," + pts[i + 1].y; }
+    var area = d + " L" + pts[pts.length - 1].x + "," + (h - padBot) + " L" + pts[0].x + "," + (h - padBot) + " Z";
+    var ty = sy(targetVal), last = pts[pts.length - 1], first = pts[0];
+    return '<svg viewBox="0 0 ' + w + " " + h + '" class="ln-chart">' +
+      '<defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + color + '" stop-opacity=".22"/><stop offset="1" stop-color="' + color + '" stop-opacity="0"/></linearGradient></defs>' +
+      chGrid(w, padTop, h - padBot, padX) +
       '<path d="' + area + '" fill="url(#lg)"/>' +
-      '<line x1="' + pad + '" y1="' + ty + '" x2="' + (w - pad) + '" y2="' + ty + '" stroke="var(--muted)" stroke-width="1.4" stroke-dasharray="4 4" opacity=".6"/>' +
-      '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
-      series.map(function (v, i) { return '<circle cx="' + sx(i) + '" cy="' + sy(v) + '" r="3.2" fill="' + color + '"/>'; }).join("") +
+      '<line x1="' + padX + '" y1="' + ty + '" x2="' + (w - padX) + '" y2="' + ty + '" stroke="' + color + '" stroke-width="1.3" stroke-dasharray="4 4" opacity=".55"/>' +
+      '<text x="' + (w - padX) + '" y="' + (ty - 5) + '" text-anchor="end" class="ch-ax">' + t("target") + " " + targetVal + "</text>" +
+      '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<circle cx="' + last.x + '" cy="' + last.y + '" r="9" fill="' + color + '" opacity=".18"/><circle cx="' + last.x + '" cy="' + last.y + '" r="4.5" fill="' + color + '"/>' +
+      '<circle cx="' + first.x + '" cy="' + first.y + '" r="3.2" fill="' + color + '" opacity=".55"/>' +
+      '<text x="' + last.x + '" y="' + (last.y - 12) + '" text-anchor="end" class="ch-val" fill="' + color + '">' + series[series.length - 1] + "</text>" +
       "</svg>";
   }
 
   function barChart(series) {
-    var w = 320, h = 150, pad = 14, n = series.length;
-    var max = Math.max.apply(null, series) + 6;
-    var bw = (w - 2 * pad) / n * 0.56;
-    return '<svg viewBox="0 0 ' + w + " " + h + '">' +
+    var w = 320, h = 156, padX = 16, padTop = 22, padBot = 18, n = series.length, max = 100;
+    var bw = (w - 2 * padX) / n * 0.58;
+    return '<svg viewBox="0 0 ' + w + " " + h + '" class="bar-chart">' + chGrid(w, padTop, h - padBot, padX) +
       series.map(function (v, i) {
-        var x = pad + (i + 0.5) * ((w - 2 * pad) / n) - bw / 2;
-        var bh = (v / max) * (h - 2 * pad);
-        var y = h - pad - bh;
+        var x = padX + (i + 0.5) * ((w - 2 * padX) / n) - bw / 2;
+        var bh = (v / max) * (h - padTop - padBot), y = h - padBot - bh;
         var col = v >= 71 ? "#27AE60" : v >= 41 ? "#F2B83B" : "#ED2E7E";
-        return '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '" rx="5" fill="' + col + '" opacity="' + (0.5 + 0.5 * (i / n)) + '"/>';
+        var lbl = (i === 0 || i === n - 1) ? '<text x="' + (x + bw / 2) + '" y="' + (y - 6) + '" text-anchor="middle" class="ch-val" fill="' + col + '">' + v + "</text>" : "";
+        var ax = (i === 0 || i === n - 1) ? '<text x="' + (x + bw / 2) + '" y="' + (h - 5) + '" text-anchor="middle" class="ch-ax">' + t("pgWeek").charAt(0) + (i + 1) + "</text>" : "";
+        return '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '" rx="5" fill="' + col + '" opacity="' + (0.6 + 0.4 * (i / n)) + '"/>' + lbl + ax;
       }).join("") +
       "</svg>";
+  }
+
+  var CH_TONE = { green: "#2BA94C", blue: "#4a90d9", yellow: "#e6b800", crimson: "#e8536b" };
+  function moodChart(dates, moodMap) {
+    var w = 320, h = 150, padX = 16, padTop = 14, padBot = 18, n = dates.length;
+    var bw = (w - 2 * padX) / n * 0.62;
+    var scores = dates.map(function (iso) { return moodMap[iso].score || 1; });
+    var avg = scores.reduce(function (a, b) { return a + b; }, 0) / scores.length;
+    var avgY = padTop + (1 - avg / 5) * (h - padTop - padBot);
+    var bars = dates.map(function (iso, i) {
+      var sc = moodMap[iso].score || 1, m = V.MOODS[sc - 1];
+      var bh = (sc / 5) * (h - padTop - padBot), y = h - padBot - bh;
+      var x = padX + (i + 0.5) * ((w - 2 * padX) / n) - bw / 2;
+      var ax = (i % 3 === 0 || i === n - 1) ? '<text x="' + (x + bw / 2) + '" y="' + (h - 5) + '" text-anchor="middle" class="ch-ax">' + iso.slice(8) + "</text>" : "";
+      return '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '" rx="4" fill="' + (CH_TONE[m.tone] || CH_TONE.green) + '"/>' + ax;
+    }).join("");
+    return '<svg viewBox="0 0 ' + w + " " + h + '" class="bar-chart">' + bars +
+      '<line x1="' + padX + '" y1="' + avgY + '" x2="' + (w - padX) + '" y2="' + avgY + '" stroke="var(--muted)" stroke-dasharray="4 4" stroke-width="1.2" opacity=".6"/>' +
+      '<text x="' + (w - padX) + '" y="' + (avgY - 5) + '" text-anchor="end" class="ch-ax">' + t("chAvg") + " " + (Math.round(avg * 10) / 10) + "</text>" +
+      "</svg>";
+  }
+
+  function sleepChart(arr) {
+    var w = 320, h = 150, padX = 16, padTop = 14, padBot = 18, n = arr.length, max = 10;
+    var bw = (w - 2 * padX) / n * 0.62;
+    var bandTop = padTop + (1 - 9 / max) * (h - padTop - padBot), bandBot = padTop + (1 - 7 / max) * (h - padTop - padBot);
+    var bars = arr.map(function (s, i) {
+      var hrs = Math.min(s.hours, max), bh = (hrs / max) * (h - padTop - padBot), y = h - padBot - bh;
+      var x = padX + (i + 0.5) * ((w - 2 * padX) / n) - bw / 2;
+      var col = s.hours < 6 ? CH_TONE.crimson : s.hours < 7 ? CH_TONE.yellow : CH_TONE.blue;
+      return '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '" rx="4" fill="' + col + '"/>' +
+        '<text x="' + (x + bw / 2) + '" y="' + (h - 5) + '" text-anchor="middle" class="ch-ax">' + s.date.slice(8) + "</text>";
+    }).join("");
+    return '<svg viewBox="0 0 ' + w + " " + h + '" class="bar-chart">' +
+      '<rect x="' + padX + '" y="' + bandTop + '" width="' + (w - 2 * padX) + '" height="' + (bandBot - bandTop) + '" fill="' + CH_TONE.blue + '" opacity=".09"/>' +
+      bars + "</svg>";
   }
 
   /* ===================== CARE PLANS (holistic A–F) ===================== */

@@ -1329,6 +1329,8 @@
 .chart-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
 .chart-card .cap { color: var(--muted); font-size: 13.5px; margin-bottom: 12px; }
 .chart-card svg { width: 100%; height: auto; display: block; }
+.ch-val { font-size: 12px; font-weight: 800; }
+.ch-ax { font-size: 10px; fill: var(--muted); }
 .goalbar { margin-bottom: 14px; }
 .goalbar__top { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 7px; }
 .goalbar__top b { font-weight: 600; }
