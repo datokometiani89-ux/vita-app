@@ -196,6 +196,7 @@
   };
 
   /* ---------- boot ---------- */
+  if (V.pruneState) try { V.pruneState(); } catch (e) {}
   setTheme(localStorage.getItem("vita.theme") === "dark");
   V.setLang(V.lang());
   window.addEventListener("hashchange", render);

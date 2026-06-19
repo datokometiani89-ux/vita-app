@@ -341,6 +341,22 @@ window.VITA = window.VITA || {};
     return (s && s.book) || "general";
   };
   // ---- yearly screening completion tracking ----
+  // trim per-day/per-year maps so localStorage doesn't grow unbounded (call once at boot)
+  V.pruneState = function () {
+    var keepDays = 21, now = new Date(V.todayISO());
+    function staleDateKey(key) {
+      if (!/^\d{4}-\d\d-\d\d/.test(key)) return false; // keep non-date keys (e.g. "quit:start")
+      var ms = now - new Date(key.slice(0, 10));
+      return ms > keepDays * 86400000;
+    }
+    var s = V.state;
+    if (s.awarded) Object.keys(s.awarded).forEach(function (k) { if (staleDateKey(k)) delete s.awarded[k]; });
+    if (s.companion && s.companion.credited) Object.keys(s.companion.credited).forEach(function (k) { if (staleDateKey(k)) delete s.companion.credited[k]; });
+    if (s.rewardLog && s.rewardLog.length > 100) s.rewardLog = s.rewardLog.slice(-100);
+    if (s.screeningDone) { var y = new Date().getFullYear(); Object.keys(s.screeningDone).forEach(function (k) { if (+k < y - 1) delete s.screeningDone[k]; }); }
+    V.save();
+  };
+
   V.screeningYear = function () { return String(new Date().getFullYear()); };
   V.screeningDoneIds = function () {
     var y = V.screeningYear();

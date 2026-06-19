@@ -11,6 +11,7 @@
   var t = V.t, esc = V.esc;
   function L(o) { return o[V.lang()] || o.en; }
   function today() { return V.todayISO(); }
+  function daysSince(iso) { return iso ? Math.round((new Date(today()) - new Date(iso)) / 86400000) : 1e9; }
   function alive(el) { return el && document.body.contains(el); }
 
   function W() { return (V.state.wellness = V.state.wellness || {}); }
@@ -1808,13 +1809,13 @@
     var w = W(), d = today(), score = 70, factors = [];
     function add(key, icon, adj, val) { score += adj; factors.push({ key: key, icon: icon, adj: Math.round(adj), val: val }); }
     var sl = (w.sleep || []).slice(-1)[0];
-    if (sl) { var h = sl.hours, a = h >= 7 && h <= 9 ? 12 : h >= 6 ? 4 : h >= 5 ? -6 : -14; a += (sl.quality - 3) * 2.5; add("rdSleep", "moon", a, h + t("slHours")); }
+    if (sl && daysSince(sl.date) <= 1) { var h = sl.hours, a = h >= 7 && h <= 9 ? 12 : h >= 6 ? 4 : h >= 5 ? -6 : -14; a += (sl.quality - 3) * 2.5; add("rdSleep", "moon", a, h + t("slHours")); }
     var mo = (w.mood || {})[d];
     if (mo) add("rdMood", "smile", (mo.score - 3) * 5, null);
     var q = V.dailyQuests ? V.dailyQuests().filter(function (x) { return x.done; }).length : 0;
     add("rdActivity", "walk", (q - 2) * 3, q + "/5");
-    var hrArr = (w.hr || []), hrLast = hrArr.length ? hrArr[hrArr.length - 1].bpm : null, hrBase = V.hrBaseline();
-    if (hrLast && hrBase) { var dev = hrLast - hrBase, a2 = dev <= 3 ? 4 : dev <= 8 ? -3 : -9; add("rdHR", "heart", a2, (dev >= 0 ? "+" : "") + dev + " bpm"); }
+    var hrArr = (w.hr || []), hrRec = hrArr.length ? hrArr[hrArr.length - 1] : null, hrBase = V.hrBaseline();
+    if (hrRec && daysSince(hrRec.date) <= 7 && hrBase) { var dev = hrRec.bpm - hrBase, a2 = dev <= 3 ? 4 : dev <= 8 ? -3 : -9; add("rdHR", "heart", a2, (dev >= 0 ? "+" : "") + dev + " bpm"); }
     score = Math.max(25, Math.min(99, Math.round(score)));
     var band = score >= 75 ? { k: "rdReady", tone: "green" } : score >= 50 ? { k: "rdModerate", tone: "yellow" } : { k: "rdRecover", tone: "crimson" };
     return { score: score, band: band, factors: factors };
