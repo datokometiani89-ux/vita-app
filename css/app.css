@@ -858,17 +858,48 @@
 .quit-mile.on { border-color: var(--green); color: var(--ink); } .quit-mile.on svg { color: var(--green); }
 .quit-mile i { font-style: normal; font-size: 11px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: .05em; }
 
-/* ===== posture coach ===== */
-.pose-card { padding: 14px; }
-.pose-stage { position: relative; height: 230px; border-radius: 16px; overflow: hidden; background: radial-gradient(circle at 50% 40%, #2a1430, #160b1a); display: grid; place-items: center; }
-.pose-figure { font-size: 96px; line-height: 1; filter: drop-shadow(0 6px 18px rgba(255,255,255,.18)); }
-.pose-figure.p-anim { animation: poseBob 1.6s ease-in-out infinite; }
+/* ===== office workout ===== */
+.ox-today { text-align: center; color: var(--green); font-weight: 700; font-size: 14px; margin: 10px 0 0; }
+.ox-group-h { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 14px 2px 8px; }
+.ox-list { display: block; }
+.ox-card { display: flex; align-items: center; gap: 13px; width: 100%; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 11px 14px; cursor: pointer; text-align: left; margin-bottom: 9px; transition: border-color .15s, transform .1s; }
+.ox-card:hover { border-color: var(--green); } .ox-card:active { transform: scale(.99); }
+.ox-vis { width: 46px; height: 46px; flex: none; border-radius: 50%; background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--green) 14%, var(--field)), var(--field)); display: grid; place-items: center; overflow: hidden; }
+.ox-emoji { font-size: 26px; line-height: 1; display: inline-block; }
+.ox-card__t { flex: 1; } .ox-card__t b { display: block; font-size: 15px; } .ox-card__t small { color: var(--muted); font-size: 12.5px; }
+.ox-card > svg:last-child { color: var(--muted); width: 17px; transform: rotate(180deg); flex: none; }
+
+.ox-player { text-align: center; }
+.ox-qmeta { color: var(--muted); font-weight: 700; font-size: 14px; margin: 2px 0 10px; }
+.ox-stage { position: relative; height: 220px; border-radius: 18px; margin: 0 auto 16px; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #2a1430, #160b1a); overflow: hidden; }
+.ox-emoji-lg { font-size: 104px; line-height: 1; display: inline-block; filter: drop-shadow(0 8px 22px rgba(255,255,255,.2)); }
+.ox-name { font-size: 22px; font-weight: 800; margin: 0 0 6px; }
+.ox-desc { color: var(--ink-2); font-size: 15px; line-height: 1.55; margin: 0 auto 14px; max-width: 320px; }
+.ox-timer { font-size: 46px; font-weight: 800; color: var(--green); font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 12px; }
+.ox-controls { display: flex; gap: 10px; }
+.ox-controls .btn { flex: 1; }
+.ox-finish { font-size: 72px; text-align: center; margin: 10px 0; animation: poseBob 1.6s ease-in-out infinite; }
+
+/* per-exercise visualizations — each move animates its emoji differently */
+.ox-emoji.ox-sway,   .ox-emoji-lg.ox-sway   { animation: oxSway 2s ease-in-out infinite; }
+.ox-emoji.ox-bob,    .ox-emoji-lg.ox-bob    { animation: oxBob 1.4s ease-in-out infinite; }
+.ox-emoji.ox-roll,   .ox-emoji-lg.ox-roll   { animation: oxRoll 2.4s linear infinite; }
+.ox-emoji.ox-twist,  .ox-emoji-lg.ox-twist  { animation: oxTwist 2.4s ease-in-out infinite; }
+.ox-emoji.ox-stretch,.ox-emoji-lg.ox-stretch{ animation: oxStretch 2.2s ease-in-out infinite; }
+.ox-emoji.ox-lean,   .ox-emoji-lg.ox-lean   { animation: oxLean 2.4s ease-in-out infinite; }
+.ox-emoji.ox-nod,    .ox-emoji-lg.ox-nod    { animation: oxNod 1.8s ease-in-out infinite; }
+.ox-emoji.ox-pulse,  .ox-emoji-lg.ox-pulse  { animation: oxPulse 1.4s ease-in-out infinite; }
+.ox-emoji.ox-breathe,.ox-emoji-lg.ox-breathe{ animation: oxBreathe 4s ease-in-out infinite; }
+@keyframes oxSway { 0%,100% { transform: rotate(-12deg); } 50% { transform: rotate(12deg); } }
+@keyframes oxBob { 0%,100% { transform: translateY(6px); } 50% { transform: translateY(-8px); } }
+@keyframes oxRoll { to { transform: rotate(360deg); } }
+@keyframes oxTwist { 0%,100% { transform: perspective(200px) rotateY(-32deg); } 50% { transform: perspective(200px) rotateY(32deg); } }
+@keyframes oxStretch { 0%,100% { transform: translateY(6px) scale(.96); } 50% { transform: translateY(-10px) scale(1.12); } }
+@keyframes oxLean { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(6px) rotate(8deg); } }
+@keyframes oxNod { 0%,100% { transform: translateY(-3px); } 50% { transform: translateY(7px) scale(.97); } }
+@keyframes oxPulse { 0%,100% { transform: scale(.9); } 50% { transform: scale(1.18); } }
+@keyframes oxBreathe { 0%,100% { transform: scale(.85); } 50% { transform: scale(1.25); } }
 @keyframes poseBob { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.06); } }
-.pose-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: rgba(0,0,0,.25); }
-.pose-stage.running .pose-overlay { background: transparent; pointer-events: none; }
-.pose-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
-.pose-meta b { font-size: 16px; } .pose-meta span { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
-.pose-desc { color: var(--ink-2); font-size: 14px; line-height: 1.5; margin: 8px 0 0; min-height: 21px; }
 
 /* vitaapp.ge account / integration */
 .va-hero { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow-card); }

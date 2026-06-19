@@ -75,9 +75,9 @@ its rAF/camera/timer on navigation (`alive()` guard). i18n keys in `js/i18n.js`
 - ✅ Fasting timer `#/fasting` — 16:8/18:6/20:4/OMAD, live ring (Date.now), `fasting.active`+`log`
 - ✅ Quit smoking `#/quitsmoke` — quit date → days/cigs/₾ saved + health milestones → `quit`
 - ✅ Risk calculator `#/risk` — FINDRISC (8-Q, **prefills from `V.state.profile`/`V.bmi()`**) → diabetes risk band → glucose deep-link, saved in `risk.findrisc`
-- ✅ Posture coach `#/posture` — guided 6-step desk-stretch routine (timed, like eye care). NB: built as a guided routine, **not** live `rep-counter.js` Pose (Pose is rep-counting + unverifiable headless); revisit if real Pose posture-angle detection is wanted.
+- ✅ Office workout `#/posture` (route kept as `posture`; displayed name "ოფისის ვარჯიში / Office workout") — **18 desk exercises** (`OFFICE_EX`, grouped by `OFFICE_AREAS`: neck/shoulders/back/wrists/legs/full). Each move has its own emoji + CSS-animated visualization (`.ox-sway/bob/roll/twist/stretch/lean/nod/pulse/breathe`). List shows every exercise individually; tap one → focused player (animated stage + countdown + progress bar + skip/finish), or "Full routine" runs all 18 in sequence. Names/descriptions inline in `OFFICE_EX` (not i18n). Awards once/day on first completion; `state.wellness.posture[date]` = exercises done that day. NB: deliberately a guided routine, **not** live `rep-counter.js` Pose.
 
 **Possible future tools** (not built): live-Pose posture analysis · medication reminders · hydration-by-weight calc · more risk scores (CVD/heart-age).
 
 ### How to verify (preview)
-rsync to `/tmp/vita-preview`, bump `?v=NN` (app.html) + `sw.js` CACHE, reload with `?cb=`, drive the UI, check `preview_console_logs`. Currently at **v18**. Launch config `.claude/launch.json` runs `python3 http.server` on the mirror, port 8011 (note: it `chdir`s first — the launched cwd is sandboxed/inaccessible, so `--directory` fails).
+rsync to `/tmp/vita-preview`, bump `?v=NN` (app.html) + `sw.js` CACHE, reload with `?cb=`, drive the UI, check `preview_console_logs`. Currently at **v19**. Launch config `.claude/launch.json` runs `python3 http.server` on the mirror, port 8011 (note: it `chdir`s first — the launched cwd is sandboxed/inaccessible, so `--directory` fails).

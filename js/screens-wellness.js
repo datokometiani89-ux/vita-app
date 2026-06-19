@@ -28,7 +28,7 @@
     { id: "fasting", route: "fasting",   icon: "flame",    tone: "yellow",  name: { ka: "უზმოობის ტაიმერი", en: "Fasting timer" }, desc: { ka: "16:8 · 18:6 · OMAD", en: "16:8 · 18:6 · OMAD" } },
     { id: "quit",    route: "quitsmoke", icon: "smoke",    tone: "green",   name: { ka: "მოწევის თავის დანებება", en: "Quit smoking" }, desc: { ka: "უსიგარეტო დღეები + ფული", en: "Smoke-free days + money" } },
     { id: "risk",    route: "risk",      icon: "shield",   tone: "blue",    name: { ka: "რისკის კალკულატორი", en: "Risk calculator" }, desc: { ka: "დიაბეტი (FINDRISC)", en: "Diabetes (FINDRISC)" } },
-    { id: "posture", route: "posture",   icon: "walk",     tone: "pink",    name: { ka: "პოზის ვარჯიში", en: "Posture coach" },   desc: { ka: "მაგიდის გაჭიმვები", en: "Desk stretches" } },
+    { id: "posture", route: "posture",   icon: "walk",     tone: "pink",    name: { ka: "ოფისის ვარჯიში", en: "Office workout" },  desc: { ka: "18 მაგიდის ვარჯიში", en: "18 desk exercises" } },
   ];
 
   /* ===================== WELLNESS HUB ===================== */
@@ -1252,77 +1252,166 @@
     renderIntro();
   };
 
-  /* ===================== POSTURE COACH (guided desk-break) ===================== */
-  var POSTURE_STEPS = [
-    { k: "po1", d: "po1d", secs: 25 }, { k: "po2", d: "po2d", secs: 25 }, { k: "po3", d: "po3d", secs: 25 },
-    { k: "po4", d: "po4d", secs: 25 }, { k: "po5", d: "po5d", secs: 30 }, { k: "po6", d: "po6d", secs: 25 },
+  /* ===================== OFFICE WORKOUT (desk exercises) ===================== */
+  var OFFICE_AREAS = {
+    neck:      { ka: "კისერი", en: "Neck" },
+    shoulders: { ka: "მხრები", en: "Shoulders" },
+    back:      { ka: "ზურგი", en: "Back & core" },
+    wrists:    { ka: "მაჯები და ხელები", en: "Wrists & hands" },
+    legs:      { ka: "ფეხები", en: "Legs" },
+    full:      { ka: "სრული სხეული", en: "Full body" },
+  };
+  // anim = CSS class (.ox-*). Each move's emoji + motion is its own visualization.
+  var OFFICE_EX = [
+    { id: "neck-tilt",   area: "neck", emoji: "🙆", anim: "ox-sway", secs: 30, name: { ka: "კისრის გვერდითი დახრა", en: "Neck side tilt" }, desc: { ka: "ყური ნელა მხრისკენ დახარე, თითო მხარეს 5 წმ დაიჭირე.", en: "Slowly tilt your ear toward each shoulder, hold 5s per side." } },
+    { id: "neck-turn",   area: "neck", emoji: "🙆", anim: "ox-twist", secs: 30, name: { ka: "კისრის შემოტრიალება", en: "Neck turns" }, desc: { ka: "ნელა მოატრიალე თავი მარცხნივ, შემდეგ მარჯვნივ.", en: "Slowly turn your head left, then right." } },
+    { id: "chin-tuck",   area: "neck", emoji: "😌", anim: "ox-nod", secs: 25, name: { ka: "ნიკაპის ჩაწევა", en: "Chin tucks" }, desc: { ka: "ნიკაპი უკან ჩაიწიე, თითქოს „ორმაგ ნიკაპს“ აკეთებ.", en: "Draw your chin straight back, making a 'double chin'." } },
+    { id: "shoulder-roll", area: "shoulders", emoji: "🤷", anim: "ox-roll", secs: 30, name: { ka: "მხრების ტრიალი", en: "Shoulder rolls" }, desc: { ka: "მხრები დიდი წრეებით ატრიალე უკან.", en: "Roll your shoulders backward in big circles." } },
+    { id: "shoulder-shrug", area: "shoulders", emoji: "🤷", anim: "ox-bob", secs: 25, name: { ka: "მხრების აწევა", en: "Shoulder shrugs" }, desc: { ka: "მხრები ყურებამდე ასწიე, 3 წმ დაიჭირე, ჩამოუშვი.", en: "Lift shoulders to your ears, hold 3s, release." } },
+    { id: "chest-open",  area: "shoulders", emoji: "🧘", anim: "ox-stretch", secs: 30, name: { ka: "გულმკერდის გახსნა", en: "Chest opener" }, desc: { ka: "ხელები ზურგს უკან გადააჯვარედინე და გულმკერდი გახსენი.", en: "Clasp your hands behind you and open your chest." } },
+    { id: "upper-back",  area: "back", emoji: "🙇", anim: "ox-lean", secs: 30, name: { ka: "ზედა ზურგის გაჭიმვა", en: "Upper-back stretch" }, desc: { ka: "ხელები წინ გაიწიე და ზედა ზურგი მოამრგვალე.", en: "Reach your arms forward and round your upper back." } },
+    { id: "torso-twist", area: "back", emoji: "🧍", anim: "ox-twist", secs: 30, name: { ka: "ტანის შემოტრიალება", en: "Seated torso twist" }, desc: { ka: "სკამზე მჯდომი ნელა შემოტრიალდი თითო მხარეს.", en: "Sitting tall, slowly twist your torso to each side." } },
+    { id: "side-stretch", area: "back", emoji: "🙆", anim: "ox-sway", secs: 30, name: { ka: "გვერდითი გაჭიმვა", en: "Seated side stretch" }, desc: { ka: "ერთი ხელი მაღლა ასწიე და ტანი გვერდზე დახარე.", en: "Raise one arm overhead and lean to the side." } },
+    { id: "wrist-circles", area: "wrists", emoji: "🤚", anim: "ox-roll", secs: 25, name: { ka: "მაჯების ტრიალი", en: "Wrist circles" }, desc: { ka: "მაჯები ორივე მიმართულებით ნელა ატრიალე.", en: "Circle your wrists slowly in both directions." } },
+    { id: "wrist-stretch", area: "wrists", emoji: "🤚", anim: "ox-pulse", secs: 25, name: { ka: "მაჯის გაჭიმვა", en: "Wrist stretch" }, desc: { ka: "ხელი წინ გაშალე, თითები მეორე ხელით ნაზად უკან გაჭიმე.", en: "Extend an arm, gently pull the fingers back with the other hand." } },
+    { id: "finger-stretch", area: "wrists", emoji: "✋", anim: "ox-pulse", secs: 20, name: { ka: "თითების გაშლა", en: "Finger spread" }, desc: { ka: "თითები ფართოდ გაშალე, შემდეგ მუშტად მოკუმე — გაიმეორე.", en: "Spread your fingers wide, then make a fist — repeat." } },
+    { id: "leg-raise",   area: "legs", emoji: "🦵", anim: "ox-bob", secs: 30, name: { ka: "ფეხის აწევა", en: "Seated leg raises" }, desc: { ka: "სკამზე მჯდომი თითო ფეხი გაასწორე და 3 წმ დაიჭირე.", en: "Sitting down, straighten one leg and hold 3s." } },
+    { id: "ankle-circles", area: "legs", emoji: "🦶", anim: "ox-roll", secs: 25, name: { ka: "ტერფების ტრიალი", en: "Ankle circles" }, desc: { ka: "ფეხი ასწიე და ტერფი ორივე მიმართულებით ატრიალე.", en: "Lift a foot and circle the ankle both ways." } },
+    { id: "calf-raise",  area: "legs", emoji: "🦵", anim: "ox-bob", secs: 30, name: { ka: "წვივების აწევა", en: "Calf raises" }, desc: { ka: "წამოდექი და ცერებზე ნელა ადი-ჩამოდი.", en: "Stand and slowly rise onto your toes and back down." } },
+    { id: "hip-march",   area: "legs", emoji: "🚶", anim: "ox-bob", secs: 30, name: { ka: "ადგილზე ნაბიჯი", en: "Seated marching" }, desc: { ka: "სკამზე მჯდომი მონაცვლეობით ასწიე მუხლები.", en: "Sitting tall, lift your knees alternately like marching." } },
+    { id: "stand-reach", area: "full", emoji: "🙆", anim: "ox-stretch", secs: 25, name: { ka: "წამოდექი და გაიწიე", en: "Stand & reach" }, desc: { ka: "წამოდექი, ხელები მაღლა გაიწიე და მთელი სხეული გაჭიმე.", en: "Stand up, reach overhead and stretch your whole body tall." } },
+    { id: "deep-breath", area: "full", emoji: "😮‍💨", anim: "ox-breathe", secs: 30, name: { ka: "ღრმა სუნთქვა", en: "Deep breathing" }, desc: { ka: "4 წმ ჩაისუნთქე ცხვირით, 4 წმ ნელა ამოისუნთქე.", en: "Breathe in through the nose 4s, exhale slowly 4s." } },
   ];
 
   V.screens.posture = function () {
-    var w = W();
-    var doneToday = !!(w.posture && w.posture[today()]);
+    var w = W(); w.posture = w.posture || {};
 
-    V.mount(
-      V.statusbar() +
-      '<div class="screen"><div class="pad-lg fade-in">' +
-        head("walk", "pink", "poTitle") +
-        '<p class="s-sub">' + t("poSub") + "</p>" +
-        '<div class="card-soft pose-card">' +
-          '<div class="pose-stage" id="poseStage">' +
-            '<div class="pose-figure" id="poseFig">🧍</div>' +
-            '<div class="pose-overlay" id="poseOverlay">' +
-              '<button class="btn btn-primary" id="poStart">' + V.icon("walk") + " " + t("poStart") + "</button>" +
-              (doneToday ? '<p class="eye-done" style="margin-top:8px">✓ ' + t("poDoneToday") + "</p>" : '<p class="pts-badge" style="margin-top:10px">+' + V.POINTS.task + " " + t("rwPts") + "</p>") +
+    function todayCount() { return Number(w.posture[today()]) || 0; }
+    function record() {
+      w.posture[today()] = todayCount() + 1;
+      if (w.posture[today()] === 1) V.awardOnce && V.awardOnce("posture:" + today(), V.POINTS.task, "task");
+      V.save();
+    }
+
+    /* ---------- list of exercises (grouped by area) ---------- */
+    function renderList() {
+      var cnt = todayCount();
+      var byArea = {};
+      OFFICE_EX.forEach(function (ex, i) { (byArea[ex.area] = byArea[ex.area] || []).push(i); });
+      var groups = Object.keys(OFFICE_AREAS).filter(function (a) { return byArea[a]; }).map(function (a) {
+        return '<div class="ox-group-h">' + L(OFFICE_AREAS[a]) + "</div>" +
+          byArea[a].map(function (i) {
+            var ex = OFFICE_EX[i];
+            return '<button class="ox-card" data-ex="' + i + '">' +
+              '<span class="ox-vis"><span class="ox-emoji ' + ex.anim + '">' + ex.emoji + "</span></span>" +
+              '<span class="ox-card__t"><b>' + L(ex.name) + "</b><small>" + ex.secs + " " + t("poSecs") + " · " + L(OFFICE_AREAS[ex.area]) + "</small></span>" +
+              V.icon("back") + "</button>";
+          }).join("");
+      }).join("");
+
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          head("walk", "pink", "poTitle") +
+          '<p class="s-sub">' + t("poSub") + "</p>" +
+          '<button class="btn btn-primary" id="poRoutine" style="width:100%">' + V.icon("walk") + " " + t("poRoutine") + " · " + OFFICE_EX.length + "</button>" +
+          (cnt ? '<p class="ox-today">✓ ' + t("poTodayCount").replace("{n}", cnt) + "</p>" : "") +
+          '<div class="section-head"><h3>' + t("poList") + "</h3></div>" +
+          '<div class="ox-list">' + groups + "</div>" +
+        "</div>" +
+        V.tabbar("home") +
+        "</div>",
+        { onMount: function () {
+          backX();
+          $("#poRoutine").addEventListener("click", function () { play(OFFICE_EX.slice(), 0); });
+          each("[data-ex]", function (b) { b.addEventListener("click", function () { play([OFFICE_EX[+b.getAttribute("data-ex")]], 0); }); });
+        }}
+      );
+    }
+
+    /* ---------- focused player (single exercise or routine queue) ---------- */
+    function play(queue, startIdx) {
+      var idx = startIdx || 0;
+      var routine = queue.length > 1;
+
+      function step() {
+        var ex = queue[idx];
+        V.mount(
+          V.statusbar() +
+          '<div class="screen"><div class="pad-lg fade-in">' +
+            head("walk", "pink", "poTitle") +
+            '<div class="ox-player">' +
+              (routine ? '<p class="ox-qmeta">' + (idx + 1) + " / " + queue.length + "</p>" : "") +
+              '<div class="ox-stage"><span class="ox-emoji-lg ' + ex.anim + '" id="oxFig">' + ex.emoji + "</span></div>" +
+              '<h2 class="ox-name">' + L(ex.name) + "</h2>" +
+              '<p class="ox-desc">' + L(ex.desc) + "</p>" +
+              '<div class="ox-timer" id="oxTimer">' + ex.secs + "</div>" +
+              '<div class="mt-prog"><span id="oxBar" style="width:0%"></span></div>' +
+              '<div class="ox-controls">' +
+                '<button class="btn btn-ghost" data-skip>' + t("poSkip") + " " + V.icon("next") + "</button>" +
+                '<button class="btn btn-ghost danger" data-stop>' + V.icon("x") + " " + t("poStop") + "</button>" +
+              "</div>" +
             "</div>" +
           "</div>" +
-          '<div class="pose-meta"><b id="poName">' + t("poReady") + '</b><span id="poTimer"></span></div>' +
-          '<p class="pose-desc" id="poDesc"></p>' +
-        "</div>" +
-      "</div>" +
-      V.tabbar("home") +
-      "</div>",
-      { onMount: function () { backX(); $("#poStart").addEventListener("click", runPosture); } }
-    );
+          V.tabbar("home") +
+          "</div>",
+          { onMount: run }
+        );
 
-    function runPosture() {
-      var stage = $("#poseStage"), fig = $("#poseFig"), overlay = $("#poseOverlay");
-      var nameEl = $("#poName"), timerEl = $("#poTimer"), descEl = $("#poDesc");
-      if (!stage) return;
-      overlay.style.display = "none";
-      stage.classList.add("running");
-      var pi = -1, start = 0, raf = 0;
+        function run() {
+          $("[data-x]").addEventListener("click", renderList);
+          $("[data-stop]").addEventListener("click", renderList);
+          $("[data-skip]").addEventListener("click", function () { advance(false); });
+          var stage = $(".ox-stage"), timerEl = $("#oxTimer"), bar = $("#oxBar");
+          var start = performance.now(), raf = 0;
+          function tick() {
+            if (!alive(stage)) { cancelAnimationFrame(raf); return; } // self-clean
+            var elapsed = (performance.now() - start) / 1000;
+            var left = Math.max(0, ex.secs - elapsed);
+            timerEl.textContent = Math.ceil(left);
+            bar.style.width = Math.min(100, elapsed / ex.secs * 100) + "%";
+            if (left <= 0) { advance(true); return; }
+            raf = requestAnimationFrame(tick);
+          }
+          tick();
+        }
+        function advance(credit) {
+          if (credit) { record(); if (navigator.vibrate) navigator.vibrate(30); }
+          idx++;
+          if (idx < queue.length) step();
+          else finishAll();
+        }
+      }
 
-      function nextStep() {
-        pi++;
-        if (pi >= POSTURE_STEPS.length) return finish();
-        var st = POSTURE_STEPS[pi];
-        nameEl.textContent = t(st.k);
-        descEl.textContent = t(st.d);
-        fig.classList.remove("p-anim"); void fig.offsetWidth; fig.classList.add("p-anim");
-        start = performance.now();
-        tick(st);
+      function finishAll() {
+        V.mount(
+          V.statusbar() +
+          '<div class="screen"><div class="pad-lg fade-in">' +
+            head("walk", "pink", "poTitle") +
+            '<div class="mt-result fade-in" style="padding-top:20px">' +
+              '<div class="ox-finish">🎉</div>' +
+              '<h2 class="mt-q" style="text-align:center">' + t("poComplete") + "</h2>" +
+              '<p class="mt-rec" style="text-align:center">' + t("poTodayCount").replace("{n}", todayCount()) + "</p>" +
+              '<div class="sy-act">' +
+                '<button class="btn btn-primary" data-again>' + V.icon("walk") + " " + t("poAgain") + "</button>" +
+                '<button class="btn btn-ghost" data-list>' + t("poBackList") + "</button>" +
+              "</div>" +
+            "</div>" +
+          "</div>" +
+          V.tabbar("home") +
+          "</div>",
+          { onMount: function () {
+            $("[data-x]").addEventListener("click", renderList);
+            $("[data-list]").addEventListener("click", renderList);
+            $("[data-again]").addEventListener("click", function () { play(queue, 0); });
+          }}
+        );
       }
-      function tick(st) {
-        if (!alive(stage)) { cancelAnimationFrame(raf); return; } // self-clean
-        var left = Math.max(0, st.secs - (performance.now() - start) / 1000);
-        timerEl.textContent = Math.ceil(left) + "s";
-        if (left <= 0) return nextStep();
-        raf = requestAnimationFrame(function () { tick(st); });
-      }
-      function finish() {
-        stage.classList.remove("running");
-        nameEl.textContent = t("poComplete"); timerEl.textContent = ""; descEl.textContent = "";
-        var ww = W(); ww.posture = ww.posture || {};
-        if (!ww.posture[today()]) { ww.posture[today()] = true; V.awardOnce && V.awardOnce("posture:" + today(), V.POINTS.task, "task"); }
-        V.save();
-        overlay.style.display = "";
-        overlay.innerHTML = '<p class="eye-done">✓ ' + t("poDoneToday") + "</p>" +
-          '<button class="btn btn-ghost" id="poAgain" style="margin-top:8px">' + t("poAgain") + "</button>";
-        var ag = $("#poAgain"); if (ag) ag.addEventListener("click", runPosture);
-        if (navigator.vibrate) navigator.vibrate(40);
-      }
-      nextStep();
+
+      step();
     }
+
+    renderList();
   };
 
   /* ---------- small shared helpers for the new screens ---------- */
