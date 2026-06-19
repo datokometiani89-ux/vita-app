@@ -64,6 +64,11 @@ window.VITA = window.VITA || {};
       mood: {},           // { "2026-06-19": {score:1..5, note, tags:[]} }
       phq: [],            // [{date, score, severity}]
       gad: [],            // [{date, score, severity}]
+      sleep: [],          // [{date, bed, wake, hours, quality}]  one row per night
+      fasting: null,      // { active:{start,targetH,protocol} | null, log:[{date,hours,protocol}] }
+      quit: null,         // { date, perDay, pricePack, cigsPerPack }  smoking-cessation start
+      risk: null,         // { findrisc:{date,score,band} }  last risk-calculator results
+      posture: {},        // { "2026-06-19": n } posture-break sessions per day
     },
   };
 

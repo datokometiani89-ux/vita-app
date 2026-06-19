@@ -55,26 +55,29 @@ All 7 round-2 features done (see `SPEC.md`) + social sign-in. Demo runs fully of
 vitaapp.ge SSO, social OAuth client IDs (`V.AUTH` in `js/auth.js`).
 **Designer's exact logo** still pending — current tree mark is a reconstruction; brand green + font already applied.
 
-## ▶ RESUME HERE — wellness micro-features (in progress)
-All new modules live in `js/screens-wellness.js`, grouped under a **"Wellness tools" hub**
-(`V.screens.wellness`, reachable from the menu tile `mWellness` and route `#/wellness`).
+## ▶ Wellness micro-features — ALL 12 TILES DONE (v18)
+All modules live in `js/screens-wellness.js`, grouped under the **"Wellness tools" hub**
+(`V.screens.wellness`, reachable from menu tile `mWellness` and route `#/wellness`).
 `V.wellnessTools` lists the hub tiles; `state.wellness` holds their data (see `js/state.js`).
+Every tool awards `V.POINTS.task` once/day via `awardOnce`, is brand-styled, and self-cleans
+its rAF/camera/timer on navigation (`alive()` guard). i18n keys in `js/i18n.js`
+(prefixes `eye/br/sy/hr/mt/mo/bp/sl/fs/qs/rk/po`); styles in `css/app.css` (matching `.`-prefixes
++ shared `.card-soft`). Shared screen helpers at bottom of the file: `head()`, `backX()`, `warn()`, `deepClinic()`.
 
-**All 6 hub tiles now built & verified in preview (v17):**
-- ✅ Wellness hub (6 tiles) + menu entry
-- ✅ Eye care — `#/eyecare`: 20-20-20 guided dot exercise (self-cleaning rAF) + Amsler grid self-test
-- ✅ Breathing — `#/breathe`: box-breathing 4-4-4-4 animated orb
-- ✅ Symptom checker — `#/symptom`: rule-based triage (`SYMPTOM_RULES` + red-flag/crisis detection) → urgency band + specialist + advice → deep-link `V.openClinics(checkupId, spec)`. Offline-first (no backend needed). Self-harm input → 116 123 / 112 crisis card.
-- ✅ Heart rate — `#/heartrate`: camera PPG (rear cam + torch, center-patch red sampling, detrended peak count) → live waveform + BPM → `state.wellness.hr`; graceful no-camera + manual entry fallback. Camera path needs a real device to fully drive (verified manual + graceful-fail in preview).
-- ✅ Mental tests — `#/mindtests`: PHQ-9 + GAD-7 (`PHQ9`/`GAD7` arrays), per-question flow w/ Back, scoring + severity bands → `state.wellness.phq/gad`. PHQ-9 Q9>0 surfaces crisis note; elevated scores deep-link mental clinics.
-- ✅ Mood journal — `#/mood`: 1–5 emoji mood + tags + note → `state.wellness.mood`, 14-day bar chart, day-streak.
+**Built & verified in preview:**
+- ✅ Eye care `#/eyecare` · Breathing `#/breathe` (box 4-4-4-4)
+- ✅ Symptom checker `#/symptom` — offline rule triage (`SYMPTOM_RULES` + red-flag/self-harm) → urgency + specialist → `V.openClinics`
+- ✅ Heart rate `#/heartrate` — camera PPG → BPM `state.wellness.hr`; manual + graceful no-cam fallback (camera path needs real device)
+- ✅ Mental tests `#/mindtests` — PHQ-9 + GAD-7, per-Q flow w/ Back, severity bands → `phq`/`gad`; Q9 crisis note
+- ✅ Mood journal `#/mood` — 1–5 emoji + tags + note → `mood`, 14-day chart, streak
+- ✅ BP log `#/bplog` — sys/dia/pulse → `bp`, ACC/AHA bands, crisis (≥180/120) → cardiologist deep-link
+- ✅ Sleep diary `#/sleep` — bed/wake → hours+quality → `sleep`, 7-day avg, chart
+- ✅ Fasting timer `#/fasting` — 16:8/18:6/20:4/OMAD, live ring (Date.now), `fasting.active`+`log`
+- ✅ Quit smoking `#/quitsmoke` — quit date → days/cigs/₾ saved + health milestones → `quit`
+- ✅ Risk calculator `#/risk` — FINDRISC (8-Q, **prefills from `V.state.profile`/`V.bmi()`**) → diabetes risk band → glucose deep-link, saved in `risk.findrisc`
+- ✅ Posture coach `#/posture` — guided 6-step desk-stretch routine (timed, like eye care). NB: built as a guided routine, **not** live `rep-counter.js` Pose (Pose is rep-counting + unverifiable headless); revisit if real Pose posture-angle detection is wanted.
 
-All four award `V.POINTS.task` once/day via `awardOnce`. i18n keys live in `js/i18n.js` (search `syTitle`/`hrTitle`/`mtTitle`/`moTitle`); styles in `css/app.css` (search `.sy-`/`.hr-`/`.mt-`/`.mo-` and shared `.card-soft`).
-
-**Still to build** (later — each its own screen, brand-styled, points + optional reminder, then commit):
-- 🧍 Posture coach (reuse `js/rep-counter.js` Pose) · 😴 sleep diary · 🚭 smoking-cessation · ⏱ fasting timer · 🩺 BP log (`state.wellness.bp` schema already exists) · risk calculators.
-
-Add each new tool's tile to `V.wellnessTools` only once its screen exists, so the hub never links to a dead route.
+**Possible future tools** (not built): live-Pose posture analysis · medication reminders · hydration-by-weight calc · more risk scores (CVD/heart-age).
 
 ### How to verify (preview)
-Per the mirror workflow above: rsync to `/tmp/vita-preview`, bump `?v=NN` + `sw.js` CACHE, reload with a `?cb=` query, then drive the UI and check `preview_console_logs` for errors. Currently at **v17**. Preview launch config: `.claude/launch.json` (`python3 -m http.server` on the mirror, port 8011).
+rsync to `/tmp/vita-preview`, bump `?v=NN` (app.html) + `sw.js` CACHE, reload with `?cb=`, drive the UI, check `preview_console_logs`. Currently at **v18**. Launch config `.claude/launch.json` runs `python3 http.server` on the mirror, port 8011 (note: it `chdir`s first — the launched cwd is sandboxed/inaccessible, so `--directory` fails).

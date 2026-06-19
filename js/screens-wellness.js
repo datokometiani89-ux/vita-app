@@ -23,6 +23,12 @@
     { id: "hr",      route: "heartrate", icon: "heart",    tone: "crimson", name: { ka: "გულისცემა კამერით", en: "Heart rate" },   desc: { ka: "თითი კამერაზე (PPG)", en: "Finger on camera (PPG)" } },
     { id: "mind",    route: "mindtests", icon: "brain",    tone: "blue",    name: { ka: "მენტალური ტესტები", en: "Mental tests" }, desc: { ka: "PHQ-9 · GAD-7", en: "PHQ-9 · GAD-7" } },
     { id: "mood",    route: "mood",      icon: "smile",    tone: "yellow",  name: { ka: "განწყობის დღიური", en: "Mood journal" },  desc: { ka: "ყოველდღიური განწყობა", en: "Daily mood" } },
+    { id: "bp",      route: "bplog",     icon: "drop",     tone: "crimson", name: { ka: "წნევის დღიური", en: "Blood pressure" }, desc: { ka: "სისტ./დიასტ. + პულსი", en: "Sys/dia + pulse log" } },
+    { id: "sleep",   route: "sleep",     icon: "moon",     tone: "blue",    name: { ka: "ძილის დღიური", en: "Sleep diary" },     desc: { ka: "ხანგრძლივობა + ხარისხი", en: "Duration + quality" } },
+    { id: "fasting", route: "fasting",   icon: "flame",    tone: "yellow",  name: { ka: "უზმოობის ტაიმერი", en: "Fasting timer" }, desc: { ka: "16:8 · 18:6 · OMAD", en: "16:8 · 18:6 · OMAD" } },
+    { id: "quit",    route: "quitsmoke", icon: "smoke",    tone: "green",   name: { ka: "მოწევის თავის დანებება", en: "Quit smoking" }, desc: { ka: "უსიგარეტო დღეები + ფული", en: "Smoke-free days + money" } },
+    { id: "risk",    route: "risk",      icon: "shield",   tone: "blue",    name: { ka: "რისკის კალკულატორი", en: "Risk calculator" }, desc: { ka: "დიაბეტი (FINDRISC)", en: "Diabetes (FINDRISC)" } },
+    { id: "posture", route: "posture",   icon: "walk",     tone: "pink",    name: { ka: "პოზის ვარჯიში", en: "Posture coach" },   desc: { ka: "მაგიდის გაჭიმვები", en: "Desk stretches" } },
   ];
 
   /* ===================== WELLNESS HUB ===================== */
@@ -807,7 +813,13 @@
         "</div>",
         { onMount: function () {
           $("[data-x]").addEventListener("click", function () { V.go("wellness"); });
-          each("[data-mood]", function (b) { b.addEventListener("click", function () { sel = parseInt(b.getAttribute("data-mood"), 10); render(); }); });
+          each("[data-mood]", function (b) { b.addEventListener("click", function () {
+            sel = parseInt(b.getAttribute("data-mood"), 10);
+            each("[data-mood]", function (x) {
+              var mv = +x.getAttribute("data-mood");
+              x.className = "mo-face" + (sel === mv ? " on tone-" + MOODS[mv - 1].tone : "");
+            });
+          }); });
           each("[data-tag]", function (b) { b.addEventListener("click", function () {
             var tg = b.getAttribute("data-tag"), i = tags.indexOf(tg);
             if (i >= 0) tags.splice(i, 1); else tags.push(tg);
@@ -827,4 +839,499 @@
     }
     render();
   };
+
+  /* ===================== BLOOD-PRESSURE LOG ===================== */
+  function bpBand(sys, dia) {
+    if (sys >= 180 || dia >= 120) return { k: "bpCrisis", tone: "crimson", crisis: true };
+    if (sys >= 140 || dia >= 90) return { k: "bpStage2", tone: "crimson" };
+    if (sys >= 130 || dia >= 80) return { k: "bpStage1", tone: "yellow" };
+    if (sys >= 120) return { k: "bpElevated", tone: "yellow" };
+    return { k: "bpNormal", tone: "green" };
+  }
+
+  V.screens.bplog = function () {
+    var w = W(); w.bp = w.bp || [];
+
+    function render() {
+      var recent = w.bp.slice(-8).reverse();
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          head("drop", "crimson", "bpTitle") +
+          '<p class="s-sub">' + t("bpSub") + "</p>" +
+          '<div class="card-soft" style="padding:16px">' +
+            '<div class="bp-row">' +
+              '<label class="bp-field"><span>' + t("bpSys") + '</span><input id="bpSys" type="number" inputmode="numeric" placeholder="120"></label>' +
+              '<label class="bp-field"><span>' + t("bpDia") + '</span><input id="bpDia" type="number" inputmode="numeric" placeholder="80"></label>' +
+            "</div>" +
+            '<label class="bp-field" style="margin-top:10px"><span>' + t("bpPulse") + '</span><input id="bpPulse" type="number" inputmode="numeric" placeholder="72"></label>' +
+            '<button class="btn btn-primary" id="bpSave" style="width:100%;margin-top:14px">' + V.icon("check") + " " + t("bpSave") + "</button>" +
+            '<div id="bpMsg"></div>' +
+          "</div>" +
+          '<div class="section-head"><h3>' + t("bpHistory") + "</h3></div>" +
+          (recent.length
+            ? '<div class="bp-list">' + recent.map(function (r) {
+                var b = bpBand(r.sys, r.dia);
+                return '<div class="bp-item"><span class="bp-dot tone-' + b.tone + '"></span>' +
+                  '<b>' + r.sys + "/" + r.dia + '</b><small>' + t(b.k) + (r.pulse ? " · ♥ " + r.pulse : "") + "</small>" +
+                  '<i>' + esc(r.date) + "</i></div>";
+              }).join("") + "</div>"
+            : '<p class="cal-note" style="text-align:left">' + t("bpNoHist") + "</p>") +
+        "</div>" +
+        V.tabbar("home") +
+        "</div>",
+        { onMount: function () {
+          backX();
+          $("#bpSave").addEventListener("click", function () {
+            var sys = parseInt($("#bpSys").value, 10), dia = parseInt($("#bpDia").value, 10), pulse = parseInt($("#bpPulse").value, 10);
+            if (!sys || !dia || sys < 70 || sys > 260 || dia < 40 || dia > 160 || dia >= sys) {
+              $("#bpMsg").innerHTML = warn(t("bpInvalid")); return;
+            }
+            var b = bpBand(sys, dia);
+            w.bp.push({ date: today(), sys: sys, dia: dia, pulse: pulse || null });
+            if (w.bp.length > 60) w.bp = w.bp.slice(-60);
+            V.awardOnce && V.awardOnce("bp:" + today(), V.POINTS.task, "task");
+            V.save();
+            var msg = '<div class="note-' + (b.tone === "green" ? "ok" : "warn") + '">' + V.icon(b.tone === "green" ? "check" : "shield") + " " + t("bpSaved") + " — <b>" + t(b.k) + "</b></div>";
+            if (b.crisis) msg += '<div class="note-warn" style="margin-top:8px">' + V.icon("shield") + " " + t("bpCrisisMsg") + "</div>";
+            if (b.tone === "crimson") msg += '<button class="link-btn" data-cardio style="margin-top:8px">' + t("bpBookCardio") + "</button>";
+            $("#bpMsg").innerHTML = msg;
+            var c = $("[data-cardio]"); if (c) c.addEventListener("click", function () { deepClinic("lipid", { ka: "კარდიოლოგი", en: "Cardiologist" }); });
+            setTimeout(render, 1100);
+          });
+        }}
+      );
+    }
+    render();
+  };
+
+  /* ===================== SLEEP DIARY ===================== */
+  function sleepHours(bed, wake) {
+    function mins(s) { var p = s.split(":"); return (+p[0]) * 60 + (+p[1]); }
+    var b = mins(bed), wk = mins(wake);
+    var diff = wk - b; if (diff <= 0) diff += 1440; // crossed midnight
+    return Math.round(diff / 6) / 10; // hours, 1-decimal
+  }
+
+  V.screens.sleep = function () {
+    var w = W(); w.sleep = w.sleep || [];
+    var qual = 3;
+
+    function render() {
+      var recent = w.sleep.slice(-7);
+      var last = w.sleep.length ? w.sleep[w.sleep.length - 1] : null;
+      var avg = recent.length ? Math.round(recent.reduce(function (a, r) { return a + r.hours; }, 0) / recent.length * 10) / 10 : null;
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          head("moon", "blue", "slTitle") +
+          '<p class="s-sub">' + t("slSub") + "</p>" +
+          '<div class="card-soft" style="padding:16px">' +
+            '<div class="bp-row">' +
+              '<label class="bp-field"><span>' + t("slBed") + '</span><input id="slBed" type="time" value="23:00"></label>' +
+              '<label class="bp-field"><span>' + t("slWake") + '</span><input id="slWake" type="time" value="07:00"></label>' +
+            "</div>" +
+            '<p class="mo-how" style="margin:14px 0 10px">' + t("slQuality") + "</p>" +
+            '<div class="sl-quality">' + [1, 2, 3, 4, 5].map(function (n) {
+              return '<button class="sl-q' + (qual === n ? " on" : "") + '" data-q="' + n + '">' + n + "<small>" + t("slQ" + n) + "</small></button>";
+            }).join("") + "</div>" +
+            '<button class="btn btn-primary" id="slSave" style="width:100%;margin-top:14px">' + V.icon("check") + " " + t("slSave") + "</button>" +
+            '<div id="slMsg"></div>' +
+          "</div>" +
+          (last || avg != null
+            ? '<div class="sl-stats">' +
+                (last ? '<div class="sl-stat"><b>' + last.hours + " " + t("slHours") + '</b><small>' + t("slLast") + "</small></div>" : "") +
+                (avg != null ? '<div class="sl-stat"><b>' + avg + " " + t("slHours") + '</b><small>' + t("slAvg") + "</small></div>" : "") +
+              "</div>"
+            : "") +
+          (avg != null ? '<div class="note-' + (avg < 7 ? "warn" : "ok") + '">' + V.icon(avg < 7 ? "info" : "check") + " " + t(avg < 7 ? "slShort" : "slGood") + "</div>" : "") +
+          '<div class="section-head"><h3>' + t("slHistory") + "</h3></div>" +
+          (recent.length
+            ? '<div class="mo-chart">' + recent.map(function (r) {
+                var tone = r.hours < 6 ? "crimson" : r.hours < 7 ? "yellow" : "green";
+                return '<div class="mo-bar" title="' + r.date + " · " + r.hours + 'h"><span class="mo-bar__fill tone-' + tone + '" style="height:' + Math.min(100, r.hours / 9 * 100) + '%"></span><i>' + r.date.slice(8) + "</i></div>";
+              }).join("") + "</div>"
+            : '<p class="cal-note" style="text-align:left">' + t("slNoHist") + "</p>") +
+        "</div>" +
+        V.tabbar("home") +
+        "</div>",
+        { onMount: function () {
+          backX();
+          each("[data-q]", function (b) { b.addEventListener("click", function () {
+            qual = +b.getAttribute("data-q");
+            each("[data-q]", function (x) { x.classList.toggle("on", x === b); });
+          }); });
+          $("#slSave").addEventListener("click", function () {
+            var bed = $("#slBed").value, wake = $("#slWake").value;
+            if (!bed || !wake) { $("#slMsg").innerHTML = warn(t("slFill")); return; }
+            var hrs = sleepHours(bed, wake);
+            var existing = w.sleep.findIndex(function (r) { return r.date === today(); });
+            var row = { date: today(), bed: bed, wake: wake, hours: hrs, quality: qual };
+            if (existing >= 0) w.sleep[existing] = row; else w.sleep.push(row);
+            if (w.sleep.length > 60) w.sleep = w.sleep.slice(-60);
+            if (existing < 0) V.awardOnce && V.awardOnce("sleep:" + today(), V.POINTS.task, "task");
+            V.save();
+            V.toast && V.toast(t("slSaved"));
+            render();
+          });
+        }}
+      );
+    }
+    render();
+  };
+
+  /* ===================== FASTING TIMER ===================== */
+  var FAST_PROTOCOLS = [
+    { id: "16:8", fast: 16, eat: 8 },
+    { id: "18:6", fast: 18, eat: 6 },
+    { id: "20:4", fast: 20, eat: 4 },
+    { id: "OMAD", fast: 23, eat: 1 },
+  ];
+
+  V.screens.fasting = function () {
+    var w = W();
+    w.fasting = w.fasting || { active: null, log: [] };
+
+    function render() {
+      var f = w.fasting, active = f.active;
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          head("flame", "yellow", "fsTitle") +
+          '<p class="s-sub">' + t("fsSub") + "</p>" +
+          (active
+            ? '<div class="card-soft fast-live">' +
+                '<svg class="fast-ring" viewBox="0 0 120 120"><circle class="fast-ring__bg" cx="60" cy="60" r="52"/><circle id="fastArc" class="fast-ring__fg" cx="60" cy="60" r="52"/></svg>' +
+                '<div class="fast-readout"><span class="fast-proto">' + active.protocol + '</span><b id="fastElapsed">0:00</b><small id="fastSub">' + t("fsRemaining") + "</small></div>" +
+              "</div>" +
+              '<div class="fast-meta" id="fastMeta">' + t("fsActive") + "</div>" +
+              '<button class="btn btn-ghost danger" id="fastStop" style="width:100%">' + V.icon("x") + " " + t("fsStop") + "</button>"
+            : '<p class="mo-how">' + t("fsPick") + "</p>" +
+              '<div class="fast-protos">' + FAST_PROTOCOLS.map(function (p) {
+                return '<button class="fast-proto-btn" data-proto="' + p.id + '"><b>' + p.id + "</b><small>" + t("fsEatWindow").replace("{h}", p.eat) + "</small></button>";
+              }).join("") + "</div>") +
+          '<div class="fast-total">' + t("fsTotal") + ": <b>" + (f.log ? f.log.length : 0) + "</b></div>" +
+        "</div>" +
+        V.tabbar("home") +
+        "</div>",
+        { onMount: function () {
+          backX();
+          if (active) { runClock(); $("#fastStop").addEventListener("click", stopFast); }
+          else each("[data-proto]", function (b) { b.addEventListener("click", function () { startFast(b.getAttribute("data-proto")); }); });
+        }}
+      );
+    }
+
+    function startFast(id) {
+      var p = FAST_PROTOCOLS.filter(function (x) { return x.id === id; })[0] || FAST_PROTOCOLS[0];
+      w.fasting.active = { start: Date.now(), targetH: p.fast, protocol: p.id };
+      V.save();
+      render();
+    }
+    function stopFast() {
+      var a = w.fasting.active; if (!a) return;
+      var hrs = (Date.now() - a.start) / 3600000;
+      if (hrs < a.targetH && !confirm(t("fsConfirmStop"))) return;
+      w.fasting.log = w.fasting.log || [];
+      w.fasting.log.push({ date: today(), hours: Math.round(hrs * 10) / 10, protocol: a.protocol });
+      if (w.fasting.log.length > 60) w.fasting.log = w.fasting.log.slice(-60);
+      w.fasting.active = null;
+      if (hrs >= a.targetH) V.awardOnce && V.awardOnce("fasting:" + today(), V.POINTS.task, "task");
+      V.save();
+      V.toast && V.toast(t("fsLogged").replace("{h}", Math.round(hrs * 10) / 10));
+      render();
+    }
+    function runClock() {
+      var arc = $("#fastArc"), elEl = $("#fastElapsed"), subEl = $("#fastSub"), metaEl = $("#fastMeta");
+      var C = 2 * Math.PI * 52;
+      if (arc) arc.style.strokeDasharray = C;
+      function tick() {
+        if (!alive(arc)) return; // self-clean on navigation
+        var a = w.fasting.active; if (!a) return;
+        var sec = (Date.now() - a.start) / 1000;
+        var targetSec = a.targetH * 3600;
+        var frac = Math.min(1, sec / targetSec);
+        if (arc) arc.style.strokeDashoffset = C * (1 - frac);
+        var done = sec >= targetSec;
+        var show = done ? sec : sec; // always show elapsed
+        elEl.textContent = fmtHMS(show);
+        if (done) { subEl.textContent = ""; metaEl.textContent = t("fsComplete"); arc.classList.add("done"); }
+        else { var rem = targetSec - sec; subEl.textContent = t("fsRemaining") + " " + fmtHMS(rem); }
+        requestAnimationFrame(function () { setTimeout(tick, 250); });
+      }
+      tick();
+    }
+    function fmtHMS(sec) {
+      var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = Math.floor(sec % 60);
+      return h + ":" + String(m).padStart(2, "0") + (h < 1 ? ":" + String(s).padStart(2, "0") : "");
+    }
+    render();
+  };
+
+  /* ===================== QUIT SMOKING ===================== */
+  var QUIT_MILES = [
+    { k: "qsM20m", ms: 20 * 60000 },
+    { k: "qsM12h", ms: 12 * 3600000 },
+    { k: "qsM2d", ms: 2 * 86400000 },
+    { k: "qsM2w", ms: 14 * 86400000 },
+    { k: "qsM1m", ms: 30 * 86400000 },
+    { k: "qsM1y", ms: 365 * 86400000 },
+  ];
+
+  V.screens.quitsmoke = function () {
+    var w = W();
+
+    function render() {
+      var q = w.quit;
+      if (!q || !q.date) return renderSetup();
+      var elapsed = Date.now() - new Date(q.date + "T00:00:00").getTime();
+      if (elapsed < 0) elapsed = 0;
+      var days = Math.floor(elapsed / 86400000);
+      var cigs = Math.floor(elapsed / 86400000 * q.perDay);
+      var packsCost = (cigs / (q.cigsPerPack || 20)) * (q.pricePack || 0);
+      var nextMile = QUIT_MILES.filter(function (m) { return m.ms > elapsed; })[0];
+
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          head("smoke", "green", "qsTitle") +
+          '<p class="s-sub">' + t("qsSub") + "</p>" +
+          '<div class="card-soft quit-hero">' +
+            '<b class="quit-days">' + days + "</b><span>" + t("qsDays") + " " + t("qsSmokeFree") + "</span>" +
+          "</div>" +
+          '<div class="quit-stats">' +
+            '<div class="quit-stat">' + V.iconBox("smoke", "blue") + "<b>" + cigs.toLocaleString() + "</b><small>" + t("qsNotSmoked") + "</small></div>" +
+            '<div class="quit-stat">' + V.iconBox("diamond", "green") + "<b>₾" + Math.round(packsCost) + "</b><small>" + t("qsSaved") + "</small></div>" +
+          "</div>" +
+          (nextMile ? '<div class="note-ok">' + V.icon("trend") + " " + t("qsNextMile") + ": " + t(nextMile.k) + "</div>" : "") +
+          '<div class="section-head"><h3>' + t("qsMiles") + "</h3></div>" +
+          '<div class="quit-miles">' + QUIT_MILES.map(function (m) {
+            var done = elapsed >= m.ms;
+            return '<div class="quit-mile' + (done ? " on" : "") + '">' + V.icon(done ? "check" : "info") + "<span>" + t(m.k) + "</span>" + (done ? '<i>' + t("qsReached") + "</i>" : "") + "</div>";
+          }).join("") + "</div>" +
+          '<button class="btn btn-ghost" id="quitReset" style="width:100%;margin-top:16px">' + t("qsReset") + "</button>" +
+        "</div>" +
+        V.tabbar("home") +
+        "</div>",
+        { onMount: function () {
+          backX();
+          $("#quitReset").addEventListener("click", function () { w.quit = null; V.save(); render(); });
+        }}
+      );
+    }
+
+    function renderSetup() {
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          head("smoke", "green", "qsTitle") +
+          '<p class="s-sub">' + t("qsSub") + "</p>" +
+          '<div class="card-soft" style="padding:16px">' +
+            '<p class="mo-how">' + t("qsSetup") + "</p>" +
+            '<label class="bp-field"><span>' + t("qsDate") + '</span><input id="qDate" type="date" value="' + today() + '"></label>' +
+            '<label class="bp-field" style="margin-top:10px"><span>' + t("qsPerDay") + '</span><input id="qPer" type="number" inputmode="numeric" placeholder="20"></label>' +
+            '<div class="bp-row" style="margin-top:10px">' +
+              '<label class="bp-field"><span>' + t("qsPrice") + '</span><input id="qPrice" type="number" inputmode="decimal" placeholder="9"></label>' +
+              '<label class="bp-field"><span>' + t("qsPerPack") + '</span><input id="qPack" type="number" inputmode="numeric" placeholder="20"></label>' +
+            "</div>" +
+            '<button class="btn btn-primary" id="qBegin" style="width:100%;margin-top:14px">' + V.icon("check") + " " + t("qsBegin") + "</button>" +
+            '<div id="qMsg"></div>' +
+          "</div>" +
+        "</div>" +
+        V.tabbar("home") +
+        "</div>",
+        { onMount: function () {
+          backX();
+          $("#qBegin").addEventListener("click", function () {
+            var date = $("#qDate").value, per = parseInt($("#qPer").value, 10);
+            if (!date || !per || per < 1) { $("#qMsg").innerHTML = warn(t("qsFill")); return; }
+            w.quit = { date: date, perDay: per, pricePack: parseFloat($("#qPrice").value) || 0, cigsPerPack: parseInt($("#qPack").value, 10) || 20 };
+            V.awardOnce && V.awardOnce("quit:start", V.POINTS.task, "task");
+            V.save();
+            render();
+          });
+        }}
+      );
+    }
+    render();
+  };
+
+  /* ===================== RISK CALCULATOR (FINDRISC) ===================== */
+  // each question: options [{label-key, pts}]; prefill index from profile when possible
+  var FINDRISC = [
+    { q: "rkQ1", opts: [["rkQ1a", 0], ["rkQ1b", 2], ["rkQ1c", 3], ["rkQ1d", 4]], pre: function (p) { var a = p.age; return a == null ? -1 : a < 45 ? 0 : a < 55 ? 1 : a < 65 ? 2 : 3; } },
+    { q: "rkQ2", opts: [["rkQ2a", 0], ["rkQ2b", 1], ["rkQ2c", 3]], pre: function () { var b = V.bmi(); return b == null ? -1 : b < 25 ? 0 : b <= 30 ? 1 : 2; } },
+    { q: "rkQ3", sub: function (p) { return p.sex === "woman" ? "rkQ3woman" : "rkQ3man"; },
+      opts: [["rkQ3a", 0], ["rkQ3b", 3], ["rkQ3c", 4]],
+      pre: function (p) { var wst = p.waist; if (wst == null) return -1; var man = p.sex !== "woman"; var lo = man ? 94 : 80, hi = man ? 102 : 88; return wst < lo ? 0 : wst <= hi ? 1 : 2; } },
+    { q: "rkQ4", yn: true, opts: [["rkNo", 2], ["rkYes", 0]], pre: function (p) { return p.activity == null ? -1 : (p.activity === "sitting" ? 0 : 1); } },
+    { q: "rkQ5", yn: true, opts: [["rkNo", 1], ["rkYes", 0]], pre: function (p) { return p.food == null ? -1 : (p.food === "irregular" ? 0 : 1); } },
+    { q: "rkQ6", yn: true, opts: [["rkNo", 0], ["rkYes", 2]], pre: function (p) { return p.conditions && p.conditions.indexOf("hyper") >= 0 ? 1 : -1; } },
+    { q: "rkQ7", yn: true, opts: [["rkNo", 0], ["rkYes", 5]], pre: function (p) { return (p.conditions && p.conditions.indexOf("pre") >= 0) || (p.lastCheck && p.lastCheck.indexOf("sugar") >= 0) ? 1 : -1; } },
+    { q: "rkQ8", opts: [["rkQ8a", 0], ["rkQ8b", 3], ["rkQ8c", 5]], pre: function () { return -1; } },
+  ];
+  function findriscBand(score) {
+    if (score < 7) return { k: "rkLow", rec: "rkRecLow", tone: "green" };
+    if (score < 12) return { k: "rkSlight", rec: "rkRecLow", tone: "green" };
+    if (score < 15) return { k: "rkModerate", rec: "rkRecMod", tone: "yellow" };
+    if (score < 21) return { k: "rkHigh", rec: "rkRecHigh", tone: "crimson" };
+    return { k: "rkVeryHigh", rec: "rkRecHigh", tone: "crimson" };
+  }
+
+  V.screens.risk = function () {
+    var p = V.state.profile;
+    var session = null; // { idx, answers:[] }
+
+    function shell(body) {
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' + head("shield", "blue", "rkTitle") + body + "</div>" +
+        V.tabbar("home") + "</div>",
+        { onMount: function () {
+          $("[data-x]").addEventListener("click", function () { if (session && !session.done) { session = null; renderIntro(); } else V.go("wellness"); });
+          wire();
+        }}
+      );
+    }
+    function renderIntro() {
+      session = null;
+      var lastR = W().risk && W().risk.findrisc;
+      shell('<p class="s-sub">' + t("rkSub") + "</p>" +
+        (lastR ? '<div class="note-ok">' + V.icon("info") + " " + t("rkResult") + ": <b>" + lastR.score + " " + t("rkPts") + "</b> · " + t(lastR.band) + "</div>" : "") +
+        '<button class="btn btn-primary" id="rkStart" style="width:100%;margin-top:14px">' + V.icon("shield") + " " + t("rkStart") + "</button>");
+    }
+    function renderQ() {
+      var item = FINDRISC[session.idx];
+      var pct = Math.round((session.idx / FINDRISC.length) * 100);
+      var preIdx = session.answers[session.idx] != null ? session.answers[session.idx] : item.pre(p);
+      var opts = item.opts.map(function (o, i) {
+        return '<button class="mt-opt' + (preIdx === i ? " on" : "") + '" data-opt="' + i + '">' + t(o[0]) + "</button>";
+      }).join("");
+      shell(
+        '<div class="mt-prog"><span style="width:' + pct + '%"></span></div>' +
+        '<p class="mt-qmeta">' + t("mtQof").replace("{n}", session.idx + 1).replace("{total}", FINDRISC.length) + "</p>" +
+        '<h2 class="mt-q">' + t(item.q) + "</h2>" +
+        (item.sub ? '<p class="mt-intro">' + t(item.sub(p)) + "</p>" : "") +
+        '<div class="mt-opts">' + opts + "</div>" +
+        (session.idx > 0 ? '<button class="btn btn-ghost" data-prev style="margin-top:14px">' + V.icon("back") + " " + t("mtBack") + "</button>" : "")
+      );
+    }
+    function renderResult() {
+      var score = session.answers.reduce(function (sum, ai, i) { return sum + FINDRISC[i].opts[ai][1]; }, 0);
+      var b = findriscBand(score);
+      var ww = W(); ww.risk = ww.risk || {};
+      ww.risk.findrisc = { date: today(), score: score, band: b.k };
+      V.awardOnce && V.awardOnce("risk:" + today(), V.POINTS.task, "task");
+      V.save();
+      shell('<div class="mt-result fade-in">' +
+        '<p class="s-sub">FINDRISC</p>' +
+        '<div class="mt-score-ring mt-tone-' + b.tone + '"><b>' + score + '</b><small>' + t("rkPts") + "</small></div>" +
+        '<div class="mt-sev mt-tone-' + b.tone + '">' + t("rkResult") + ": <b>" + t(b.k) + "</b></div>" +
+        '<p class="mt-rec">' + t(b.rec) + "</p>" +
+        '<div class="sy-act">' +
+          (b.tone !== "green" ? '<button class="btn btn-primary" data-book>' + V.icon("calendar") + " " + t("rkBook") + "</button>" : "") +
+          '<button class="btn btn-ghost" data-retake>' + t("rkRetake") + "</button>" +
+        "</div></div>");
+    }
+    function wire() {
+      if (!session) { var s = $("#rkStart"); if (s) s.addEventListener("click", function () { session = { idx: 0, answers: [] }; renderQ(); }); return; }
+      if (session.done) {
+        var bk = $("[data-book]"); if (bk) bk.addEventListener("click", function () { deepClinic("glucose", { ka: "ენდოკრინოლოგი", en: "Endocrinologist" }); });
+        var rt = $("[data-retake]"); if (rt) rt.addEventListener("click", function () { session = { idx: 0, answers: [] }; renderQ(); });
+        return;
+      }
+      each("[data-opt]", function (b) {
+        b.addEventListener("click", function () {
+          session.answers[session.idx] = parseInt(b.getAttribute("data-opt"), 10);
+          if (session.idx < FINDRISC.length - 1) { session.idx++; renderQ(); }
+          else { session.done = true; renderResult(); }
+        });
+      });
+      var pv = $("[data-prev]"); if (pv) pv.addEventListener("click", function () { session.idx--; renderQ(); });
+    }
+    renderIntro();
+  };
+
+  /* ===================== POSTURE COACH (guided desk-break) ===================== */
+  var POSTURE_STEPS = [
+    { k: "po1", d: "po1d", secs: 25 }, { k: "po2", d: "po2d", secs: 25 }, { k: "po3", d: "po3d", secs: 25 },
+    { k: "po4", d: "po4d", secs: 25 }, { k: "po5", d: "po5d", secs: 30 }, { k: "po6", d: "po6d", secs: 25 },
+  ];
+
+  V.screens.posture = function () {
+    var w = W();
+    var doneToday = !!(w.posture && w.posture[today()]);
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        head("walk", "pink", "poTitle") +
+        '<p class="s-sub">' + t("poSub") + "</p>" +
+        '<div class="card-soft pose-card">' +
+          '<div class="pose-stage" id="poseStage">' +
+            '<div class="pose-figure" id="poseFig">🧍</div>' +
+            '<div class="pose-overlay" id="poseOverlay">' +
+              '<button class="btn btn-primary" id="poStart">' + V.icon("walk") + " " + t("poStart") + "</button>" +
+              (doneToday ? '<p class="eye-done" style="margin-top:8px">✓ ' + t("poDoneToday") + "</p>" : '<p class="pts-badge" style="margin-top:10px">+' + V.POINTS.task + " " + t("rwPts") + "</p>") +
+            "</div>" +
+          "</div>" +
+          '<div class="pose-meta"><b id="poName">' + t("poReady") + '</b><span id="poTimer"></span></div>' +
+          '<p class="pose-desc" id="poDesc"></p>' +
+        "</div>" +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () { backX(); $("#poStart").addEventListener("click", runPosture); } }
+    );
+
+    function runPosture() {
+      var stage = $("#poseStage"), fig = $("#poseFig"), overlay = $("#poseOverlay");
+      var nameEl = $("#poName"), timerEl = $("#poTimer"), descEl = $("#poDesc");
+      if (!stage) return;
+      overlay.style.display = "none";
+      stage.classList.add("running");
+      var pi = -1, start = 0, raf = 0;
+
+      function nextStep() {
+        pi++;
+        if (pi >= POSTURE_STEPS.length) return finish();
+        var st = POSTURE_STEPS[pi];
+        nameEl.textContent = t(st.k);
+        descEl.textContent = t(st.d);
+        fig.classList.remove("p-anim"); void fig.offsetWidth; fig.classList.add("p-anim");
+        start = performance.now();
+        tick(st);
+      }
+      function tick(st) {
+        if (!alive(stage)) { cancelAnimationFrame(raf); return; } // self-clean
+        var left = Math.max(0, st.secs - (performance.now() - start) / 1000);
+        timerEl.textContent = Math.ceil(left) + "s";
+        if (left <= 0) return nextStep();
+        raf = requestAnimationFrame(function () { tick(st); });
+      }
+      function finish() {
+        stage.classList.remove("running");
+        nameEl.textContent = t("poComplete"); timerEl.textContent = ""; descEl.textContent = "";
+        var ww = W(); ww.posture = ww.posture || {};
+        if (!ww.posture[today()]) { ww.posture[today()] = true; V.awardOnce && V.awardOnce("posture:" + today(), V.POINTS.task, "task"); }
+        V.save();
+        overlay.style.display = "";
+        overlay.innerHTML = '<p class="eye-done">✓ ' + t("poDoneToday") + "</p>" +
+          '<button class="btn btn-ghost" id="poAgain" style="margin-top:8px">' + t("poAgain") + "</button>";
+        var ag = $("#poAgain"); if (ag) ag.addEventListener("click", runPosture);
+        if (navigator.vibrate) navigator.vibrate(40);
+      }
+      nextStep();
+    }
+  };
+
+  /* ---------- small shared helpers for the new screens ---------- */
+  function head(icon, tone, titleKey) {
+    return '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' +
+      V.iconBox(icon, tone) + "<h1>" + t(titleKey) + "</h1></div>" +
+      '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>";
+  }
+  function backX() { var b = $("[data-x]"); if (b) b.addEventListener("click", function () { V.go("wellness"); }); }
+  function warn(msg) { return '<div class="note-warn">' + V.icon("info") + " " + msg + "</div>"; }
+  function deepClinic(id, title) { if (V.openClinics) V.openClinics(id, title); else V.go("clinics"); }
 })();

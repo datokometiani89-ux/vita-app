@@ -802,6 +802,74 @@
 .mo-bar__fill.tone-yellow { background: #e6b800; }
 .mo-bar__fill.tone-crimson { background: #e8536b; }
 
+/* ===== blood pressure + shared inputs ===== */
+.bp-row { display: flex; gap: 12px; }
+.bp-field { flex: 1; display: block; }
+.bp-field > span { display: block; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin: 0 0 6px 2px; }
+.bp-field input { width: 100%; box-sizing: border-box; background: var(--field); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; font: inherit; font-size: 16px; color: var(--ink); }
+.bp-field input:focus { border-color: var(--green); outline: none; }
+.bp-list { display: grid; gap: 8px; }
+.bp-item { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 11px 14px; }
+.bp-item b { font-size: 16px; font-variant-numeric: tabular-nums; min-width: 64px; }
+.bp-item small { color: var(--muted); font-size: 13px; flex: 1; }
+.bp-item i { color: var(--muted); font-style: normal; font-size: 12px; }
+.bp-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.bp-dot.tone-green { background: var(--green); } .bp-dot.tone-yellow { background: #e6b800; } .bp-dot.tone-crimson { background: #e8536b; }
+
+/* ===== sleep diary ===== */
+.sl-quality { display: flex; gap: 7px; }
+.sl-q { flex: 1; background: var(--field); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 9px 2px; font-size: 17px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: border-color .15s, background .15s; }
+.sl-q small { font-size: 9.5px; font-weight: 500; color: var(--muted); }
+.sl-q:hover { border-color: var(--green); }
+.sl-q.on { border-color: var(--green); background: var(--green-tint); } .sl-q.on small { color: var(--green-dark, #1c7a37); }
+.sl-stats { display: flex; gap: 12px; margin: 4px 0 12px; }
+.sl-stat { flex: 1; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 14px; text-align: center; }
+.sl-stat b { display: block; font-size: 22px; color: var(--green); } .sl-stat small { color: var(--muted); font-size: 12.5px; }
+
+/* ===== fasting timer ===== */
+.fast-protos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.fast-proto-btn { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 16px; cursor: pointer; text-align: center; transition: border-color .15s, transform .1s; }
+.fast-proto-btn:hover { border-color: var(--green); } .fast-proto-btn:active { transform: scale(.98); }
+.fast-proto-btn b { display: block; font-size: 22px; } .fast-proto-btn small { color: var(--muted); font-size: 12px; }
+.fast-live { padding: 22px; display: grid; place-items: center; position: relative; }
+.fast-ring { width: 230px; height: 230px; transform: rotate(-90deg); }
+.fast-ring__bg { fill: none; stroke: var(--line); stroke-width: 8; }
+.fast-ring__fg { fill: none; stroke: #e6b800; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset .3s linear; }
+.fast-ring__fg.done { stroke: var(--green); }
+.fast-readout { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.fast-readout .fast-proto { display: block; font-size: 14px; font-weight: 700; color: var(--muted); letter-spacing: .05em; }
+.fast-readout b { font-size: 38px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.fast-readout small { color: var(--muted); font-size: 12.5px; }
+.fast-meta { text-align: center; color: var(--muted); font-weight: 600; margin: 6px 0 14px; }
+.fast-total { text-align: center; color: var(--muted); margin-top: 16px; } .fast-total b { color: var(--ink); }
+
+/* ===== quit smoking ===== */
+.quit-hero { padding: 22px; text-align: center; background: linear-gradient(160deg, var(--green-tint), var(--card)); border-color: color-mix(in srgb, var(--green) 30%, var(--line)); }
+.quit-days { display: block; font-size: 56px; font-weight: 800; color: var(--green); line-height: 1; }
+.quit-hero span { color: var(--ink-2); font-weight: 600; font-size: 14px; }
+.quit-stats { display: flex; gap: 12px; margin-bottom: 14px; }
+.quit-stat { flex: 1; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 14px; text-align: center; }
+.quit-stat .icon-box { margin: 0 auto 8px; }
+.quit-stat b { display: block; font-size: 21px; } .quit-stat small { color: var(--muted); font-size: 12px; }
+.quit-miles { display: grid; gap: 8px; }
+.quit-mile { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; color: var(--muted); }
+.quit-mile svg { width: 17px; height: 17px; flex: none; }
+.quit-mile span { flex: 1; font-size: 13.5px; }
+.quit-mile.on { border-color: var(--green); color: var(--ink); } .quit-mile.on svg { color: var(--green); }
+.quit-mile i { font-style: normal; font-size: 11px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: .05em; }
+
+/* ===== posture coach ===== */
+.pose-card { padding: 14px; }
+.pose-stage { position: relative; height: 230px; border-radius: 16px; overflow: hidden; background: radial-gradient(circle at 50% 40%, #2a1430, #160b1a); display: grid; place-items: center; }
+.pose-figure { font-size: 96px; line-height: 1; filter: drop-shadow(0 6px 18px rgba(255,255,255,.18)); }
+.pose-figure.p-anim { animation: poseBob 1.6s ease-in-out infinite; }
+@keyframes poseBob { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.06); } }
+.pose-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: rgba(0,0,0,.25); }
+.pose-stage.running .pose-overlay { background: transparent; pointer-events: none; }
+.pose-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+.pose-meta b { font-size: 16px; } .pose-meta span { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pose-desc { color: var(--ink-2); font-size: 14px; line-height: 1.5; margin: 8px 0 0; min-height: 21px; }
+
 /* vitaapp.ge account / integration */
 .va-hero { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow-card); }
 .va-hero.on { border-color: var(--green); background: linear-gradient(160deg, color-mix(in srgb, var(--green) 8%, var(--card)), var(--card)); }
