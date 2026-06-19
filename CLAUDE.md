@@ -87,8 +87,11 @@ A deep-research competitive analysis (Finch, Daylio, Oura, Samsung Vitals, K Hea
 - ✅ **VITA garden** (`#/quests`) — Finch-style daily quests grow a 6-stage SVG plant. `V.dailyQuests` (derived from existing state, no double-tracking), `V.creditQuests` (+1 grow/quest, per-day guarded, once/day all-done bonus), `V.companionStage`/`companionProgress`, `plantSVG`. Home card `V.gardenHomeCard`/`V.wireGardenHome`. `state.companion {grow, credited}`.
 - ✅ **Readiness** (`#/readiness`) — Oura-style daily 0-100 (`V.readiness`: sleep+mood+activity+HR-deviation factors) + Samsung-Vitals baseline-deviation insights. `V.hrBaseline/sleepBaseline/bpBaseline` = avg of PRIOR readings (exclude latest) → "vs your usual". Home card `V.readinessHomeCard`. Labeled wellness, not medical.
 
-**Stage 2 — NEXT (differentiation):** probabilistic symptom triage (weighted/Bayesian upgrade of `SYMPTOM_RULES`, "compare to similar profiles", K Health/Infermedica blueprint) · multi-signal camera (respiratory rate / HRV from the existing PPG tool).
-**Stage 3 — strategic:** in-app telemedicine (video + e-prescription + payment, Doctolib model) on the clinics-booking seam · subscription tier (VITA+) + B2B2C.
+**Stage 2 — DONE (differentiation):**
+- ✅ **Probabilistic triage** — `triage()` scores matched `SYMPTOM_RULES` by `countHits` (regex-alternation hit count) + red-flag bonus + `profilePrior` (age/sex/conditions/smoking → cardiac, stress/mood/sleep → mental, smoking → resp). Ranks safety-first then likelihood; shows a profile-prior note + per-candidate match-strength bars. No accuracy % shown.
+- ✅ **Multi-signal camera** — `V.ppgHRV(beatTimes)` (RMSSD ms) + `V.ppgRR(series, durSec)` (resp rate via cardiac-smoothing + slow-detrend + first-peak autocorrelation). Heart-rate loop records beat times + raw series; `saveReading` stores `{bpm, rr, hrv}` + shows chips. Wellness-grade + skin-fairness disclaimers. Pure fns unit-testable via `V.ppgRR`/`V.ppgHRV`.
+
+**Stage 3 — NEXT (strategic):** in-app telemedicine (video + e-prescription + payment, Doctolib model) on the clinics-booking seam · subscription tier (VITA+) + B2B2C.
 **Hard rules from research:** never label camera-vitals or AI triage as clinical/diagnostic — wellness/informational + disclaimer; do NOT cite any symptom-checker accuracy %; camera-PPG degrades on dark skin (fairness caveat). Open: Georgian medical-device regulation + whether the local market supports B2B2C subsidized telehealth.
 
 ### How to verify (preview)
