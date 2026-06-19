@@ -21,13 +21,34 @@
       '<div class="splash__logo">' + V.mark(116) +
         '<div class="word">VITA</div></div>' +
       '<div class="splash__cta">' +
-        '<div><small>' + t("noAccount") + '</small><b>' + t("createNow") + "</b></div>" +
-        '<button class="btn btn-primary" data-next>' + t("getStarted") + " " + V.icon("next") + "</button>" +
+        '<div class="sso-head"><small>' + t("noAccount") + '</small><b>' + t("createNow") + "</b></div>" +
+        '<button class="sso-btn sso-google" data-sso="google">' + V.brandGlyph("google") + "<span>" + t("ssoGoogle") + "</span></button>" +
+        '<button class="sso-btn sso-fb" data-sso="facebook">' + V.brandGlyph("facebook") + "<span>" + t("ssoFacebook") + "</span></button>" +
+        '<div class="sso-or"><span>' + t("ssoOr") + "</span></div>" +
+        '<button class="btn btn-primary" data-next>' + t("ssoEmail") + " " + V.icon("next") + "</button>" +
+        '<p class="sso-legal">' + t("ssoLegal") + "</p>" +
       "</div>" +
       '<div class="home-bar"></div>' +
       "</div></div>",
       { onMount: function () {
         $("[data-next]").addEventListener("click", function () { V.go("intro"); });
+        each("[data-sso]", function (b) {
+          b.addEventListener("click", function () {
+            var provider = b.getAttribute("data-sso");
+            if (b.classList.contains("loading")) return;
+            b.classList.add("loading");
+            var span = b.querySelector("span"), label = span.textContent;
+            span.textContent = t("ssoConnecting");
+            V.auth.signIn(provider).then(function (id) {
+              V.applyAuth(id);
+              V.go("intro");
+            }).catch(function () {
+              b.classList.remove("loading");
+              span.textContent = label;
+              V.toast && V.toast(t("ssoFailed"));
+            });
+          });
+        });
       }}
     );
   };

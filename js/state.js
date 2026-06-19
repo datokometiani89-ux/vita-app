@@ -54,6 +54,7 @@ window.VITA = window.VITA || {};
     weightLog: [],        // [{date, kg}]
     chat: [],             // [{role:"user"|"vita", text}]
     vitaAccount: { connected: false, email: "", plan: "" }, // link to vitaapp.ge
+    auth: null,           // { provider:"google"|"facebook"|"email", name, email, connected }
   };
 
   function load() {
