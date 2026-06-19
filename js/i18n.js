@@ -42,6 +42,7 @@ window.VITA = window.VITA || {};
     wellTitle: { ka: "კეთილდღეობა", en: "Wellness" },
     wellSub: { ka: "მცირე ვარჯიშები და თვითტესტები ყოველდღიური ჯანმრთელობისთვის.", en: "Quick exercises and self-tests for everyday health." },
     rwPts: { ka: "ქულა", en: "pts" },
+    wellPhone: { ka: "სჭირდება ტელეფონის კამერა", en: "Needs a phone camera" },
     /* eye care */
     eyeTitle: { ka: "თვალის მოვლა", en: "Eye care" },
     eyeSub: { ka: "20-20-20 წესი: ყოველ 20 წუთში გაამხნევე თვალები. მიჰყევი წერტილს მხოლოდ თვალებით.", en: "20-20-20 rule: relax your eyes every 20 min. Follow the dot with your eyes only." },
@@ -164,6 +165,7 @@ window.VITA = window.VITA || {};
     moTitle: { ka: "განწყობის დღიური", en: "Mood journal" },
     moSub: { ka: "ჩაინიშნე დღევანდელი განწყობა — დროთა განმავლობაში ნახავ ტენდენციას.", en: "Log today's mood — spot your trend over time." },
     moHome: { ka: "დღევანდელი განწყობა", en: "Today's mood" },
+    todayK: { ka: "დღევანდელი", en: "Today" },
     moHow: { ka: "როგორ გრძნობ თავს დღეს?", en: "How do you feel today?" },
     moM1: { ka: "ძალიან ცუდად", en: "Awful" },
     moM2: { ka: "ცუდად", en: "Low" },

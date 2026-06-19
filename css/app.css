@@ -671,6 +671,10 @@
 .vtoast.on { opacity: 1; transform: translate(-50%, 0); }
 
 /* ===== wellness hub ===== */
+.well-group-h { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 20px 2px 10px; }
+.well-group-h:first-of-type { margin-top: 8px; }
+.well-phone { display: inline-flex; vertical-align: middle; color: var(--muted); margin-left: 4px; }
+.well-phone svg { width: 14px; height: 14px; }
 .well-grid { display: grid; gap: 11px; }
 .well-tile { display: flex; align-items: center; gap: 13px; width: 100%; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 14px; cursor: pointer; text-align: left; transition: border-color .15s, transform .1s; }
 .well-tile:active { transform: scale(.99); }
@@ -845,6 +849,17 @@
 .rd-dev.ok { background: var(--green-tint); color: var(--green-dark, #1c7a37); }
 .rd-dev.good { background: var(--green-tint); color: var(--green-dark, #1c7a37); }
 .rd-dev.bad { background: #fdf0e8; color: #9a3412; }
+
+/* ===== home "today" 2-up (readiness + garden) ===== */
+.today-mini { display: flex; gap: 10px; margin-bottom: 16px; }
+.tm-cell { flex: 1; min-width: 0; display: flex; align-items: center; gap: 11px; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 12px; cursor: pointer; text-align: left; transition: border-color .15s, transform .1s; }
+.tm-cell:hover { border-color: var(--green); } .tm-cell:active { transform: scale(.99); }
+.tm-cell .rd-ring { width: 46px; height: 46px; border-width: 5px; flex: none; }
+.tm-cell .rd-ring b { font-size: 16px; }
+.tm-plant { width: 46px; height: 52px; flex: none; }
+.tm-lbl { min-width: 0; }
+.tm-lbl b { font-size: 14px; display: block; line-height: 1.2; }
+.tm-lbl small { color: var(--muted); font-size: 11.5px; display: block; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ===== home daily mood check-in ===== */
 .home-mood { padding: 14px 16px; }

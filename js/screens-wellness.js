@@ -16,20 +16,25 @@
 
   function W() { return (V.state.wellness = V.state.wellness || {}); }
 
-  /* tools shown in the hub — only those with a built screen */
+  /* tools shown in the hub — only those with a built screen. group: exercises | track | programs */
   V.wellnessTools = [
-    { id: "eye",     route: "eyecare",   icon: "eye",      tone: "blue",    name: { ka: "თვალის მოვლა", en: "Eye care" },        desc: { ka: "20-20-20 + Amsler ტესტი", en: "20-20-20 + Amsler test" } },
-    { id: "breathe", route: "breathe",   icon: "lungs",    tone: "green",   name: { ka: "სუნთქვის ვარჯიში", en: "Breathing" },     desc: { ka: "ბოქს-სუნთქვა 4-4-4-4", en: "Box breathing 4-4-4-4" } },
-    { id: "symptom", route: "symptom",   icon: "stethoscope", tone: "pink", name: { ka: "სიმპტომ-ჩეკერი", en: "Symptom checker" }, desc: { ka: "AI ტრიაჟი → ექიმი", en: "AI triage → doctor" } },
-    { id: "hr",      route: "heartrate", icon: "heart",    tone: "crimson", name: { ka: "გულისცემა კამერით", en: "Heart rate" },   desc: { ka: "თითი კამერაზე (PPG)", en: "Finger on camera (PPG)" } },
-    { id: "mind",    route: "mindtests", icon: "brain",    tone: "blue",    name: { ka: "მენტალური ტესტები", en: "Mental tests" }, desc: { ka: "PHQ-9 · GAD-7", en: "PHQ-9 · GAD-7" } },
-    { id: "mood",    route: "mood",      icon: "smile",    tone: "yellow",  name: { ka: "განწყობის დღიური", en: "Mood journal" },  desc: { ka: "ყოველდღიური განწყობა", en: "Daily mood" } },
-    { id: "bp",      route: "bplog",     icon: "drop",     tone: "crimson", name: { ka: "წნევის დღიური", en: "Blood pressure" }, desc: { ka: "სისტ./დიასტ. + პულსი", en: "Sys/dia + pulse log" } },
-    { id: "sleep",   route: "sleep",     icon: "moon",     tone: "blue",    name: { ka: "ძილის დღიური", en: "Sleep diary" },     desc: { ka: "ხანგრძლივობა + ხარისხი", en: "Duration + quality" } },
-    { id: "fasting", route: "fasting",   icon: "flame",    tone: "yellow",  name: { ka: "უზმოობის ტაიმერი", en: "Fasting timer" }, desc: { ka: "16:8 · 18:6 · OMAD", en: "16:8 · 18:6 · OMAD" } },
-    { id: "quit",    route: "quitsmoke", icon: "smoke",    tone: "green",   name: { ka: "მოწევის თავის დანებება", en: "Quit smoking" }, desc: { ka: "უსიგარეტო დღეები + ფული", en: "Smoke-free days + money" } },
-    { id: "risk",    route: "risk",      icon: "shield",   tone: "blue",    name: { ka: "რისკის კალკულატორი", en: "Risk calculator" }, desc: { ka: "დიაბეტი (FINDRISC)", en: "Diabetes (FINDRISC)" } },
-    { id: "posture", route: "posture",   icon: "walk",     tone: "pink",    name: { ka: "ოფისის ვარჯიში", en: "Office workout" },  desc: { ka: "18 მაგიდის ვარჯიში", en: "18 desk exercises" } },
+    { id: "eye",     route: "eyecare",   group: "exercises", icon: "eye",      tone: "blue",    name: { ka: "თვალის მოვლა", en: "Eye care" },        desc: { ka: "20-20-20 + Amsler ტესტი", en: "20-20-20 + Amsler test" } },
+    { id: "breathe", route: "breathe",   group: "exercises", icon: "lungs",    tone: "green",   name: { ka: "სუნთქვის ვარჯიში", en: "Breathing" },     desc: { ka: "ბოქს-სუნთქვა 4-4-4-4", en: "Box breathing 4-4-4-4" } },
+    { id: "posture", route: "posture",   group: "exercises", icon: "walk",     tone: "pink",    name: { ka: "ოფისის ვარჯიში", en: "Office workout" },  desc: { ka: "18 მაგიდის ვარჯიში", en: "18 desk exercises" } },
+    { id: "symptom", route: "symptom",   group: "track", icon: "stethoscope", tone: "pink", name: { ka: "სიმპტომ-ჩეკერი", en: "Symptom checker" }, desc: { ka: "AI ტრიაჟი → ექიმი", en: "AI triage → doctor" } },
+    { id: "hr",      route: "heartrate", group: "track", phone: true, icon: "heart", tone: "crimson", name: { ka: "გულისცემა კამერით", en: "Heart rate" },   desc: { ka: "თითი კამერაზე (PPG)", en: "Finger on camera (PPG)" } },
+    { id: "mind",    route: "mindtests", group: "track", icon: "brain",    tone: "blue",    name: { ka: "მენტალური ტესტები", en: "Mental tests" }, desc: { ka: "PHQ-9 · GAD-7", en: "PHQ-9 · GAD-7" } },
+    { id: "mood",    route: "mood",      group: "track", icon: "smile",    tone: "yellow",  name: { ka: "განწყობის დღიური", en: "Mood journal" },  desc: { ka: "ყოველდღიური განწყობა", en: "Daily mood" } },
+    { id: "bp",      route: "bplog",     group: "track", icon: "drop",     tone: "crimson", name: { ka: "წნევის დღიური", en: "Blood pressure" }, desc: { ka: "სისტ./დიასტ. + პულსი", en: "Sys/dia + pulse log" } },
+    { id: "sleep",   route: "sleep",     group: "track", icon: "moon",     tone: "blue",    name: { ka: "ძილის დღიური", en: "Sleep diary" },     desc: { ka: "ხანგრძლივობა + ხარისხი", en: "Duration + quality" } },
+    { id: "fasting", route: "fasting",   group: "programs", icon: "flame",    tone: "yellow",  name: { ka: "უზმოობის ტაიმერი", en: "Fasting timer" }, desc: { ka: "16:8 · 18:6 · OMAD", en: "16:8 · 18:6 · OMAD" } },
+    { id: "quit",    route: "quitsmoke", group: "programs", icon: "smoke",    tone: "green",   name: { ka: "მოწევის თავის დანებება", en: "Quit smoking" }, desc: { ka: "უსიგარეტო დღეები + ფული", en: "Smoke-free days + money" } },
+    { id: "risk",    route: "risk",      group: "programs", icon: "shield",   tone: "blue",    name: { ka: "რისკის კალკულატორი", en: "Risk calculator" }, desc: { ka: "დიაბეტი (FINDRISC)", en: "Diabetes (FINDRISC)" } },
+  ];
+  var WELL_GROUPS = [
+    { id: "exercises", label: { ka: "ვარჯიშები", en: "Exercises" } },
+    { id: "track",     label: { ka: "ტესტები და ტრეკინგი", en: "Tests & tracking" } },
+    { id: "programs",  label: { ka: "პროგრამები", en: "Programs" } },
   ];
 
   /* ===================== WELLNESS HUB ===================== */
@@ -37,16 +42,22 @@
     function card(tool) {
       return '<button class="well-tile" data-go="' + tool.route + '">' +
         V.iconBox(tool.icon, tool.tone) +
-        '<div class="well-tile__t"><b>' + L(tool.name) + "</b><small>" + L(tool.desc) + "</small></div>" +
+        '<div class="well-tile__t"><b>' + L(tool.name) + (tool.phone ? ' <span class="well-phone" title="' + t("wellPhone") + '">' + V.icon("camera") + "</span>" : "") + "</b><small>" + L(tool.desc) + "</small></div>" +
         V.icon("back") + "</button>";
     }
+    var groups = WELL_GROUPS.map(function (g) {
+      var tools = V.wellnessTools.filter(function (tt) { return tt.group === g.id; });
+      if (!tools.length) return "";
+      return '<div class="well-group-h">' + L(g.label) + "</div>" +
+        '<div class="well-grid">' + tools.map(card).join("") + "</div>";
+    }).join("");
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
         '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("wellTitle") + "</h1></div>" +
           '<button class="icon-box gray" data-x>' + V.icon("x") + "</button></div>" +
         '<p class="s-sub">' + t("wellSub") + "</p>" +
-        '<div class="well-grid">' + V.wellnessTools.map(card).join("") + "</div>" +
+        groups +
       "</div>" +
       V.tabbar("home") +
       "</div>",
@@ -1876,6 +1887,20 @@
       V.icon("next") + "</button>";
   };
   V.wireReadinessHome = function () { var c = document.getElementById("rdHome"); if (c) c.addEventListener("click", function () { V.go("readiness"); }); };
+
+  // compact 2-up "today" row for home: readiness ring + garden plant
+  V.todayMini = function () {
+    V.creditQuests && V.creditQuests();
+    var r = V.readiness(), stage = V.companionStage(), quests = V.dailyQuests();
+    var qDone = quests.filter(function (q) { return q.done; }).length;
+    return '<div class="today-mini">' +
+      '<button class="tm-cell" data-tm="readiness"><span class="rd-ring rd-tone-' + r.band.tone + '"><b>' + r.score + "</b></span>" +
+        '<span class="tm-lbl"><b>' + t("rdTitle") + '</b><small class="rd-text-' + r.band.tone + '">' + t(r.band.k) + "</small></span></button>" +
+      '<button class="tm-cell" data-tm="quests"><span class="tm-plant">' + plantSVG(stage) + "</span>" +
+        '<span class="tm-lbl"><b>' + t("quTitle") + "</b><small>" + qDone + " / " + quests.length + " " + t("quQuests") + "</small></span></button>" +
+    "</div>";
+  };
+  V.wireTodayMini = function () { document.querySelectorAll("[data-tm]").forEach(function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-tm")); }); }); };
 
   /* ---------- small shared helpers for the new screens ---------- */
   function head(icon, tone, titleKey) {
