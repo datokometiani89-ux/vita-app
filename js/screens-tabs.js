@@ -436,11 +436,18 @@
     var streak = countStreak();
     var totalDone = Object.keys(V.state.doneTasks).reduce(function (a, k) { return a + V.state.doneTasks[k].length; }, 0);
 
-    var goalNames = { weight: t("gWeight"), waist: t("gWaist"), sugar: t("gSugar"), energy: t("gEnergy"), wellbeing: t("gWellbeing"), skin: t("gSkin"), hair: t("gHair"), oral: t("gOral") };
-    var goals = V.state.goals.map(function (id, i) {
-      var prog = [62, 48, 75, 55, 80, 40][i % 6];
-      return { name: goalNames[id] || id, prog: prog };
-    });
+    // ---- real logged wellness data ----
+    var ws = V.state.wellness || {};
+    var moodStreak = V.moodStreak ? V.moodStreak() : 0;
+    var screenPct = V.screeningProgress ? V.screeningProgress().pct : 0;
+    var sleepArr = ws.sleep || [];
+    var sleepAvg = sleepArr.length ? Math.round(sleepArr.slice(-7).reduce(function (a, x) { return a + x.hours; }, 0) / Math.min(7, sleepArr.length) * 10) / 10 : null;
+    var gardenStage = V.companionStage ? V.companionStage() : 0;
+    var moodDates = Object.keys(ws.mood || {}).sort().slice(-14);
+
+    function wstat(val, label) {
+      return '<div class="an-stat"><b>' + val + "</b><small>" + label + "</small></div>";
+    }
 
     V.mount(
       V.statusbar() +
@@ -455,6 +462,20 @@
             '<small>' + t("pgTasksDone") + "</small></div>" +
         "</div>" +
 
+        '<div class="kicker" style="margin:6px 0 10px">' + t("pgWellness") + "</div>" +
+        '<div class="an-summary" style="flex-wrap:wrap">' +
+          wstat("🔥 " + moodStreak, t("moStreak")) +
+          wstat("🌱 " + (gardenStage + 1), t("quTitle")) +
+          wstat(screenPct + "%", t("scRecCount")) +
+          (sleepAvg != null ? wstat(sleepAvg + t("slHours"), t("slAvg")) : "") +
+        "</div>" +
+
+        (moodDates.length ? '<div class="chart-card"><h3>' + t("pgMoodTrend") + "</h3>" +
+          '<div class="mo-chart">' + moodDates.map(function (iso) {
+            var e = ws.mood[iso], m = V.MOODS[(e.score || 1) - 1];
+            return '<div class="mo-bar" title="' + iso + '"><span class="mo-bar__fill tone-' + m.tone + '" style="height:' + (e.score / 5 * 100) + '%"></span><i>' + iso.slice(8) + "</i></div>";
+          }).join("") + "</div></div>" : "") +
+
         '<div class="chart-card"><h3>' + t("pgWeight") + "</h3>" +
           '<div class="cap">' + startW + t("kg") + " → " + curW + t("kg") + "  ·  " + t("target") + " " + tgtW + t("kg") + "</div>" +
           lineChart(wSeries, "#27AE60", tgtW) + "</div>" +
@@ -462,13 +483,6 @@
         '<div class="chart-card"><h3>' + t("pgScore") + "</h3>" +
           '<div class="cap">' + sSeries[0] + " → " + sSeries[weeks - 1] + "</div>" +
           barChart(sSeries) + "</div>" +
-
-        '<div class="chart-card"><h3>' + t("pgGoals") + "</h3>" +
-          (goals.length ? goals.map(function (g) {
-            return '<div class="goalbar"><div class="goalbar__top"><b>' + esc(g.name) + "</b><span>" + g.prog + "%</span></div>" +
-              '<div class="goalbar__track"><span style="width:' + g.prog + '%"></span></div></div>';
-          }).join("") : '<p class="cap">—</p>') +
-        "</div>" +
       "</div>" +
       V.tabbar("progress") +
       "</div>"

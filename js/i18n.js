@@ -865,6 +865,8 @@ window.VITA = window.VITA || {};
     pgTasksDone: { ka: "შესრულებული დავალება", en: "tasks completed" },
     pgGoals: { ka: "მიზნების პროგრესი", en: "Goal progress" },
     pgWeek: { ka: "კვირა", en: "Week" },
+    pgWellness: { ka: "კეთილდღეობის მონაცემები", en: "Your wellness data" },
+    pgMoodTrend: { ka: "განწყობის დინამიკა (14 დღე)", en: "Mood trend (14 days)" },
 
     /* ---------- settings ---------- */
     setTitle: { ka: "პარამეტრები", en: "Settings" },
