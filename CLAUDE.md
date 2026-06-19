@@ -55,15 +55,25 @@ All 7 round-2 features done (see `SPEC.md`) + social sign-in. Demo runs fully of
 vitaapp.ge SSO, social OAuth client IDs (`V.AUTH` in `js/auth.js`).
 **Designer's exact logo** still pending — current tree mark is a reconstruction; brand green + font already applied.
 
-## Roadmap — wellness micro-features (in progress)
-Building these as prototype modules, brand-styled, with points + reminders, each its own commit:
-1. 👁 Eye care (20-20-20 guided exercise + Amsler grid self-test)
-2. 🫁 Breathing (box-breathing animated circle)
-3. 🤖 AI symptom checker → specialist → booking (reuses chat + clinics + calendar)
-4. ❤️ Heart rate via camera (PPG, finger on lens)
-5. 🧠 Mental health tests (PHQ-9, GAD-7) with scoring
-6. 🙂 Mood journal (daily mood + chart)
-7. 🧍 Posture coach (reuses MediaPipe Pose)
-8. 😴 Sleep diary · 🚭 Smoking-cessation · ⏱ Intermittent fasting · 🩺 BP log · risk calculators
+## ▶ RESUME HERE — wellness micro-features (in progress)
+All new modules live in `js/screens-wellness.js`, grouped under a **"Wellness tools" hub**
+(`V.screens.wellness`, reachable from the menu tile `mWellness` and route `#/wellness`).
+`V.wellnessTools` lists the hub tiles; `state.wellness` holds their data (see `js/state.js`).
 
-Likely grouped under a **"Wellness tools" hub** reachable from the menu.
+**Done & committed** (last commit `bb972eb`):
+- ✅ Wellness hub (6 tiles) + menu entry
+- ✅ Eye care — `#/eyecare`: 20-20-20 guided dot exercise (self-cleaning rAF) + Amsler grid self-test
+- ✅ Breathing — `#/breathe`: box-breathing 4-4-4-4 animated orb
+- ⚠️ Eye + breathe code is written but their **interactive flows were not yet driven in preview** — verify first (drive the Start buttons, watch the animation, confirm points award + no console errors).
+
+**Still to build** (each its own screen in `js/screens-wellness.js`, brand-styled, points + optional reminder, then commit):
+1. 🤖 Symptom checker — `#/symptom`: AI triage (reuse `js/api.js` chat w/ offline fallback) → suggest specialist + urgency → deep-link `V.openClinics(checkupId, title)`.
+2. ❤️ Heart rate — `#/heartrate`: PPG from rear-camera red-channel variation (getUserMedia + canvas sampling), live waveform + BPM → `state.wellness.hr`, manual fallback.
+3. 🧠 Mental tests — `#/mindtests`: PHQ-9 + GAD-7 questionnaires, scoring + severity bands + recommendation → `state.wellness.phq/gad`, deep-link mental clinics.
+4. 🙂 Mood journal — `#/mood`: daily mood (1–5 + note/tags) → `state.wellness.mood`, history chart, streak.
+5. (later) 🧍 Posture coach (reuse `js/rep-counter.js` Pose) · 😴 sleep diary · 🚭 smoking-cessation · ⏱ fasting timer · 🩺 BP log (`state.wellness.bp`) · risk calculators.
+
+Add each new tool's tile to `V.wellnessTools` only once its screen exists, so the hub never links to a dead route.
+
+### How to verify (preview)
+Per the mirror workflow above: rsync to `/tmp/vita-preview`, bump `?v=NN` + `sw.js` CACHE, reload with a `?cb=` query, then drive the UI and check `preview_console_logs` for errors. Currently at **v16**.
