@@ -479,6 +479,57 @@
   };
 
   /* ===================== HEART RATE (camera PPG) ===================== */
+  /* ---- multi-signal PPG analysis (pure fns, wellness-grade estimates) ---- */
+  function movingAvg(a, win) {
+    if (win < 2) return a.slice();
+    var out = [], half = Math.floor(win / 2);
+    for (var i = 0; i < a.length; i++) {
+      var s = 0, n = 0;
+      for (var j = Math.max(0, i - half); j <= Math.min(a.length - 1, i + half); j++) { s += a[j]; n++; }
+      out.push(s / n);
+    }
+    return out;
+  }
+  // HRV (RMSSD, ms) from beat timestamps; null if too few / implausible beats
+  V.ppgHRV = function (beatTimes) {
+    if (!beatTimes || beatTimes.length < 6) return null;
+    var ibi = [];
+    for (var i = 1; i < beatTimes.length; i++) {
+      var d = beatTimes[i] - beatTimes[i - 1];
+      if (d >= 300 && d <= 2000) ibi.push(d); // plausible 30–200 bpm
+    }
+    if (ibi.length < 5) return null;
+    var ss = 0, m = 0;
+    for (var k = 1; k < ibi.length; k++) { var diff = ibi[k] - ibi[k - 1]; ss += diff * diff; m++; }
+    if (!m) return null;
+    var rmssd = Math.round(Math.sqrt(ss / m));
+    return (rmssd >= 5 && rmssd <= 200) ? rmssd : null;
+  };
+  // respiratory rate (breaths/min) via first-peak autocorrelation of the slow signal; null if weak/short
+  V.ppgRR = function (series, durSec) {
+    if (!series || durSec < 12 || series.length < 60) return null;
+    var fps = series.length / durSec;
+    var sShort = movingAvg(series, Math.max(3, Math.round(fps * 1.0)));   // kill cardiac pulse (~1 beat period)
+    var trend = movingAvg(sShort, Math.max(5, Math.round(fps * 8)));      // very slow baseline drift
+    var resp = [], amp = 0;
+    for (var i = 0; i < sShort.length; i++) { var r = sShort[i] - trend[i]; resp.push(r); amp += Math.abs(r); }
+    amp /= resp.length;
+    if (amp < 0.05) return null; // essentially flat — no respiratory signal
+    var minLag = Math.round(fps * 2), maxLag = Math.round(fps * 10), ac = []; // periods 2–10s = 6–30 br/min
+    for (var lag = 0; lag <= maxLag + 1; lag++) {
+      var s = 0, c = 0;
+      for (var j = 0; j + lag < resp.length; j++) { s += resp[j] * resp[j + lag]; c++; }
+      ac[lag] = s / c;
+    }
+    var bestLag = 0; // first prominent autocorrelation peak = fundamental respiratory period
+    for (var l = minLag; l <= maxLag; l++) {
+      if (ac[l] > ac[l - 1] && ac[l] >= ac[l + 1] && ac[l] > 0.3 * ac[0]) { bestLag = l; break; }
+    }
+    if (!bestLag) return null;
+    var rr = Math.round(60 / (bestLag / fps));
+    return (rr >= 6 && rr <= 30) ? rr : null;
+  };
+
   V.screens.heartrate = function () {
     var w = W();
     var last = (w.hr && w.hr.length) ? w.hr[w.hr.length - 1] : null;
@@ -492,6 +543,7 @@
 
         '<div class="card-soft hr-card">' +
           '<div class="hr-readout"><b id="hrBpm">--</b><small>' + t("hrBpm") + "</small></div>" +
+          '<div class="hr-extra" id="hrExtra"></div>' +
           '<canvas id="hrWave" class="hr-wave" width="600" height="120"></canvas>' +
           '<div class="hr-status" id="hrStatus">' + t("hrRestNote") + "</div>" +
           '<button class="btn btn-primary" id="hrStart" style="width:100%">' + V.icon("heart") + " " + t("hrStart") + "</button>" +
@@ -502,7 +554,8 @@
           '<button class="btn btn-ghost" id="hrManualSave">' + t("hrManual") + "</button>" +
         "</div>" +
         '<div id="hrMsg"></div>' +
-        (last ? '<div class="hr-last">' + t("hrLast") + ": <b>" + last.bpm + " " + t("hrBpm") + "</b> · " + esc(last.date) + "</div>" : "") +
+        (last ? '<div class="hr-last">' + t("hrLast") + ": <b>" + last.bpm + " " + t("hrBpm") + "</b>" + (last.rr ? " · " + last.rr + " " + t("hrRRUnit") : "") + (last.hrv ? " · HRV " + last.hrv + " ms" : "") + " · " + esc(last.date) + "</div>" : "") +
+        '<p class="hr-multi-note">' + t("hrSkinNote") + "</p>" +
         '<video id="hrVideo" playsinline muted style="display:none"></video>' +
       "</div>" +
       V.tabbar("home") +
@@ -519,7 +572,7 @@
     );
 
     var stream = null, raf = 0, running = false, video, canvas, ctx, hidden, hctx;
-    var samples = [], waveBuf = [], baseline = 0, lastBeat = 0, beats = 0, startT = 0, prevSig = 0, ampEMA = 0;
+    var samples = [], waveBuf = [], rawBuf = [], beatTimes = [], baseline = 0, lastBeat = 0, beats = 0, startT = 0, measT = 0, prevSig = 0, ampEMA = 0;
 
     function toggle() { if (running) { stop(); resetUI(); } else start(); }
     function resetUI() {
@@ -537,7 +590,7 @@
           video = $("#hrVideo"); video.srcObject = s; video.play();
           canvas = $("#hrWave"); ctx = canvas.getContext("2d");
           hidden = document.createElement("canvas"); hidden.width = 60; hidden.height = 60; hctx = hidden.getContext("2d");
-          samples = []; waveBuf = []; baseline = 0; lastBeat = 0; beats = 0; prevSig = 0; ampEMA = 0; startT = performance.now();
+          samples = []; waveBuf = []; rawBuf = []; beatTimes = []; baseline = 0; lastBeat = 0; beats = 0; prevSig = 0; ampEMA = 0; measT = 0; startT = performance.now();
           running = true;
           var b = $("#hrStart"); b.innerHTML = V.icon("x") + " " + t("hrCancel");
           $("#hrStatus").textContent = t("hrPlace");
@@ -572,9 +625,12 @@
         $("#hrStatus").textContent = ampEMA <= 0.25 && v < 150 ? t("hrWeak") : t("hrPlace");
       } else {
         $("#hrStatus").textContent = t("hrMeasuring");
+        if (!measT) measT = now;
+        rawBuf.push(v); if (rawBuf.length > 4000) rawBuf.shift();
         // beat = downward zero-crossing of detrended signal, with refractory
         if (prevSig > 0 && sig <= 0 && (now - lastBeat) > 300) {
           if (lastBeat) beats++;
+          beatTimes.push(now);
           lastBeat = now;
         }
         if (elapsed > 5 && beats >= 2) {
@@ -606,11 +662,15 @@
     }
 
     function finishMeasure() {
-      var spanMin = (performance.now() - firstBeatT()) / 60000;
+      var endT = performance.now();
+      var spanMin = (endT - firstBeatT()) / 60000;
       var bpm = Math.round(beats / spanMin);
+      var measSec = measT ? (endT - measT) / 1000 : 0;
+      var rr = V.ppgRR(rawBuf, measSec);
+      var hrv = V.ppgHRV(beatTimes);
       stop();
       if (bpm < 35 || bpm > 210) { $("#hrStatus").textContent = t("hrWeak"); resetUI(); return; }
-      saveReading(bpm);
+      saveReading(bpm, rr, hrv);
     }
 
     function band(bpm) {
@@ -620,16 +680,27 @@
       return { k: "hrHigh", c: "crimson" };
     }
 
-    function saveReading(bpm) {
+    function saveReading(bpm, rr, hrv) {
       var b = band(bpm);
       var ww = W(); ww.hr = ww.hr || [];
-      ww.hr.push({ date: today(), bpm: bpm });
+      var rec = { date: today(), bpm: bpm };
+      if (rr) rec.rr = rr;
+      if (hrv) rec.hrv = hrv;
+      ww.hr.push(rec);
       if (ww.hr.length > 60) ww.hr = ww.hr.slice(-60);
       V.awardOnce && V.awardOnce("hr:" + today(), V.POINTS.task, "task");
       V.save();
       var bpmEl = $("#hrBpm"); if (bpmEl) bpmEl.textContent = bpm;
+      var ex = $("#hrExtra");
+      if (ex) {
+        var chips = "";
+        if (rr) chips += '<span class="hr-stat">' + V.icon("lungs") + "<b>" + rr + "</b><small>" + t("hrRRUnit") + "</small></span>";
+        if (hrv) chips += '<span class="hr-stat">' + V.icon("trend") + "<b>" + hrv + "</b><small>" + t("hrHRVUnit") + "</small></span>";
+        ex.innerHTML = chips;
+      }
       var st = $("#hrStatus"); if (st) st.innerHTML = "<b>" + t(b.k) + "</b> · " + bpm + " " + t("hrBpm");
-      var msg = $("#hrMsg"); if (msg) msg.innerHTML = '<div class="note-ok">' + V.icon("check") + " " + t("hrSaved") + " — " + t(b.k) + " (" + bpm + " " + t("hrBpm") + ")</div>";
+      var msg = $("#hrMsg"); if (msg) msg.innerHTML = '<div class="note-ok">' + V.icon("check") + " " + t("hrSaved") + " — " + t(b.k) + " (" + bpm + " " + t("hrBpm") + ")</div>" +
+        ((rr || hrv) ? '<p class="hr-multi-note">' + t("hrMultiNote") + "</p>" : "");
       var startBtn = $("#hrStart"); if (startBtn) { startBtn.disabled = false; startBtn.innerHTML = V.icon("heart") + " " + t("hrAgain"); }
       if (navigator.vibrate) navigator.vibrate(40);
     }

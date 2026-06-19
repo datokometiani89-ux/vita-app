@@ -124,6 +124,10 @@ window.VITA = window.VITA || {};
     hrElevated: { ka: "ოდნავ მაღალი", en: "Slightly elevated" },
     hrHigh: { ka: "მაღალი (ტაქიკარდია)", en: "High (tachycardia)" },
     hrRestNote: { ka: "მოსვენებული ნორმა: 60–100 დარტყმა/წთ.", en: "Resting normal: 60–100 BPM." },
+    hrRRUnit: { ka: "სუნთქვა/წთ", en: "br/min" },
+    hrHRVUnit: { ka: "HRV ms", en: "HRV ms" },
+    hrMultiNote: { ka: "სუნთქვისა და HRV-ის შეფასება სიგნალის მოდულაციიდან — სავარაუდო მაჩვენებელია.", en: "Respiration and HRV are estimated from the signal — approximate values." },
+    hrSkinNote: { ka: "კამერის გაზომვა wellness-შეფასებაა (არა სამედიცინო) და სიზუსტე მუქ კანზე შეიძლება დაეცეს.", en: "Camera readings are wellness estimates (not medical) and may be less accurate on darker skin." },
 
     /* mental tests (PHQ-9 / GAD-7) */
     mtTitle: { ka: "მენტალური ტესტები", en: "Mental tests" },
