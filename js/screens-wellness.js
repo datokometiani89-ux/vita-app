@@ -336,6 +336,36 @@
       advice: { ka: "ხანგრძლივი დაღლილობა შეიძლება ანემიის, ფარისებრის ან D-ვიტამინის ნიშანი იყოს — გაიარე ზოგადი ანალიზები.", en: "Persistent fatigue can signal anemia, thyroid or low vitamin D — consider a general blood panel." } },
   ];
 
+  // count how many distinct symptom keywords (regex alternatives) actually matched → likelihood signal
+  function countHits(reList, lc) {
+    if (!reList) return 0;
+    var n = 0;
+    reList.forEach(function (re) {
+      re.source.split("|").forEach(function (p) { if (!p) return; try { if (new RegExp(p, "i").test(lc)) n++; } catch (e) {} });
+    });
+    return n;
+  }
+  // demographic/profile priors — "compare to similar profiles" (Infermedica/K Health style)
+  function profilePrior(rule) {
+    var p = V.state.profile || {}, s = 0, factors = [], ka = V.lang() === "ka";
+    function add(n, fk, fe) { s += n; factors.push(ka ? fk : fe); }
+    var age = +p.age || 0;
+    if (rule.checkupId === "lipid") {            // cardiac
+      if (age >= 60) add(2, age + " წ", age + "y"); else if (age >= 45) add(1, age + " წ", age + "y");
+      if (p.sex === "man") add(0.6, "მამაკაცი", "male");
+      if (p.conditions && p.conditions.indexOf("hyper") >= 0) add(1.2, "მაღალი წნევა", "high BP");
+      if (p.conditions && p.conditions.indexOf("chol") >= 0) add(1, "ქოლესტერინი", "high cholesterol");
+      if (p.smoking === "daily") add(0.8, "მოწევა", "smoking");
+    } else if (rule.checkupId === "mental") {
+      if (p.stress === "high" || p.stress === "burn") add(1, "სტრესი", "stress");
+      if (p.mood === "anx" || p.mood === "low") add(0.8, "დაბალი განწყობა", "low mood");
+      if (p.sleepQ === "poor" || p.sleepQ === "ins") add(0.5, "ცუდი ძილი", "poor sleep");
+    } else if (rule.spec && rule.spec.en.indexOf("Pulmonologist") >= 0) {
+      if (p.smoking === "daily") add(1, "მოწევა", "smoking");
+    }
+    return { score: s, factors: factors };
+  }
+
   function triage(text) {
     var lc = " " + (text || "").toLowerCase() + " ";
     function any(arr) { for (var i = 0; i < arr.length; i++) if (arr[i].test(lc)) return true; return false; }
@@ -349,18 +379,25 @@
     var matched = [];
     SYMPTOM_RULES.forEach(function (r) {
       if (any(r.re)) {
-        var urg = (r.flagRe && r.flagUrgency && any(r.flagRe)) ? r.flagUrgency : r.urgency;
-        matched.push({ rule: r, urgency: urg });
+        var flagged = !!(r.flagRe && any(r.flagRe));
+        var urg = (flagged && r.flagUrgency) ? r.flagUrgency : r.urgency;
+        var prior = profilePrior(r);
+        var score = countHits(r.re, lc) + (flagged ? countHits(r.flagRe, lc) * 1.5 + 1 : 0) + prior.score;
+        matched.push({ rule: r, urgency: urg, score: score, factors: prior.factors });
       }
     });
     if (!matched.length) {
       return { unknown: true, urgency: "soon", spec: { ka: "თერაპევტი", en: "GP / Internist" }, checkupId: "general",
         advice: { ka: "სიმპტომი ცალსახად ვერ დავაკავშირე. დაიწყე თერაპევტით — ის საჭიროებისას მიგმართავს სპეციალისტთან.", en: "I couldn't map this clearly. Start with a GP — they'll refer you to a specialist if needed." } };
     }
-    matched.sort(function (a, b) { return URANK[b.urgency] - URANK[a.urgency]; });
+    // rank: safety first (urgency), then likelihood (score)
+    matched.sort(function (a, b) { return (URANK[b.urgency] - URANK[a.urgency]) || (b.score - a.score); });
     var top = matched[0];
-    return { urgency: top.urgency, spec: top.rule.spec, checkupId: top.rule.checkupId, advice: top.rule.advice,
-      others: matched.slice(1, 3).map(function (m) { return m.rule.spec; }) };
+    var maxScore = Math.max.apply(null, matched.map(function (m) { return m.score; })) || 1;
+    return {
+      urgency: top.urgency, spec: top.rule.spec, checkupId: top.rule.checkupId, advice: top.rule.advice, factors: top.factors,
+      candidates: matched.slice(0, 3).map(function (m) { return { spec: m.rule.spec, urgency: m.urgency, strength: Math.max(20, Math.round(m.score / maxScore * 100)) }; }),
+    };
   }
 
   V.screens.symptom = function () {
@@ -415,8 +452,15 @@
       } else {
         html += '<div class="sy-spec"><small>' + t("sySpecialist") + "</small><b>" + esc(L(r.spec)) + "</b></div>" +
           '<div class="sy-adv"><small>' + t("syAdvice") + "</small><p>" + esc(L(r.advice)) + "</p></div>";
-        if (r.others && r.others.length)
-          html += '<p class="sy-other">' + (V.lang() === "ka" ? "ასევე იხილე: " : "Consider also: ") + r.others.map(function (s) { return esc(L(s)); }).join(", ") + "</p>";
+        if (r.factors && r.factors.length)
+          html += '<p class="sy-prior">' + V.icon("user") + " " + (V.lang() === "ka"
+            ? "შენი პროფილით (" + esc(r.factors.join(", ")) + ") ეს მიმართულება უფრო რელევანტურია."
+            : "Given your profile (" + esc(r.factors.join(", ")) + "), this direction is more relevant.") + "</p>";
+        if (r.candidates && r.candidates.length > 1)
+          html += '<div class="sy-cands"><small>' + t("syMatch") + "</small>" + r.candidates.map(function (c) {
+            return '<div class="sy-cand"><span class="sy-cand__n"><span class="sy-cand__dot sy-urg--' + c.urgency + '"></span>' + esc(L(c.spec)) + "</span>" +
+              '<span class="sy-cand__bar"><i style="width:' + c.strength + '%"></i></span></div>';
+          }).join("") + "</div>";
       }
       html += '<div class="sy-act">' +
         '<button class="btn btn-primary" data-book>' + V.icon("calendar") + " " + t("syBook") + "</button>" +

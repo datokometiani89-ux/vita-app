@@ -81,6 +81,7 @@ window.VITA = window.VITA || {};
     syAdvice: { ka: "რჩევა", en: "Advice" },
     syBook: { ka: "ჩაეწერე ექიმთან →", en: "Book this specialist →" },
     syClear: { ka: "ახლიდან", en: "Start over" },
+    syMatch: { ka: "სიმპტომების შესაბამისობა", en: "Symptom match" },
     syDisclaimer: { ka: "⚠️ ეს ხელსაწყო არ სვამს დიაგნოზს. გადაუდებელ შემთხვევაში დარეკე 112.", en: "⚠️ This tool does not diagnose. In an emergency call 112." },
     syEmergency: { ka: "გადაუდებელი — დაუყოვნებლივ დარეკე 112", en: "Emergency — call 112 immediately" },
     syUrgent: { ka: "სასწრაფო — მიმართე ექიმს 24 საათში", en: "Urgent — see a doctor within 24h" },
