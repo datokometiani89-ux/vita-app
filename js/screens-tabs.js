@@ -29,8 +29,8 @@
             '<p class="s-sub" style="max-width:210px;margin-bottom:0">' + t("hpCreated") + "</p></div>" +
           '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">' +
             '<div style="display:flex;gap:8px;align-items:center">' +
-              '<button class="pts-chip" data-rewards>' + V.icon("sparkle") + (V.state.points || 0) + "</button>" +
-              '<button class="icon-box gray" data-menu>' + V.icon("grid") + "</button>" +
+              '<button class="pts-chip" data-rewards aria-label="' + t("rwTitle") + '">' + V.icon("sparkle") + (V.state.points || 0) + "</button>" +
+              '<button class="icon-box gray" data-menu aria-label="' + t("menuTitle") + '">' + V.icon("grid") + "</button>" +
             "</div>" +
             '<div class="score-bubble">100%</div>' +
           "</div>" +

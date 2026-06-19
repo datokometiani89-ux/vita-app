@@ -1591,6 +1591,8 @@
         "</div>",
         { onMount: function () {
           backX();
+          // freeze the 18 list figures (perf) — they animate only in the player
+          each(".ox-vis .ox-fig", function (svg) { try { svg.pauseAnimations(); } catch (e) {} });
           $("#poRoutine").addEventListener("click", function () { play(OFFICE_EX.slice(), 0); });
           each("[data-ex]", function (b) { b.addEventListener("click", function () { play([OFFICE_EX[+b.getAttribute("data-ex")]], 0); }); });
         }}
@@ -1906,7 +1908,7 @@
   function head(icon, tone, titleKey) {
     return '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' +
       V.iconBox(icon, tone) + "<h1>" + t(titleKey) + "</h1></div>" +
-      '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>";
+      '<button class="icon-box gray" data-x aria-label="' + t("back") + '">' + V.icon("back") + "</button></div>";
   }
   function backX() { var b = $("[data-x]"); if (b) b.addEventListener("click", function () { V.go("wellness"); }); }
   function warn(msg) { return '<div class="note-warn">' + V.icon("info") + " " + msg + "</div>"; }

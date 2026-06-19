@@ -50,6 +50,11 @@ window.VITA = window.VITA || {};
     if (meds.some(function (m) { return m.when === "evening"; }))
       out.push({ h: 19, m: 0, title: ka() ? "საღამოს მედიკამენტები 💊" : "Evening meds 💊",
         body: ka() ? "ვახშამთან ერთად, ექიმის დანიშნულებით." : "With dinner, as prescribed by your doctor." });
+    // daily mood check-in nudge — only if not logged yet today
+    var moodToday = V.state.wellness && V.state.wellness.mood && V.state.wellness.mood[V.todayISO()];
+    if (!moodToday)
+      out.push({ h: 20, m: 30, title: ka() ? "დღის განწყობა 🙂" : "Today's mood 🙂",
+        body: ka() ? "ერთ შეხებაში ჩაინიშნე როგორ გრძნობ თავს — შეინარჩუნე სტრიქი." : "Log how you feel in one tap — keep your streak going." });
     out.push({ h: 21, m: 30, title: ka() ? "ძილის რეჟიმი 🌙" : "Wind down 🌙",
       body: ka() ? "1 სთ ეკრანის გარეშე — მიზანი 7–8 სთ ძილი." : "1 screen-free hour — aim for 7–8h sleep." });
     return out;
