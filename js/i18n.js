@@ -663,6 +663,8 @@ window.VITA = window.VITA || {};
     rwGet: { ka: "აღება", en: "Get" },
     rwNeed: { ka: "გჭირდება {n} ქულა", en: "Need {n} pts" },
     rwGotCode: { ka: "შენი კოდი:", en: "Your code:" },
+    rwCopy: { ka: "კოპირება", en: "Copy code" },
+    rwCopied: { ka: "კოდი დაკოპირდა ✓", en: "Code copied ✓" },
     rwOpenSite: { ka: "vitaapp.ge-ზე გახსნა", en: "Open vitaapp.ge" },
     /* water */
     waterTitle: { ka: "წყლის თრექერი", en: "Water tracker" },

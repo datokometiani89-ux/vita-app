@@ -101,7 +101,7 @@
         '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("yourProfile") + "</h1></div>" +
           '<button class="icon-box gray" data-open-settings>' + V.icon("settings") + "</button></div>" +
         '<div class="profile-hero">' +
-          '<div class="avatar">🧑🏻‍🦱</div>' +
+          V.avatar(96) +
           "<h2>" + esc(name) + "</h2>" +
           '<div class="loc">' + esc(loc) + (V.lang() === "ka" ? ", საქართველო" : ", Georgia") + "</div>" +
         "</div>" +

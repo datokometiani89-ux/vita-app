@@ -129,7 +129,7 @@
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
         '<div style="display:flex;align-items:center;gap:12px;margin:4px 0 18px">' +
-          '<div class="avatar" style="width:48px;height:48px;font-size:26px;margin:0">🧑🏻‍🦱</div>' +
+          V.avatar(48) +
           '<div style="flex:1"><span style="color:var(--muted)">' + greet + ' , </span><b>' + esc(name) + "</b></div>" +
           '<button class="icon-box gray" data-open-settings>' + V.icon("bell") + "</button>" +
         "</div>" +
@@ -753,7 +753,8 @@
           '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
         '<p class="s-sub">' + t("visitsDesc") + "</p>" +
         (bookings.length ? bookings.map(visitCard).join("")
-          : '<div class="empty-state"><p class="cal-note">' + t("vsNone") + "</p>" +
+          : '<div class="empty-state"><div class="empty-ic">' + V.iconBox("calendar", "green") + "</div>" +
+            '<p class="cal-note">' + t("vsNone") + "</p>" +
             '<button class="btn btn-primary" data-tocheckup style="margin-top:8px">' + t("vsBook") + "</button></div>") +
       "</div>" +
       V.tabbar("home") +
@@ -1041,9 +1042,15 @@
           V.state.redeemed.push({ tier: tr.id, code: code, date: V.todayISO() });
           V.save();
           root.querySelector("#rdResult").innerHTML =
-            '<div class="tag green" style="margin-top:12px;width:100%;justify-content:center">' + t("rwGotCode") + " <b style='margin-left:6px'>" + code + "</b></div>";
+            '<button class="tag green rd-copy" data-copy="' + code + '" title="' + t("rwCopy") + '" style="margin-top:12px;width:100%;justify-content:center;border:none;cursor:pointer">' + t("rwGotCode") + " <b style='margin-left:6px'>" + code + "</b> " + V.icon("file") + "</button>";
+          var cp = root.querySelector("[data-copy]");
+          if (cp) cp.addEventListener("click", function () {
+            var c = cp.getAttribute("data-copy");
+            if (navigator.clipboard) navigator.clipboard.writeText(c).catch(function () {});
+            V.toast && V.toast(t("rwCopied"));
+          });
           // refresh the sheet's affordability state
-          setTimeout(function () { var sh = root.querySelector("#rdSheet"); if (sh) sh.remove(); V.render(); }, 1600);
+          setTimeout(function () { var sh = root.querySelector("#rdSheet"); if (sh) sh.remove(); V.render(); }, 2800);
         });
       });
     }

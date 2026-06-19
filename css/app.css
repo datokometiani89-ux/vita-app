@@ -312,6 +312,8 @@
   font-size: 50px;
   box-shadow: 0 8px 24px rgba(39,174,96,.18);
 }
+.avatar-init { background: radial-gradient(circle at 35% 30%, #5fe09a, var(--green) 72%); color: #fff; font-weight: 800; letter-spacing: .02em; flex: none; }
+.avatar-init svg { width: 48%; height: 48%; }
 .profile-hero h2 { font-size: 27px; font-weight: 800; }
 .profile-hero .loc { color: var(--muted); letter-spacing: .12em; margin-top: 4px; font-size: 14px; text-transform: uppercase; }
 
@@ -1150,6 +1152,10 @@
 .visit__cancel { width: 44px; height: 44px; border-radius: 12px; flex: none; background: var(--field); color: var(--muted); display: inline-flex; align-items: center; justify-content: center; }
 .visit__cancel svg { width: 18px; height: 18px; }
 .empty-state { text-align: center; padding: 30px 0; }
+.empty-ic { display: flex; justify-content: center; margin-bottom: 12px; }
+.empty-ic .icon-box { width: 56px; height: 56px; }
+.empty-ic .icon-box svg { width: 26px; height: 26px; }
+.rd-copy svg { width: 14px; height: 14px; opacity: .8; }
 
 /* calendar month view */
 .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }

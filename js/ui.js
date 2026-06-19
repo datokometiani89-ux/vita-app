@@ -139,6 +139,21 @@ window.VITA = window.VITA || {};
     var en = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     return (V.lang && V.lang() === "ka" ? ka : en)[(m - 1) % 12];
   };
+  // initials from a name ("Giorgi Kometiani" → "GK")
+  V.initials = function (name) {
+    if (!name) return "";
+    var parts = String(name).trim().split(/\s+/).filter(Boolean);
+    return ((parts[0] ? parts[0][0] : "") + (parts[1] ? parts[1][0] : "")).toUpperCase();
+  };
+  // personalized avatar: initials on a brand disc, or a neutral user icon if no name
+  V.avatar = function (size) {
+    size = size || 96;
+    var init = V.initials((V.state.profile || {}).name);
+    var margin = size <= 56 ? "0" : "0 auto 12px";
+    var style = "width:" + size + "px;height:" + size + "px;font-size:" + Math.round(size * 0.4) + "px;margin:" + margin;
+    return '<div class="avatar avatar-init" style="' + style + '">' + (init || V.icon("user")) + "</div>";
+  };
+
   V.monthShort = function (m) {
     var ka = ["იან","თებ","მარ","აპრ","მაი","ივნ","ივლ","აგვ","სექ","ოქტ","ნოე","დეკ"];
     var en = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
