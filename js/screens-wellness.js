@@ -1283,15 +1283,40 @@
     { id: "deep-breath", area: "full", fig: "breathe", secs: 30, name: { ka: "ღრმა სუნთქვა", en: "Deep breathing" }, desc: { ka: "4 წმ ჩაისუნთქე ცხვირით, 4 წმ ნელა ამოისუნთქე.", en: "Breathe in through the nose 4s, exhale slowly 4s." } },
   ];
 
-  /* ---------- human SVG figure builder — one animated pose per motion ---------- */
-  var OXC = { sk: "#e9b78c", sk2: "#f0c8a0", gr: "#2BA94C", gr2: "#1f8a3f", hr: "#4a3526", shoe: "#2f3640", eye: "#3a2a20" };
+  /* ---------- human SVG figure builder — animated pose per motion, varied looks ---------- */
+  var OXC = { gr: "#2BA94C", gr2: "#1f8a3f", shoe: "#2f3640", eye: "#2a1c14" };
+  // diverse cast: skin tones, hair styles + colours, m/f silhouettes — cycled per exercise
+  var OX_LOOKS = [
+    { sk: "#f0c8a0", hair: "#4a3526", style: "mop",      fem: false },
+    { sk: "#d99a6c", hair: "#3a2418", style: "ponytail", fem: true },
+    { sk: "#a9663c", hair: "#15151a", style: "crop",     fem: false },
+    { sk: "#f4d2ad", hair: "#c79a3e", style: "long",     fem: true },
+    { sk: "#cf9560", hair: "#5b4636", style: "curly",    fem: false },
+    { sk: "#9c5e38", hair: "#1b1320", style: "bun",      fem: true },
+    { sk: "#e8b487", hair: "#6b4a2a", style: "short",    fem: false },
+    { sk: "#c98a5a", hair: "#2a1c14", style: "long",     fem: true },
+  ];
   function oxP(d, c, w) { return '<path d="' + d + '" stroke="' + c + '" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'; }
   function oxShoe(x, y) { return '<ellipse cx="' + x + '" cy="' + y + '" rx="8" ry="5" fill="' + OXC.shoe + '"/>'; }
-  function oxLegs() { return oxP("M54 98 L50 138", OXC.sk, 11) + oxP("M66 98 L70 138", OXC.sk, 11) + oxShoe(49, 140) + oxShoe(71, 140); }
-  function oxShorts() { return '<rect x="46" y="82" width="28" height="18" rx="7" fill="' + OXC.gr2 + '"/>'; }
-  function oxTorso(cls) { return '<rect ' + (cls ? 'class="' + cls + '" ' : "") + 'x="44" y="54" width="32" height="36" rx="14" fill="' + OXC.gr + '"/>'; }
-  function oxHead() { return '<rect x="55" y="48" width="10" height="9" rx="4" fill="' + OXC.sk + '"/><circle cx="60" cy="34" r="15" fill="' + OXC.sk2 + '"/><path d="M46 32 a14 14 0 0 1 28 0 l-3 -2 a12 12 0 0 0 -22 0 z" fill="' + OXC.hr + '"/><circle cx="55" cy="35" r="1.8" fill="' + OXC.eye + '"/><circle cx="65" cy="35" r="1.8" fill="' + OXC.eye + '"/>'; }
-  function oxArmsDown() { return oxP("M48 60 L40 86", OXC.sk, 9) + oxP("M72 60 L80 86", OXC.sk, 9); }
+  function oxLegs(A) { return oxP("M54 98 L50 138", A.sk, 11) + oxP("M66 98 L70 138", A.sk, 11) + oxShoe(49, 140) + oxShoe(71, 140); }
+  function oxShorts(A) { return A.fem ? '<path d="M47 82 q13 9 26 0 l2 18 q-15 7 -30 0 z" fill="' + OXC.gr2 + '"/>' : '<rect x="46" y="82" width="28" height="18" rx="7" fill="' + OXC.gr2 + '"/>'; }
+  function oxTorso(A, cls) { var c = cls ? 'class="' + cls + '" ' : ""; return A.fem ? '<path ' + c + 'd="M44 56 q16 -7 32 0 l-3 34 q-13 5 -26 0 z" fill="' + OXC.gr + '"/>' : '<rect ' + c + 'x="44" y="54" width="32" height="36" rx="14" fill="' + OXC.gr + '"/>'; }
+  function oxHairBack(A) {
+    if (A.style === "ponytail") return '<path d="M74 30 q9 8 5 26 q-2 6 -6 4 q5 -16 -3 -28 z" fill="' + A.hair + '"/>';
+    if (A.style === "long") return '<path d="M44 28 q-6 24 -1 40 q4 4 8 1 q-5 -22 1 -41 z" fill="' + A.hair + '"/><path d="M76 28 q6 24 1 40 q-4 4 -8 1 q5 -22 -1 -41 z" fill="' + A.hair + '"/>';
+    if (A.style === "bun") return '<circle cx="60" cy="16" r="6" fill="' + A.hair + '"/>';
+    return "";
+  }
+  function oxHairFront(A) {
+    if (A.style === "crop") return '<path d="M46 33 a14 14 0 0 1 28 0 l-2 -4 a13 13 0 0 0 -24 0 z" fill="' + A.hair + '"/>';
+    if (A.style === "short") return '<path d="M48 28 a13 13 0 0 1 24 0 q-12 -5 -24 0 z" fill="' + A.hair + '"/>';
+    if (A.style === "curly") return '<path d="M46 33 a14 14 0 0 1 28 0 l-3 -2 a12 12 0 0 0 -22 0 z" fill="' + A.hair + '"/><circle cx="49" cy="27" r="4" fill="' + A.hair + '"/><circle cx="57" cy="22" r="4.5" fill="' + A.hair + '"/><circle cx="64" cy="22" r="4.5" fill="' + A.hair + '"/><circle cx="71" cy="27" r="4" fill="' + A.hair + '"/>';
+    if (A.style === "long") return '<path d="M44 33 a16 14 0 0 1 32 0 q-5 -11 -16 -11 q-11 0 -16 11 z" fill="' + A.hair + '"/>';
+    if (A.style === "ponytail" || A.style === "bun") return '<path d="M45 33 a15 13 0 0 1 30 0 q-4 -10 -15 -10 q-11 0 -15 10 z" fill="' + A.hair + '"/>';
+    return '<path d="M46 32 a14 14 0 0 1 28 0 l-3 -2 a12 12 0 0 0 -22 0 z" fill="' + A.hair + '"/>'; // mop
+  }
+  function oxHead(A) { return oxHairBack(A) + '<rect x="55" y="48" width="10" height="9" rx="4" fill="' + A.sk + '"/><circle cx="60" cy="34" r="15" fill="' + A.sk + '"/>' + oxHairFront(A) + '<circle cx="55" cy="35" r="1.8" fill="' + OXC.eye + '"/><circle cx="65" cy="35" r="1.8" fill="' + OXC.eye + '"/>'; }
+  function oxArmsDown(A) { return oxP("M48 60 L40 86", A.sk, 9) + oxP("M72 60 L80 86", A.sk, 9); }
   // animateTransform: smooth eased loop (or linear for continuous circles)
   function oxAT(type, vals, dur, linear) {
     if (linear) return '<animateTransform attributeName="transform" type="' + type + '" values="' + vals + '" dur="' + dur + 's" repeatCount="indefinite" calcMode="linear"/>';
@@ -1302,45 +1327,46 @@
   function oxG(anim, inner) { return "<g>" + anim + inner + "</g>"; }
 
   var OX_FIG = {
-    headTilt: function () { return oxLegs() + oxShorts() + oxArmsDown() + oxTorso() + oxG(oxAT("rotate", "-12 60 53;-12 60 53;12 60 53;12 60 53;-12 60 53", 3.4), oxHead()); },
-    headTurn: function () { return oxLegs() + oxShorts() + oxArmsDown() + oxTorso() + '<g class="ox-turn">' + oxHead() + "</g>"; },
-    headTuck: function () { return oxLegs() + oxShorts() + oxArmsDown() + oxTorso() + oxG(oxAT("rotate", "8 60 52;8 60 52;-7 60 52;8 60 52;8 60 52", 2.8), oxHead()); },
-    shoulderRoll: function () { return oxLegs() + oxShorts() + oxTorso() + oxHead() + oxG(oxAT("translate", "0 -3;3 0;0 4;-3 0;0 -3", 2.8, true), oxP("M47 59 L43 76 L48 90", OXC.sk, 9) + oxP("M73 59 L77 76 L72 90", OXC.sk, 9)); },
-    shrug: function () { return oxLegs() + oxShorts() + oxTorso() + oxHead() + oxG(oxAT("translate", "0 3;0 3;0 -5;0 -5;0 3", 2.4), oxArmsDown()); },
-    armsBack: function () { return oxLegs() + oxShorts() +
-      oxG(oxAT("rotate", "0 50 58;0 50 58;20 50 58;0 50 58;0 50 58", 2.8), oxP("M50 58 L40 82", OXC.sk, 9)) +
-      oxG(oxAT("rotate", "0 70 58;0 70 58;-20 70 58;0 70 58;0 70 58", 2.8), oxP("M70 58 L80 82", OXC.sk, 9)) +
-      oxTorso() + oxHead(); },
-    leanForward: function () { return oxLegs() + oxShorts() + oxG(oxAT("rotate", "0 60 92;0 60 92;12 60 92;12 60 92;0 60 92", 3),
-      oxP("M50 60 L58 82", OXC.sk, 9) + oxP("M70 60 L62 82", OXC.sk, 9) + oxTorso() + oxHead()); },
-    twist: function () { return oxLegs() + oxShorts() + '<g class="ox-twist">' + oxArmsDown() + oxTorso() + oxHead() + "</g>"; },
-    sideStretch: function () { return oxLegs() + oxShorts() + oxG(oxAT("rotate", "0 60 96;0 60 96;13 60 96;13 60 96;0 60 96", 3.6),
-      oxP("M48 58 L42 84", OXC.sk, 9) + oxP("M72 56 L82 26", OXC.sk, 9) + oxTorso() + oxHead()); },
-    wristCircle: function () { return oxLegs() + oxShorts() + oxTorso() + oxHead() +
-      oxP("M48 60 L50 78", OXC.sk, 9) + oxP("M72 60 L70 78", OXC.sk, 9) +
-      oxG(oxAT("rotate", "0 50 78;360 50 78", 2.6, true), oxP("M50 78 L57 67", OXC.sk, 8)) +
-      oxG(oxAT("rotate", "0 70 78;360 70 78", 2.6, true), oxP("M70 78 L63 67", OXC.sk, 8)); },
-    handsPulse: function () { return oxLegs() + oxShorts() + oxTorso() + oxHead() +
-      '<g class="ox-pulse-c">' + oxP("M48 60 L52 78 L60 72", OXC.sk, 9) + oxP("M72 60 L68 78 L60 72", OXC.sk, 9) + "</g>"; },
-    legRaise: function () { return oxArmsDown() + oxTorso() + oxHead() + oxShorts() + oxP("M54 98 L50 138", OXC.sk, 11) + oxShoe(49, 140) +
-      oxG(oxAT("rotate", "0 64 96;0 64 96;-34 64 96;0 64 96;0 64 96", 3.2), oxP("M64 96 L70 134", OXC.sk, 11) + oxShoe(71, 140)); },
-    ankleCircle: function () { return oxArmsDown() + oxTorso() + oxHead() + oxShorts() + oxP("M54 98 L50 138", OXC.sk, 11) + oxShoe(49, 140) +
-      oxP("M66 98 L70 126", OXC.sk, 11) + oxG(oxAT("rotate", "0 70 128;360 70 128", 2.4, true), oxShoe(70, 134)); },
-    calfRaise: function () { return '<ellipse cx="49" cy="143" rx="8" ry="4" fill="' + OXC.shoe + '" opacity="0.28"/><ellipse cx="71" cy="143" rx="8" ry="4" fill="' + OXC.shoe + '" opacity="0.28"/>' +
-      oxG(oxAT("translate", "0 0;0 0;0 -11;0 0;0 0", 2), oxLegs() + oxShorts() + oxArmsDown() + oxTorso() + oxHead()); },
-    march: function () { return oxArmsDown() + oxTorso() + oxHead() + oxShorts() +
-      oxG(oxAT("translate", "0 0;0 -9;0 0;0 0;0 0", 1.7), oxP("M54 98 L50 138", OXC.sk, 11) + oxShoe(49, 140)) +
-      oxG(oxAT("translate", "0 0;0 0;0 0;0 -9;0 0", 1.7), oxP("M66 98 L70 138", OXC.sk, 11) + oxShoe(71, 140)); },
-    reachUp: function () { return oxLegs() + oxShorts() + oxG(oxAT("translate", "0 2;0 2;0 -3;0 2;0 2", 3),
-      oxP("M48 58 L53 24", OXC.sk, 9) + oxP("M72 58 L67 24", OXC.sk, 9) + oxTorso() + oxHead()); },
-    breathe: function () { return oxLegs() + oxShorts() +
-      oxG(oxAT("rotate", "0 60 60;0 60 60;-13 60 60;0 60 60;0 60 60", 4.5), oxP("M50 60 L41 83", OXC.sk, 9)) +
-      oxG(oxAT("rotate", "0 60 60;0 60 60;13 60 60;0 60 60;0 60 60", 4.5), oxP("M70 60 L79 83", OXC.sk, 9)) +
-      oxTorso("ox-breathe-c") + oxHead(); },
+    headTilt: function (A) { return oxLegs(A) + oxShorts(A) + oxArmsDown(A) + oxTorso(A) + oxG(oxAT("rotate", "-12 60 53;-12 60 53;12 60 53;12 60 53;-12 60 53", 3.4), oxHead(A)); },
+    headTurn: function (A) { return oxLegs(A) + oxShorts(A) + oxArmsDown(A) + oxTorso(A) + '<g class="ox-turn">' + oxHead(A) + "</g>"; },
+    headTuck: function (A) { return oxLegs(A) + oxShorts(A) + oxArmsDown(A) + oxTorso(A) + oxG(oxAT("rotate", "8 60 52;8 60 52;-7 60 52;8 60 52;8 60 52", 2.8), oxHead(A)); },
+    shoulderRoll: function (A) { return oxLegs(A) + oxShorts(A) + oxTorso(A) + oxHead(A) + oxG(oxAT("translate", "0 -3;3 0;0 4;-3 0;0 -3", 2.8, true), oxP("M47 59 L43 76 L48 90", A.sk, 9) + oxP("M73 59 L77 76 L72 90", A.sk, 9)); },
+    shrug: function (A) { return oxLegs(A) + oxShorts(A) + oxTorso(A) + oxHead(A) + oxG(oxAT("translate", "0 3;0 3;0 -5;0 -5;0 3", 2.4), oxArmsDown(A)); },
+    armsBack: function (A) { return oxLegs(A) + oxShorts(A) +
+      oxG(oxAT("rotate", "0 50 58;0 50 58;20 50 58;0 50 58;0 50 58", 2.8), oxP("M50 58 L40 82", A.sk, 9)) +
+      oxG(oxAT("rotate", "0 70 58;0 70 58;-20 70 58;0 70 58;0 70 58", 2.8), oxP("M70 58 L80 82", A.sk, 9)) +
+      oxTorso(A) + oxHead(A); },
+    leanForward: function (A) { return oxLegs(A) + oxShorts(A) + oxG(oxAT("rotate", "0 60 92;0 60 92;12 60 92;12 60 92;0 60 92", 3),
+      oxP("M50 60 L58 82", A.sk, 9) + oxP("M70 60 L62 82", A.sk, 9) + oxTorso(A) + oxHead(A)); },
+    twist: function (A) { return oxLegs(A) + oxShorts(A) + '<g class="ox-twist">' + oxArmsDown(A) + oxTorso(A) + oxHead(A) + "</g>"; },
+    sideStretch: function (A) { return oxLegs(A) + oxShorts(A) + oxG(oxAT("rotate", "0 60 96;0 60 96;13 60 96;13 60 96;0 60 96", 3.6),
+      oxP("M48 58 L42 84", A.sk, 9) + oxP("M72 56 L82 26", A.sk, 9) + oxTorso(A) + oxHead(A)); },
+    wristCircle: function (A) { return oxLegs(A) + oxShorts(A) + oxTorso(A) + oxHead(A) +
+      oxP("M48 60 L50 78", A.sk, 9) + oxP("M72 60 L70 78", A.sk, 9) +
+      oxG(oxAT("rotate", "0 50 78;360 50 78", 2.6, true), oxP("M50 78 L57 67", A.sk, 8)) +
+      oxG(oxAT("rotate", "0 70 78;360 70 78", 2.6, true), oxP("M70 78 L63 67", A.sk, 8)); },
+    handsPulse: function (A) { return oxLegs(A) + oxShorts(A) + oxTorso(A) + oxHead(A) +
+      '<g class="ox-pulse-c">' + oxP("M48 60 L52 78 L60 72", A.sk, 9) + oxP("M72 60 L68 78 L60 72", A.sk, 9) + "</g>"; },
+    legRaise: function (A) { return oxArmsDown(A) + oxTorso(A) + oxHead(A) + oxShorts(A) + oxP("M54 98 L50 138", A.sk, 11) + oxShoe(49, 140) +
+      oxG(oxAT("rotate", "0 64 96;0 64 96;-34 64 96;0 64 96;0 64 96", 3.2), oxP("M64 96 L70 134", A.sk, 11) + oxShoe(71, 140)); },
+    ankleCircle: function (A) { return oxArmsDown(A) + oxTorso(A) + oxHead(A) + oxShorts(A) + oxP("M54 98 L50 138", A.sk, 11) + oxShoe(49, 140) +
+      oxP("M66 98 L70 126", A.sk, 11) + oxG(oxAT("rotate", "0 70 128;360 70 128", 2.4, true), oxShoe(70, 134)); },
+    calfRaise: function (A) { return '<ellipse cx="49" cy="143" rx="8" ry="4" fill="' + OXC.shoe + '" opacity="0.28"/><ellipse cx="71" cy="143" rx="8" ry="4" fill="' + OXC.shoe + '" opacity="0.28"/>' +
+      oxG(oxAT("translate", "0 0;0 0;0 -11;0 0;0 0", 2), oxLegs(A) + oxShorts(A) + oxArmsDown(A) + oxTorso(A) + oxHead(A)); },
+    march: function (A) { return oxArmsDown(A) + oxTorso(A) + oxHead(A) + oxShorts(A) +
+      oxG(oxAT("translate", "0 0;0 -9;0 0;0 0;0 0", 1.7), oxP("M54 98 L50 138", A.sk, 11) + oxShoe(49, 140)) +
+      oxG(oxAT("translate", "0 0;0 0;0 0;0 -9;0 0", 1.7), oxP("M66 98 L70 138", A.sk, 11) + oxShoe(71, 140)); },
+    reachUp: function (A) { return oxLegs(A) + oxShorts(A) + oxG(oxAT("translate", "0 2;0 2;0 -3;0 2;0 2", 3),
+      oxP("M48 58 L53 24", A.sk, 9) + oxP("M72 58 L67 24", A.sk, 9) + oxTorso(A) + oxHead(A)); },
+    breathe: function (A) { return oxLegs(A) + oxShorts(A) +
+      oxG(oxAT("rotate", "0 60 60;0 60 60;-13 60 60;0 60 60;0 60 60", 4.5), oxP("M50 60 L41 83", A.sk, 9)) +
+      oxG(oxAT("rotate", "0 60 60;0 60 60;13 60 60;0 60 60;0 60 60", 4.5), oxP("M70 60 L79 83", A.sk, 9)) +
+      oxTorso(A, "ox-breathe-c") + oxHead(A); },
   };
-  function figureSVG(kind) {
+  function figureSVG(kind, idx) {
     var build = OX_FIG[kind] || OX_FIG.headTilt;
-    return '<svg viewBox="0 0 120 150" class="ox-fig" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' + build() + "</svg>";
+    var A = OX_LOOKS[(idx || 0) % OX_LOOKS.length];
+    return '<svg viewBox="0 0 120 150" class="ox-fig" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' + build(A) + "</svg>";
   }
 
   V.screens.posture = function () {
@@ -1363,7 +1389,7 @@
           byArea[a].map(function (i) {
             var ex = OFFICE_EX[i];
             return '<button class="ox-card" data-ex="' + i + '">' +
-              '<span class="ox-vis">' + figureSVG(ex.fig) + "</span>" +
+              '<span class="ox-vis">' + figureSVG(ex.fig, i) + "</span>" +
               '<span class="ox-card__t"><b>' + L(ex.name) + "</b><small>" + ex.secs + " " + t("poSecs") + " · " + L(OFFICE_AREAS[ex.area]) + "</small></span>" +
               V.icon("back") + "</button>";
           }).join("");
@@ -1402,7 +1428,7 @@
             head("walk", "pink", "poTitle") +
             '<div class="ox-player">' +
               (routine ? '<p class="ox-qmeta">' + (idx + 1) + " / " + queue.length + "</p>" : "") +
-              '<div class="ox-stage" id="oxFig">' + figureSVG(ex.fig) + "</div>" +
+              '<div class="ox-stage" id="oxFig">' + figureSVG(ex.fig, OFFICE_EX.indexOf(ex)) + "</div>" +
               '<h2 class="ox-name">' + L(ex.name) + "</h2>" +
               '<p class="ox-desc">' + L(ex.desc) + "</p>" +
               '<div class="ox-timer" id="oxTimer">' + ex.secs + "</div>" +
