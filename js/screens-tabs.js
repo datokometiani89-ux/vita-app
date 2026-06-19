@@ -432,11 +432,9 @@
       sSeries.push(Math.round(Math.max(40, scoreNow - (weeks - 1 - j) * 2.2)));
     }
 
-    // streak + tasks completed
+    // ---- real logged data → tappable dashboard cards ----
     var streak = countStreak();
     var totalDone = Object.keys(V.state.doneTasks).reduce(function (a, k) { return a + V.state.doneTasks[k].length; }, 0);
-
-    // ---- real logged wellness data ----
     var ws = V.state.wellness || {};
     var moodStreak = V.moodStreak ? V.moodStreak() : 0;
     var screenPct = V.screeningProgress ? V.screeningProgress().pct : 0;
@@ -444,10 +442,24 @@
     var sleepAvg = sleepArr.length ? Math.round(sleepArr.slice(-7).reduce(function (a, x) { return a + x.hours; }, 0) / Math.min(7, sleepArr.length) * 10) / 10 : null;
     var gardenStage = V.companionStage ? V.companionStage() : 0;
     var moodDates = Object.keys(ws.mood || {}).sort().slice(-14);
+    var r = V.readiness ? V.readiness() : null;
+    var bpLast = (ws.bp || []).slice(-1)[0];
+    var hrLast = (ws.hr || []).slice(-1)[0];
 
-    function wstat(val, label) {
-      return '<div class="an-stat"><b>' + val + "</b><small>" + label + "</small></div>";
+    function pgCard(icon, tone, value, label, route) {
+      return '<button class="pg-card" data-go="' + route + '">' + V.iconBox(icon, tone) +
+        '<span class="pg-card__t"><b>' + value + "</b><small>" + label + "</small></span></button>";
     }
+    var cards = [];
+    if (r) cards.push(pgCard("bolt", r.band.tone, r.score, t("rdTitle"), "readiness"));
+    cards.push(pgCard("flame", "crimson", streak, t("pgStreakDays"), "plan"));
+    cards.push(pgCard("smile", "yellow", "🔥 " + moodStreak, t("moStreak"), "mood"));
+    cards.push(pgCard("walk", "pink", t("quS" + gardenStage), t("quTitle"), "quests"));
+    cards.push(pgCard("shield", "blue", screenPct + "%", t("scRecCount"), "annual"));
+    if (sleepAvg != null) cards.push(pgCard("moon", "blue", sleepAvg + t("slHours"), t("slAvg"), "sleep"));
+    if (bpLast) cards.push(pgCard("drop", "crimson", bpLast.sys + "/" + bpLast.dia, t("bpTitle"), "bplog"));
+    if (hrLast) cards.push(pgCard("heart", "crimson", String(hrLast.bpm), t("hrTitle"), "heartrate"));
+    cards.push(pgCard("check", "green", totalDone, t("pgTasksDone"), "plan"));
 
     V.mount(
       V.statusbar() +
@@ -455,20 +467,8 @@
         '<div class="s-head">' + V.logoBadge(34) + "<h1>" + t("pgTitle") + "</h1></div>" +
         '<p class="s-sub">' + t("pgDesc") + "</p>" +
 
-        '<div class="pg-streak">' +
-          '<div class="pg-stat"><div class="big">' + V.icon("flame") + streak + "</div>" +
-            '<small>' + t("pgStreakDays") + "</small></div>" +
-          '<div class="pg-stat"><div class="big" style="color:var(--green)">' + V.icon("check") + totalDone + "</div>" +
-            '<small>' + t("pgTasksDone") + "</small></div>" +
-        "</div>" +
-
         '<div class="kicker" style="margin:6px 0 10px">' + t("pgWellness") + "</div>" +
-        '<div class="an-summary" style="flex-wrap:wrap">' +
-          wstat("🔥 " + moodStreak, t("moStreak")) +
-          wstat("🌱 " + (gardenStage + 1), t("quTitle")) +
-          wstat(screenPct + "%", t("scRecCount")) +
-          (sleepAvg != null ? wstat(sleepAvg + t("slHours"), t("slAvg")) : "") +
-        "</div>" +
+        '<div class="pg-grid">' + cards.join("") + "</div>" +
 
         (moodDates.length ? '<div class="chart-card"><h3>' + t("pgMoodTrend") + "</h3>" +
           '<div class="mo-chart">' + moodDates.map(function (iso) {
@@ -485,7 +485,10 @@
           barChart(sSeries) + "</div>" +
       "</div>" +
       V.tabbar("progress") +
-      "</div>"
+      "</div>",
+      { onMount: function () {
+        each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
+      }}
     );
   };
 

@@ -1311,6 +1311,13 @@
 @keyframes blink { 0%,60%,100%{ opacity:.3; transform: translateY(0);} 30%{ opacity:1; transform: translateY(-3px);} }
 
 /* ---------- progress ---------- */
+.pg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.pg-card { display: flex; align-items: center; gap: 11px; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 13px; cursor: pointer; text-align: left; min-width: 0; transition: border-color .15s, transform .1s; }
+.pg-card:hover { border-color: var(--green); } .pg-card:active { transform: scale(.98); }
+.pg-card .icon-box { flex: none; width: 40px; height: 40px; }
+.pg-card__t { min-width: 0; }
+.pg-card__t b { display: block; font-size: 19px; font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pg-card__t small { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 .pg-streak { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
 .pg-stat { background: var(--card); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 18px; }
 .pg-stat .big { font-size: 32px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
