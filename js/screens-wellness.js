@@ -769,6 +769,61 @@
     return n;
   }
 
+  /* ---------- public mood API (used by the home daily-loop card) ---------- */
+  V.MOODS = MOODS;
+  V.moodStreak = function () { return moodStreak(W().mood || {}); };
+  V.moodToday = function () { return (W().mood || {})[today()] || null; };
+  // one-tap log from anywhere; keeps any existing note/tags, awards once/day
+  V.quickLogMood = function (score) {
+    var w = W(); w.mood = w.mood || {};
+    var existed = !!w.mood[today()];
+    var prev = w.mood[today()] || {};
+    w.mood[today()] = { score: score, note: prev.note || "", tags: prev.tags || [] };
+    if (!existed) V.awardOnce && V.awardOnce("mood:" + today(), V.POINTS.task, "task");
+    V.save();
+    return w.mood[today()];
+  };
+
+  // returns HTML for a home-screen daily mood check-in (one-tap)
+  V.moodHomeCard = function () {
+    var todays = V.moodToday(), streak = V.moodStreak();
+    var head = '<div class="hm-head"><b>' + t("moHow") + "</b>" +
+      (streak ? '<span class="hm-streak">🔥 ' + streak + "</span>" : "") + "</div>";
+    if (todays) {
+      var m = MOODS[(todays.score || 1) - 1];
+      return '<div class="card-soft home-mood" id="homeMood">' + head +
+        '<div class="hm-done"><span class="hm-emoji">' + m.emoji + "</span>" +
+          "<div><b>" + t(m.k) + "</b><small>" + t("moSaved") + "</small></div>" +
+          '<button class="hm-hist" data-hm-hist>' + t("moHistory") + " " + V.icon("next") + "</button></div></div>";
+    }
+    return '<div class="card-soft home-mood" id="homeMood">' + head +
+      '<div class="hm-faces">' + MOODS.map(function (mm) {
+        return '<button class="hm-face" data-hm="' + mm.v + '" aria-label="' + t(mm.k) + '"><span>' + mm.emoji + "</span></button>";
+      }).join("") + "</div></div>";
+  };
+  // wires the home mood card; re-renders itself in place after a tap
+  V.wireMoodHome = function () {
+    var card = document.getElementById("homeMood");
+    if (!card) return;
+    function refresh() {
+      var box = document.createElement("div");
+      box.innerHTML = V.moodHomeCard();
+      var fresh = box.firstChild;
+      card.replaceWith(fresh);
+      V.wireMoodHome();
+    }
+    card.querySelectorAll("[data-hm]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        V.quickLogMood(parseInt(b.getAttribute("data-hm"), 10));
+        V.toast && V.toast(t("moSaved"));
+        if (navigator.vibrate) navigator.vibrate(25);
+        refresh();
+      });
+    });
+    var h = card.querySelector("[data-hm-hist]");
+    if (h) h.addEventListener("click", function () { V.go("mood"); });
+  };
+
   V.screens.mood = function () {
     var w = W();
     w.mood = w.mood || {};

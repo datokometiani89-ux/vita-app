@@ -802,6 +802,24 @@
 .mo-bar__fill.tone-yellow { background: #e6b800; }
 .mo-bar__fill.tone-crimson { background: #e8536b; }
 
+/* ===== home daily mood check-in ===== */
+.home-mood { padding: 14px 16px; }
+.hm-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.hm-head b { font-size: 15.5px; }
+.hm-streak { font-size: 13px; font-weight: 700; color: var(--green); background: var(--green-tint); padding: 3px 10px; border-radius: 99px; }
+.hm-faces { display: flex; justify-content: space-between; gap: 8px; }
+.hm-face { flex: 1; background: var(--field); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 10px 0; cursor: pointer; transition: border-color .15s, transform .12s, background .15s; }
+.hm-face span { font-size: 28px; line-height: 1; display: block; filter: grayscale(.35); transition: filter .15s, transform .15s; }
+.hm-face:hover { border-color: var(--green); }
+.hm-face:active { transform: scale(.94); }
+.hm-face:hover span { filter: none; transform: scale(1.12); }
+.hm-done { display: flex; align-items: center; gap: 12px; }
+.hm-emoji { font-size: 34px; line-height: 1; }
+.hm-done b { display: block; font-size: 15px; }
+.hm-done small { color: var(--muted); font-size: 12.5px; }
+.hm-hist { margin-left: auto; background: none; border: none; color: var(--green); font-weight: 700; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+.hm-hist svg { width: 15px; height: 15px; }
+
 /* ===== blood pressure + shared inputs ===== */
 .bp-row { display: flex; gap: 12px; }
 .bp-field { flex: 1; display: block; }

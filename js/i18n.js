@@ -158,6 +158,7 @@ window.VITA = window.VITA || {};
     /* mood journal */
     moTitle: { ka: "განწყობის დღიური", en: "Mood journal" },
     moSub: { ka: "ჩაინიშნე დღევანდელი განწყობა — დროთა განმავლობაში ნახავ ტენდენციას.", en: "Log today's mood — spot your trend over time." },
+    moHome: { ka: "დღევანდელი განწყობა", en: "Today's mood" },
     moHow: { ka: "როგორ გრძნობ თავს დღეს?", en: "How do you feel today?" },
     moM1: { ka: "ძალიან ცუდად", en: "Awful" },
     moM2: { ka: "ცუდად", en: "Low" },
