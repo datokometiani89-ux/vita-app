@@ -53,6 +53,7 @@ window.VITA = window.VITA || {};
     labResults: [],       // [{id, date, values:{glucose:..}, summary}]
     weightLog: [],        // [{date, kg}]
     chat: [],             // [{role:"user"|"vita", text}]
+    vitaAccount: { connected: false, email: "", plan: "" }, // link to vitaapp.ge
   };
 
   function load() {

@@ -78,6 +78,28 @@ window.VITA = window.VITA || {};
     return { glucose: "medical", energy: "medical", lipid: "medical", general: "medical",
       prostate: "medical", mental: "mental", derm: "aesthetic", dental: "dental" }[id] || "medical";
   };
+
+  /* ---------- vitaapp.ge service directory + account ----------
+     Surfaced on the VITA account screen — deep-links into the live
+     vitaapp.ge service categories (real site, SPA). */
+  V.VITAAPP_URL = "https://vitaapp.ge";
+  V.vitaServices = [
+    { id: "medical",   icon: "shield",   tone: "green", name: { ka: "კლინიკები", en: "Clinics" },        url: clinicData.medical.vitaUrl },
+    { id: "pharmacy",  icon: "pill",     tone: "blue",  name: { ka: "აფთიაქები", en: "Pharmacies" },      url: clinicData.pharmacy.vitaUrl },
+    { id: "dental",    icon: "sparkle",  tone: "pink",  name: { ka: "სტომატოლოგია", en: "Dental" },        url: clinicData.dental.vitaUrl },
+    { id: "aesthetic", icon: "heart",    tone: "pink",  name: { ka: "სილამაზე & ესთეტიკა", en: "Beauty & aesthetics" }, url: clinicData.aesthetic.vitaUrl },
+    { id: "mental",    icon: "chat",     tone: "blue",  name: { ka: "მენტალური ჯანმრთელობა", en: "Mental health" }, url: clinicData.mental.vitaUrl },
+  ];
+  V.vitaRegisterUrl = function () { return V.VITAAPP_URL + "/register"; };
+  // link the local app to a vitaapp.ge account (prototype: email only, no password)
+  V.linkVitaAccount = function (email, plan) {
+    V.state.vitaAccount = { connected: true, email: email || "", plan: plan || "basic" };
+    V.save();
+  };
+  V.unlinkVitaAccount = function () {
+    V.state.vitaAccount = { connected: false, email: "", plan: "" };
+    V.save();
+  };
   V.clinicsFor = function (category, sort) {
     var grp = clinicData[category] || clinicData.medical;
     var items = grp.items.map(function (c, i) { return Object.assign({ id: category + i }, c); });

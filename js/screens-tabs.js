@@ -1068,6 +1068,7 @@
           tile("chat", "blue", "mChat", 'data-go="vita"'),
           tile("progress", "green", "mProgress", 'data-go="progress"'),
           tile("sparkle", "yellow", "mRewards", 'data-go="rewards"'),
+          tile("globe", "green", "mVitaapp", 'data-go="vitaapp"'),
         ]) +
         group("grpTools", [
           tile("calendar", "blue", "mIcs", 'data-act="ics"'),
@@ -1091,6 +1092,71 @@
             else if (a === "print") V.features.printSummary();
             else if (a === "settings") { V.openSettings(); }
           });
+        });
+      }}
+    );
+  };
+
+  /* ===================== VITAAPP.GE ACCOUNT / INTEGRATION ===================== */
+  V.screens.vitaapp = function () {
+    var acc = V.state.vitaAccount || { connected: false };
+    var pts = V.state.points || 0;
+
+    function serviceCard(s) {
+      return '<a class="va-svc" href="' + s.url + '" target="_blank" rel="noopener">' +
+        V.iconBox(s.icon, s.tone) + '<span>' + L(s.name) + '</span></a>';
+    }
+
+    var hero = acc.connected
+      ? '<div class="va-hero on">' +
+          '<div class="va-hero__top">' + V.logoBadge(40) +
+            '<div><b>' + t("vaConnected") + '</b><small>' + esc(acc.email || "vitaapp.ge") + '</small></div>' +
+            '<span class="tag green">' + t("vaPlan" + (acc.plan === "premium" ? "Premium" : "Basic")) + '</span></div>' +
+          '<div class="va-hero__act">' +
+            '<a class="btn btn-primary" href="' + V.VITAAPP_URL + '" target="_blank" rel="noopener" style="flex:1">' + V.icon("globe") + ' ' + t("vaOpen") + '</a>' +
+            '<button class="btn btn-ghost" data-unlink>' + t("vaUnlink") + '</button></div>' +
+        '</div>'
+      : '<div class="va-hero">' +
+          '<div class="va-hero__top">' + V.logoBadge(40) +
+            '<div><b>' + t("vaTitle") + '</b><small>' + t("vaSub") + '</small></div></div>' +
+          '<ul class="va-benefits">' +
+            '<li>' + V.icon("check") + t("vaB1") + '</li>' +
+            '<li>' + V.icon("check") + t("vaB2") + '</li>' +
+            '<li>' + V.icon("check") + t("vaB3") + '</li></ul>' +
+          '<a class="btn btn-primary" href="' + V.vitaRegisterUrl() + '" target="_blank" rel="noopener" style="width:100%">' + V.icon("globe") + ' ' + t("vaRegister") + '</a>' +
+          '<div class="va-link"><p class="cal-note" style="margin:14px 0 8px">' + t("vaLinkHint") + '</p>' +
+            '<div class="field"><input type="email" id="vaEmail" placeholder="' + t("vaEmailPh") + '"></div>' +
+            '<button class="btn btn-ghost" id="vaLinkBtn" style="width:100%">' + t("vaLinkBtn") + '</button></div>' +
+        '</div>';
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("vaHeader") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("x") + "</button></div>" +
+        '<p class="s-sub">' + t("vaIntro") + "</p>" +
+        hero +
+        '<button class="va-points" data-rewards>' + V.iconBox("sparkle", "yellow") +
+          '<div style="flex:1;text-align:left"><b>' + t("vaPointsTitle") + '</b><small>' + t("vaPointsSub", { n: pts }) + '</small></div>' +
+          V.icon("back") + '</button>' +
+        '<div class="section-head"><h3>' + t("vaServices") + '</h3></div>' +
+        '<p class="cal-note" style="text-align:left;margin:0 0 12px">' + t("vaServicesSub") + '</p>' +
+        '<div class="va-svc-grid">' + V.vitaServices.map(serviceCard).join("") + '</div>' +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("menu"); });
+        var rw = $("[data-rewards]"); if (rw) rw.addEventListener("click", function () { V.go("rewards"); });
+        var unlink = $("[data-unlink]");
+        if (unlink) unlink.addEventListener("click", function () { V.unlinkVitaAccount(); V.render(); });
+        var linkBtn = $("#vaLinkBtn");
+        if (linkBtn) linkBtn.addEventListener("click", function () {
+          var email = ($("#vaEmail").value || "").trim();
+          if (!email || email.indexOf("@") < 0) { $("#vaEmail").focus(); return; }
+          V.linkVitaAccount(email, "basic");
+          V.render();
+          V.toast && V.toast(t("vaLinked"));
         });
       }}
     );
