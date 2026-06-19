@@ -1533,18 +1533,20 @@
         $("#analyzeBtn").addEventListener("click", function () {
           captureInputs();
           var values = (V.state.labResults[0] && V.state.labResults[0].values) || {};
+          var demoFilled = false;
           if (!Object.keys(values).length) {
             // nothing anywhere → demo-fill the open panel so the flow always works
+            demoFilled = true;
             panel.refs.forEach(function (r) { values[r.id] = r.demo; });
             var box0 = root.querySelectorAll("[data-lab]");
             box0.forEach(function (inp) { var r = refById(inp.getAttribute("data-lab")); if (r) inp.value = r.demo; });
           }
           applyResults(values);
-          V.state.labResults = [{ date: V.todayISO(), values: values }];
+          V.state.labResults = [{ date: V.todayISO(), values: values, demo: demoFilled }];
           V.save();
           V.awardOnce("lab", V.POINTS.lab, "lab");
           var box = $("#ruResult");
-          box.innerHTML = resultBlock();
+          box.innerHTML = (demoFilled ? '<div class="note-warn" style="margin-bottom:12px">' + V.icon("info") + " " + t("ruDemoNote") + "</div>" : "") + resultBlock();
           box.scrollIntoView({ behavior: "smooth", block: "start" });
           if (V.api.aiOn()) {
             var sumEl = $("#ruSummary");

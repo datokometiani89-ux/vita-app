@@ -824,6 +824,7 @@ window.VITA = window.VITA || {};
     ruManual: { ka: "ხელით შეყვანა", en: "Enter manually" },
     ruValues: { ka: "ლაბორატორიული მაჩვენებლები", en: "Lab values" },
     ruAnalyze: { ka: "ანალიზი", en: "Analyse" },
+    ruDemoNote: { ka: "მაჩვენებლები ცარიელი იყო — ნაჩვენებია სადემონსტრაციო მნიშვნელობებზე. შენი რეალური შედეგებისთვის შეიყვანე მონაცემები.", en: "Fields were empty — this uses demo values. Enter your real results for a personal analysis." },
     ruResult: { ka: "ინტერპრეტაცია", en: "Interpretation" },
     ruUpdated: { ka: "პროფილი განახლდა ახალი შედეგებით", en: "Profile updated with new results" },
     ruNormRange: { ka: "ნორმა", en: "Normal range" },
