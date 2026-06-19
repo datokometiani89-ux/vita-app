@@ -79,5 +79,17 @@ its rAF/camera/timer on navigation (`alive()` guard). i18n keys in `js/i18n.js`
 
 **Possible future tools** (not built): live-Pose posture analysis · medication reminders · hydration-by-weight calc · more risk scores (CVD/heart-age).
 
+## ▶ Engagement layer (from competitive analysis — global health apps)
+A deep-research competitive analysis (Finch, Daylio, Oura, Samsung Vitals, K Health, Infermedica, Teladoc, Doctolib) drives a staged roadmap. All public APIs live in `js/screens-wellness.js`; home cards render in `V.screens.home` (`js/screens-tabs.js`) and are wired in its onMount.
+
+**Stage 1 — DONE (quick wins):**
+- ✅ **Mood daily loop** — one-tap 5-emoji check-in on home (`V.moodHomeCard`/`V.wireMoodHome`/`V.quickLogMood`/`V.moodStreak`), flips to logged + day-streak. (Daylio pattern.)
+- ✅ **VITA garden** (`#/quests`) — Finch-style daily quests grow a 6-stage SVG plant. `V.dailyQuests` (derived from existing state, no double-tracking), `V.creditQuests` (+1 grow/quest, per-day guarded, once/day all-done bonus), `V.companionStage`/`companionProgress`, `plantSVG`. Home card `V.gardenHomeCard`/`V.wireGardenHome`. `state.companion {grow, credited}`.
+- ✅ **Readiness** (`#/readiness`) — Oura-style daily 0-100 (`V.readiness`: sleep+mood+activity+HR-deviation factors) + Samsung-Vitals baseline-deviation insights. `V.hrBaseline/sleepBaseline/bpBaseline` = avg of PRIOR readings (exclude latest) → "vs your usual". Home card `V.readinessHomeCard`. Labeled wellness, not medical.
+
+**Stage 2 — NEXT (differentiation):** probabilistic symptom triage (weighted/Bayesian upgrade of `SYMPTOM_RULES`, "compare to similar profiles", K Health/Infermedica blueprint) · multi-signal camera (respiratory rate / HRV from the existing PPG tool).
+**Stage 3 — strategic:** in-app telemedicine (video + e-prescription + payment, Doctolib model) on the clinics-booking seam · subscription tier (VITA+) + B2B2C.
+**Hard rules from research:** never label camera-vitals or AI triage as clinical/diagnostic — wellness/informational + disclaimer; do NOT cite any symptom-checker accuracy %; camera-PPG degrades on dark skin (fairness caveat). Open: Georgian medical-device regulation + whether the local market supports B2B2C subsidized telehealth.
+
 ### How to verify (preview)
 rsync to `/tmp/vita-preview`, bump `?v=NN` (app.html) + `sw.js` CACHE, reload with `?cb=`, drive the UI, check `preview_console_logs`. Currently at **v21**. Launch config `.claude/launch.json` runs `python3 http.server` on the mirror, port 8011 (note: it `chdir`s first — the launched cwd is sandboxed/inaccessible, so `--directory` fails).
