@@ -1061,10 +1061,13 @@
 
   /* ===================== MENU / HUB ===================== */
   V.screens.menu = function () {
-    function tile(icon, tone, labelKey, attr) {
-      return '<button class="menu-tile" ' + attr + '>' + V.iconBox(icon, tone) +
-        "<span>" + t(labelKey) + "</span></button>";
+    function tile(icon, tone, labelKey, attr, badge) {
+      return '<button class="menu-tile" ' + attr + '>' +
+        (badge ? '<i class="menu-badge">' + badge + "</i>" : "") +
+        V.iconBox(icon, tone) + "<span>" + t(labelKey) + "</span></button>";
     }
+    var upVisits = (V.state.bookings || []).filter(function (b) { return b.status !== "cancelled"; }).length;
+    var screenP = V.screeningProgress ? V.screeningProgress() : null;
     function group(titleKey, tiles) {
       return '<div class="menu-grp"><div class="kicker" style="margin:18px 0 10px">' + t(titleKey) + "</div>" +
         '<div class="menu-grid">' + tiles.join("") + "</div></div>";
@@ -1079,7 +1082,7 @@
 
         group("grpHealth", [
           tile("user", "green", "mProfile", 'data-go="profile"'),
-          tile("calendar", "pink", "mAnnual", 'data-go="annual"'),
+          tile("calendar", "pink", "mAnnual", 'data-go="annual"', screenP && screenP.total ? screenP.pct + "%" : null),
           tile("shield", "blue", "mBody", 'data-go="bodymap"'),
           tile("flask", "yellow", "mResults", 'data-go="results"'),
         ].concat(V.state.profile.sex === "woman" ? [tile("heart", "pink", "mCycle", 'data-go="cycle"')] : [])) +
@@ -1090,13 +1093,13 @@
           tile("drop", "blue", "mWater", 'data-go="water"'),
           tile("calendar", "green", "mCalendar", 'data-go="calendar"'),
           tile("flask", "pink", "mCheckup", 'data-go="checkup"'),
-          tile("location", "blue", "mVisits", 'data-go="visits"'),
+          tile("location", "blue", "mVisits", 'data-go="visits"', upVisits || null),
         ]) +
         group("grpAssistant", [
           tile("chat", "blue", "mChat", 'data-go="vita"'),
           tile("progress", "green", "mProgress", 'data-go="progress"'),
           tile("eye", "blue", "mWellness", 'data-go="wellness"'),
-          tile("sparkle", "yellow", "mRewards", 'data-go="rewards"'),
+          tile("sparkle", "yellow", "mRewards", 'data-go="rewards"', (V.state.points || 0) || null),
           tile("globe", "green", "mVitaapp", 'data-go="vitaapp"'),
         ]) +
         group("grpTools", [
