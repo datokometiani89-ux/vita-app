@@ -133,12 +133,13 @@
 /* ---------- bottom action bar ---------- */
 .actionbar {
   flex: none;
+  position: sticky; bottom: 0; z-index: 20;
   display: flex; align-items: center; justify-content: space-between;
   gap: 14px;
   padding: 14px 20px calc(16px + var(--safe-bottom));
   background: var(--card);
   border-top: 1px solid var(--line);
-  box-shadow: 0 -6px 20px rgba(20,24,31,.04);
+  box-shadow: 0 -6px 20px rgba(20,24,31,.06);
 }
 .actionbar .btn-primary { flex: 1; max-width: 60%; }
 .actionbar.center { justify-content: center; }
@@ -1376,9 +1377,11 @@
 
 /* small phones / mobile browsers */
 @media (max-width: 480px) {
-  .app-stage { padding: 0; }
+  .app-stage { padding: 0; min-height: 100vh; min-height: 100dvh; }
   .phone {
-    width: 100vw; height: 100vh; max-height: none;
+    width: 100vw;
+    height: 100vh; height: 100dvh; /* dvh = visible area (excludes browser UI) so bottom bars stay reachable */
+    max-height: none;
     border-radius: 0; box-shadow: none;
   }
   .phone__notch { display: none; }
