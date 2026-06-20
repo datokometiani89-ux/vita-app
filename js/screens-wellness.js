@@ -21,6 +21,7 @@
     { id: "eye",     route: "eyecare",   group: "exercises", icon: "eye",      tone: "blue",    name: { ka: "თვალის მოვლა", en: "Eye care" },        desc: { ka: "20-20-20 + Amsler ტესტი", en: "20-20-20 + Amsler test" } },
     { id: "breathe", route: "breathe",   group: "exercises", icon: "lungs",    tone: "green",   name: { ka: "სუნთქვის ვარჯიში", en: "Breathing" },     desc: { ka: "ბოქს-სუნთქვა 4-4-4-4", en: "Box breathing 4-4-4-4" } },
     { id: "posture", route: "posture",   group: "exercises", icon: "walk",     tone: "pink",    name: { ka: "ოფისის ვარჯიში", en: "Office workout" },  desc: { ka: "18 მაგიდის ვარჯიში", en: "18 desk exercises" } },
+    { id: "scan",    route: "scan",      group: "track", phone: true, icon: "heart", tone: "crimson", name: { ka: "AI ჯანმრთელობის სკანი", en: "AI Health Scan" }, desc: { ka: "კამერით vitals 30 წმ-ში", en: "Camera vitals in 30s" } },
     { id: "symptom", route: "symptom",   group: "track", icon: "stethoscope", tone: "pink", name: { ka: "სიმპტომ-ჩეკერი", en: "Symptom checker" }, desc: { ka: "AI ტრიაჟი → ექიმი", en: "AI triage → doctor" } },
     { id: "hr",      route: "heartrate", group: "track", phone: true, icon: "heart", tone: "crimson", name: { ka: "გულისცემა კამერით", en: "Heart rate" },   desc: { ka: "თითი კამერაზე (PPG)", en: "Finger on camera (PPG)" } },
     { id: "mind",    route: "mindtests", group: "track", icon: "brain",    tone: "blue",    name: { ka: "მენტალური ტესტები", en: "Mental tests" }, desc: { ka: "PHQ-9 · GAD-7", en: "PHQ-9 · GAD-7" } },
@@ -542,6 +543,108 @@
     return (rr >= 6 && rr <= 30) ? rr : null;
   };
 
+  // ---- AI Health Scan derived metrics (pure, wellness-grade) ----
+  // stress/recovery from HRV (RMSSD ms): higher HRV → better recovery / lower stress
+  V.scanStress = function (hrv) {
+    if (!hrv) return null;
+    var rec = Math.round(Math.max(15, Math.min(95, (hrv - 10) / 60 * 80 + 20)));
+    var stress = 100 - rec;
+    var band = stress < 35 ? { k: "scnLow", tone: "green" } : stress < 60 ? { k: "scnMid", tone: "yellow" } : { k: "scnHigh", tone: "crimson" };
+    return { recovery: rec, stress: stress, band: band };
+  };
+  // composite 0-100 scan score from the available signals
+  V.scanScore = function (m) {
+    m = m || {};
+    var s = 70;
+    if (m.bpm) s += (m.bpm >= 55 && m.bpm <= 75) ? 12 : (m.bpm <= 90 ? 4 : -8);
+    if (m.hrv) s += m.hrv >= 45 ? 12 : m.hrv >= 25 ? 4 : -6;
+    if (m.rr) s += (m.rr >= 10 && m.rr <= 18) ? 6 : -4;
+    return Math.max(25, Math.min(99, Math.round(s)));
+  };
+
+  /* ---- reusable camera-PPG capture (platform foundation: heart rate + AI Health Scan) ---- */
+  // opts: { onStatus(key), onTick(bpm), onDone({bpm,rr,hrv,beatTimes}), onError(key) }
+  // returns a stop() function. Caller provides a hidden <video> el id and a wave <canvas> el id.
+  function ppgCapture(videoEl, canvasEl, opts) {
+    opts = opts || {};
+    var stream = null, raf = 0, running = false, video = videoEl, canvas = canvasEl, ctx, hidden, hctx;
+    var waveBuf = [], rawBuf = [], beatTimes = [], baseline = 0, lastBeat = 0, beats = 0, startT = 0, measT = 0, prevSig = 0, ampEMA = 0, _firstBeat = 0;
+    function status(k) { if (opts.onStatus) opts.onStatus(k); }
+    function err(k) { stop(); if (opts.onError) opts.onError(k); }
+
+    function start() {
+      if (typeof isSecureContext !== "undefined" && !isSecureContext && location.hostname !== "localhost") { err("hrInsecure"); return; }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { err("hrNoCam"); return; }
+      status("hrRequesting");
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false })
+        .catch(function () { return navigator.mediaDevices.getUserMedia({ video: true, audio: false }); })
+        .then(onStream).catch(camFail);
+    }
+    function onStream(s) {
+      stream = s;
+      var track = s.getVideoTracks()[0];
+      try { if (track.applyConstraints) track.applyConstraints({ advanced: [{ torch: true }] }).catch(function () {}); } catch (e) {}
+      video.srcObject = s; var pp = video.play(); if (pp && pp.catch) pp.catch(function () {});
+      ctx = canvas.getContext("2d");
+      hidden = document.createElement("canvas"); hidden.width = 60; hidden.height = 60; hctx = hidden.getContext("2d");
+      waveBuf = []; rawBuf = []; beatTimes = []; baseline = 0; lastBeat = 0; beats = 0; prevSig = 0; ampEMA = 0; measT = 0; _firstBeat = 0; startT = performance.now();
+      running = true; status("hrPlace"); loop();
+    }
+    function camFail(e) {
+      var k = (e && e.name === "NotAllowedError") ? "hrDenied" : (e && (e.name === "NotFoundError" || e.name === "OverconstrainedError")) ? "hrNoDevice" : "hrNoCam";
+      err(k);
+    }
+    function firstBeatT() { if (!_firstBeat && lastBeat) _firstBeat = startT + 5000; return _firstBeat || startT; }
+    function loop() {
+      if (!running) return;
+      if (!document.body.contains(canvas)) { stop(); return; }
+      raf = requestAnimationFrame(loop);
+      if (!video || video.readyState < 2) return;
+      hctx.drawImage(video, 0, 0, 60, 60);
+      var d = hctx.getImageData(20, 20, 20, 20).data, rSum = 0, n = 0;
+      for (var i = 0; i < d.length; i += 4) { rSum += d[i]; n++; }
+      var v = rSum / n, now = performance.now(), elapsed = (now - startT) / 1000;
+      baseline = baseline ? baseline * 0.92 + v * 0.08 : v;
+      var sig = v - baseline; ampEMA = ampEMA * 0.95 + Math.abs(sig) * 0.05;
+      waveBuf.push(sig); if (waveBuf.length > 200) waveBuf.shift();
+      drawWave();
+      var fingerOn = v < 150 && ampEMA > 0.25;
+      if (!fingerOn) { status(ampEMA <= 0.25 && v < 150 ? "hrWeak" : "hrPlace"); }
+      else {
+        status("hrMeasuring");
+        if (!measT) measT = now;
+        rawBuf.push(v); if (rawBuf.length > 4000) rawBuf.shift();
+        if (prevSig > 0 && sig <= 0 && (now - lastBeat) > 300) { if (lastBeat) beats++; beatTimes.push(now); lastBeat = now; }
+        if (elapsed > 5 && beats >= 2) { var bpm = Math.round(beats / ((now - firstBeatT()) / 60000)); if (bpm >= 35 && bpm <= 210 && opts.onTick) opts.onTick(bpm); }
+      }
+      prevSig = sig;
+      if (elapsed >= 24 && beats >= 4) finish();
+      else if (elapsed >= 32) err("hrWeak");
+    }
+    function drawWave() {
+      if (!ctx) return; var W2 = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W2, H); ctx.strokeStyle = "#e8536b"; ctx.lineWidth = 2.5; ctx.lineJoin = "round";
+      var max = 1; for (var i = 0; i < waveBuf.length; i++) max = Math.max(max, Math.abs(waveBuf[i]));
+      ctx.beginPath();
+      for (var j = 0; j < waveBuf.length; j++) { var x = (j / 200) * W2, y = H / 2 - (waveBuf[j] / max) * (H / 2 - 8); j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke();
+    }
+    function finish() {
+      var endT = performance.now(), spanMin = (endT - firstBeatT()) / 60000, bpm = Math.round(beats / spanMin);
+      var measSec = measT ? (endT - measT) / 1000 : 0, rr = V.ppgRR(rawBuf, measSec), hrv = V.ppgHRV(beatTimes);
+      stop();
+      if (bpm < 35 || bpm > 210) { if (opts.onError) opts.onError("hrWeak"); return; }
+      if (opts.onDone) opts.onDone({ bpm: bpm, rr: rr, hrv: hrv });
+    }
+    function stop() {
+      running = false; if (raf) cancelAnimationFrame(raf);
+      if (stream) { stream.getTracks().forEach(function (tr) { try { tr.stop(); } catch (e) {} }); stream = null; }
+    }
+    start();
+    return stop;
+  }
+  V.ppgCapture = ppgCapture;
+
   V.screens.heartrate = function () {
     var w = W();
     var last = (w.hr && w.hr.length) ? w.hr[w.hr.length - 1] : null;
@@ -772,6 +875,115 @@
     if (score <= 14) return { k: "mtModerate", rec: "mtRecMod", tone: "yellow" };
     return { k: "mtSevere", rec: "mtRecSevere", tone: "crimson" };
   }
+
+  /* ===================== AI HEALTH SCAN (multimodal camera scan) ===================== */
+  function scanScoreTone(s) { return s >= 75 ? "green" : s >= 50 ? "yellow" : "crimson"; }
+  function hrBandKey(bpm) { return bpm < 60 ? "hrLow" : bpm <= 90 ? "hrNormal" : bpm <= 100 ? "hrElevated" : "hrHigh"; }
+
+  V.screens.scan = function () {
+    var w = W(); w.scan = w.scan || [];
+    var stopCap = null;
+
+    function modalityStrip() {
+      return '<div class="scn-mods">' +
+        '<span class="scn-mod on">' + V.icon("heart") + L({ ka: "გულსისხლძარღვთა", en: "Cardiovascular" }) + ' <i>' + t("scnActive") + "</i></span>" +
+        '<span class="scn-mod">' + V.icon("camera") + L({ ka: "კანი", en: "Skin" }) + " <i>" + t("scnSoon") + "</i></span>" +
+        '<span class="scn-mod">' + V.icon("mic") + L({ ka: "ხმა", en: "Voice" }) + " <i>" + t("scnSoon") + "</i></span>" +
+      "</div>";
+    }
+
+    function render(result) {
+      var last = w.scan.length ? w.scan[w.scan.length - 1] : null;
+      var stage = result
+        ? (function () {
+            var tone = scanScoreTone(result.score);
+            var st = result.hrv ? V.scanStress(result.hrv) : null;
+            return '<div class="scn-result fade-in">' +
+              '<div class="scn-ring rd-tone-' + tone + '"><b>' + result.score + '</b><small>' + t("scnScore") + "</small></div>" +
+              '<div class="scn-metrics">' +
+                scnMetric("heart", result.bpm, t("scnHR"), t(hrBandKey(result.bpm))) +
+                (result.hrv ? scnMetric("trend", result.hrv + " ms", t("scnHRV"), null) : "") +
+                (result.rr ? scnMetric("lungs", result.rr + " " + t("hrRRUnit"), t("scnResp"), null) : "") +
+                (st ? scnMetric("brain", st.recovery + "%", t("scnRecovery"), t(st.band.k)) : "") +
+              "</div>" +
+              '<button class="btn btn-primary" id="scnStart" style="width:100%;margin-top:6px">' + V.icon("heart") + " " + t("scnAgain") + "</button>" +
+            "</div>";
+          })()
+        : '<div class="scn-stage" id="scnStage">' +
+            '<canvas id="hrWave" class="scn-wave" width="600" height="120"></canvas>' +
+            '<div class="scn-status" id="scnStatus">' + t("scnReady") + "</div>" +
+            '<button class="btn btn-primary" id="scnStart" style="width:100%">' + V.icon("heart") + " " + t("scnStart") + "</button>" +
+          "</div>";
+
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          head("heart", "crimson", "scnTitle") +
+          '<p class="s-sub">' + t("scnSub") + "</p>" +
+          modalityStrip() +
+          '<div class="card-soft scn-card">' + stage + "</div>" +
+          '<div class="hr-manual">' +
+            '<input id="hrManual" class="field" type="number" inputmode="numeric" min="30" max="220" placeholder="' + esc(t("hrManualPh")) + '">' +
+            '<button class="btn btn-ghost" id="hrManualSave">' + t("hrManual") + "</button>" +
+          "</div>" +
+          '<div id="scnMsg"></div>' +
+          (last ? '<div class="hr-last">' + t("scnLast") + ": <b>" + last.score + "</b> " + t("scnScore") + " · " + last.bpm + " " + t("hrBpm") + (last.hrv ? " · HRV " + last.hrv : "") + " · " + esc(last.date) + "</div>" : "") +
+          '<p class="hr-multi-note">' + t("scnDisc") + "</p>" +
+          '<video id="hrVideo" playsinline muted style="display:none"></video>' +
+        "</div>" +
+        V.tabbar("home") +
+        "</div>",
+        { onMount: function () {
+          backX();
+          $("[data-x]").addEventListener("click", function () { if (stopCap) stopCap(); });
+          $("#scnStart").addEventListener("click", startScan);
+          $("#hrManualSave").addEventListener("click", function () {
+            var v = parseInt($("#hrManual").value, 10);
+            if (!v || v < 30 || v > 220) { $("#scnMsg").innerHTML = warn(t("hrManualPh")); return; }
+            saveScan({ bpm: v });
+          });
+        }}
+      );
+    }
+
+    function scnMetric(icon, val, label, sub) {
+      return '<div class="scn-metric">' + V.iconBox(icon, "gray") +
+        '<div class="scn-metric__t"><b>' + val + "</b><small>" + label + (sub ? " · " + sub : "") + "</small></div></div>";
+    }
+
+    function startScan() {
+      var btn = $("#scnStart"); if (btn) btn.disabled = true;
+      stopCap = V.ppgCapture($("#hrVideo"), $("#hrWave"), {
+        onStatus: function (k) { var s = $("#scnStatus"); if (s) s.textContent = t(k); },
+        onTick: function (bpm) { var s = $("#scnStatus"); if (s) s.textContent = bpm + " " + t("hrBpm"); },
+        onError: function (k) {
+          var b = $("#scnStart"); if (b) b.disabled = false;
+          $("#scnMsg").innerHTML = warn(t(k)); var mi = $("#hrManual"); if (mi) mi.focus();
+          var s = $("#scnStatus"); if (s) s.textContent = t("scnReady");
+        },
+        onDone: function (m) { saveScan(m); },
+      });
+    }
+
+    function saveScan(m) {
+      var st = m.hrv ? V.scanStress(m.hrv) : null;
+      var score = V.scanScore(m);
+      var rec = { date: today(), bpm: m.bpm, score: score };
+      if (m.hrv) rec.hrv = m.hrv;
+      if (m.rr) rec.rr = m.rr;
+      if (st) rec.stress = st.stress;
+      w.scan.push(rec); if (w.scan.length > 60) w.scan = w.scan.slice(-60);
+      // also feed the resting-HR log so Progress/readiness see it
+      w.hr = w.hr || []; w.hr.push({ date: today(), bpm: m.bpm, rr: m.rr, hrv: m.hrv }); if (w.hr.length > 60) w.hr = w.hr.slice(-60);
+      V.awardOnce && V.awardOnce("scan:" + today(), V.POINTS.task, "task");
+      V.save();
+      if (navigator.vibrate) navigator.vibrate(40);
+      render({ bpm: m.bpm, hrv: m.hrv, rr: m.rr, score: score });
+      var msg = $("#scnMsg"); if (msg) msg.innerHTML = '<div class="note-ok">' + V.icon("check") + " " + t("scnSaved") + "</div>";
+    }
+
+    render(null);
+  };
 
   V.screens.mindtests = function () {
     var session = null; // { kind, qs, idx, answers:[] }

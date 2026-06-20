@@ -65,6 +65,7 @@ window.VITA = window.VITA || {};
       amsler: null,       // { date, result:"normal"|"distortion" }
       breatheLog: {},     // { "2026-06-19": n } breathing sessions per day
       hr: [],             // [{date, bpm}] resting heart-rate readings
+      scan: [],           // [{date, bpm, hrv, rr, stress, score}] multimodal AI Health Scan results
       bp: [],             // [{date, sys, dia}] blood-pressure log
       mood: {},           // { "2026-06-19": {score:1..5, note, tags:[]} }
       phq: [],            // [{date, score, severity}]

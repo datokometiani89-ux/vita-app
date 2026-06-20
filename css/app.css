@@ -779,6 +779,27 @@
 .hr-last { margin-top: 12px; color: var(--muted); font-size: 13.5px; }
 .hr-last b { color: var(--ink); }
 
+/* ===== AI Health Scan ===== */
+.scn-mods { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.scn-mod { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); background: var(--field); border: 1.5px solid var(--line); border-radius: 99px; padding: 6px 12px; }
+.scn-mod svg { width: 15px; height: 15px; }
+.scn-mod.on { color: var(--green-dark, #1c7a37); border-color: color-mix(in srgb, var(--green) 35%, var(--line)); background: var(--green-tint); }
+.scn-mod i { font-style: normal; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; opacity: .8; }
+.scn-card { padding: 16px; }
+.scn-stage { text-align: center; }
+.scn-wave { width: 100%; height: 96px; background: var(--field); border-radius: var(--r-md); display: block; margin-bottom: 12px; }
+.scn-status { font-size: 14px; color: var(--muted); font-weight: 600; min-height: 20px; margin-bottom: 14px; }
+.scn-result { text-align: center; }
+.scn-ring { width: 132px; height: 132px; border-radius: 50%; margin: 4px auto 16px; display: grid; place-content: center; border: 9px solid var(--rdc, var(--green)); }
+.scn-ring b { font-size: 44px; font-weight: 800; line-height: 1; }
+.scn-ring small { color: var(--muted); font-size: 12px; }
+.scn-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
+.scn-metric { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 11px; text-align: left; }
+.scn-metric .icon-box { width: 38px; height: 38px; flex: none; }
+.scn-metric__t { min-width: 0; }
+.scn-metric__t b { display: block; font-size: 17px; font-weight: 800; line-height: 1.1; }
+.scn-metric__t small { display: block; color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 /* ===== mental tests ===== */
 .mt-pick { display: flex; align-items: center; gap: 13px; width: 100%; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 16px; cursor: pointer; text-align: left; margin-bottom: 12px; transition: border-color .15s, transform .1s; }
 .mt-pick:hover { border-color: var(--green); } .mt-pick:active { transform: scale(.99); }
