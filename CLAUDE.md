@@ -92,7 +92,14 @@ A deep-research competitive analysis (Finch, Daylio, Oura, Samsung Vitals, K Hea
 - ✅ **Multi-signal camera** — `V.ppgHRV(beatTimes)` (RMSSD ms) + `V.ppgRR(series, durSec)` (resp rate via cardiac-smoothing + slow-detrend + first-peak autocorrelation). Heart-rate loop records beat times + raw series; `saveReading` stores `{bpm, rr, hrv}` + shows chips. Wellness-grade + skin-fairness disclaimers. Pure fns unit-testable via `V.ppgRR`/`V.ppgHRV`.
 
 **Stage 3 — NEXT (strategic):** in-app telemedicine (video + e-prescription + payment, Doctolib model) on the clinics-booking seam · subscription tier (VITA+) + B2B2C.
+
+## ▶ AI Health Scan — multimodal flagship (the globally-fundable wedge)
+The strategic "smartphone = diagnostic" play. `#/scan` is the hub; modality strip links the three:
+- **Cardiovascular** (`#/scan`) — camera PPG via reusable `V.ppgCapture` (HR + `V.ppgRR` resp + `V.ppgHRV`) → `V.scanStress` (recovery/stress from HRV) + `V.scanScore` composite → `state.wellness.scan`. Shows scan-score history + rule-based trend insight + **"Discuss with VITA"** (seeds the AI chat with the scan summary). Home flagship card `V.scanHomeCard`.
+- **Skin** (`#/skinscan`) — photo + ABCDE guided self-check + on-device `V.skinColorVar` (pixel colour-variation) → `V.skinFlag` band → dermatologist deep-link. `state.wellness.skinScan`.
+- **Voice** (`#/voicescan`) — 5s sustained vowel → Web Audio per-frame pitch (autocorrelation) + RMS → `V.voiceSteadiness` (jitter/shimmer CV) + `V.voiceBand` → breathing deep-link. `state.wellness.voiceScan`.
+All wellness-grade + disclaimers; pure analysis fns unit-tested; camera/mic paths fail gracefully (denied/no-device messages). Real ML models are a future seam. Pure fns: `V.scanStress/scanScore/skinColorVar/skinFlag/voiceSteadiness/voiceBand`, capture helpers `V.ppgCapture` (+ internal `voiceCapture`).
 **Hard rules from research:** never label camera-vitals or AI triage as clinical/diagnostic — wellness/informational + disclaimer; do NOT cite any symptom-checker accuracy %; camera-PPG degrades on dark skin (fairness caveat). Open: Georgian medical-device regulation + whether the local market supports B2B2C subsidized telehealth.
 
 ### How to verify (preview)
-rsync to `/tmp/vita-preview`, bump `?v=NN` (app.html) + `sw.js` CACHE, reload with `?cb=`, drive the UI, check `preview_console_logs`. Currently at **v42**. Launch config `.claude/launch.json` runs `python3 http.server` on the mirror, port 8011 (note: it `chdir`s first — the launched cwd is sandboxed/inaccessible, so `--directory` fails).
+rsync to `/tmp/vita-preview`, bump `?v=NN` (app.html) + `sw.js` CACHE, reload with `?cb=`, drive the UI, check `preview_console_logs`. Currently at **v50**. Launch config `.claude/launch.json` runs `python3 http.server` on the mirror, port 8011 (note: it `chdir`s first — the launched cwd is sandboxed/inaccessible, so `--directory` fails).
