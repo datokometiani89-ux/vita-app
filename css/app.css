@@ -1618,3 +1618,54 @@
 .we-hr > div { padding: 8px 4px; background: var(--field); border-radius: var(--r-md); }
 .we-hr b { display: block; font-size: 19px; font-weight: 800; }
 .we-hr small { color: var(--muted); font-size: 10.5px; }
+
+/* ---- telemedicine ---- */
+.td-av { display: grid; place-content: center; border-radius: 50%; color: #fff; font-weight: 800; flex: none; }
+.td-doc, .td-past { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 10px; border: 1.5px solid var(--line); border-radius: var(--r-md); background: var(--card); }
+.td-doc { cursor: pointer; transition: border-color .12s, transform .1s; }
+.td-doc:hover { border-color: var(--green); } .td-doc:active { transform: scale(.99); }
+.td-doc__t { flex: 1; min-width: 0; }
+.td-doc__t b { display: block; font-size: 14.5px; }
+.td-doc__t small { color: var(--muted); font-size: 12px; }
+.td-doc__r { text-align: right; flex: none; }
+.td-doc__r b { display: block; font-size: 15px; }
+.td-online { display: inline-block; font-size: 11px; font-weight: 700; color: var(--green); background: var(--green-tint); padding: 1px 8px; border-radius: 99px; }
+.td-soon { display: inline-block; font-size: 11px; font-weight: 700; color: var(--muted); background: var(--field); padding: 1px 8px; border-radius: 99px; }
+
+/* video call */
+.td-call { display: flex; flex-direction: column; gap: 12px; }
+.td-stage { position: relative; height: 300px; border-radius: var(--r-lg); background: linear-gradient(160deg, #1b2733, #0f1a14); display: grid; place-content: center; overflow: hidden; }
+.td-vid--doc { display: flex; flex-direction: column; align-items: center; gap: 10px; color: #fff; }
+.td-vid--doc .td-av { box-shadow: 0 0 0 4px rgba(255,255,255,.12); }
+.td-vid__name { text-align: center; font-weight: 700; }
+.td-vid__name small { display: block; color: rgba(255,255,255,.6); font-weight: 500; font-size: 12px; }
+.td-live { position: absolute; top: 12px; left: 12px; font-size: 11px; font-weight: 800; color: #fff; background: #e8536b; padding: 3px 10px; border-radius: 99px; }
+.td-vid--me { position: absolute; bottom: 12px; right: 12px; width: 76px; height: 96px; border-radius: 12px; background: #2a3744; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border: 2px solid rgba(255,255,255,.15); }
+.td-vid--me small { color: rgba(255,255,255,.7); font-size: 10px; }
+.td-vid--me svg, .td-vid--me span { width: 40px; height: 40px; }
+.td-timer { position: absolute; top: 12px; right: 12px; font-size: 13px; font-weight: 700; color: #fff; background: rgba(0,0,0,.35); padding: 3px 10px; border-radius: 99px; }
+.td-chat { max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; padding: 2px; }
+.td-msg { max-width: 80%; padding: 8px 12px; border-radius: 14px; font-size: 13.5px; line-height: 1.4; }
+.td-msg--doc { align-self: flex-start; background: var(--field); border-bottom-left-radius: 4px; }
+.td-msg--me { align-self: flex-end; background: var(--green); color: #fff; border-bottom-right-radius: 4px; }
+.td-input { display: flex; gap: 8px; }
+.td-input .field { flex: 1; }
+.td-input .icon-box { width: 44px; flex: none; }
+.td-ctrls { display: flex; gap: 10px; justify-content: center; }
+.td-ctrl { width: 52px; height: 52px; border-radius: 50%; background: var(--field); display: grid; place-content: center; color: var(--ink); }
+.td-ctrl svg { width: 22px; }
+.td-ctrl.off { background: #e8536b; color: #fff; }
+.td-ctrl--end { width: auto; padding: 0 20px; border-radius: 26px; background: #e8536b; color: #fff; font-weight: 700; gap: 6px; display: flex; align-items: center; }
+.td-ctrl--end svg { width: 16px; }
+
+/* summary + e-rx */
+.td-sum { padding: 14px 16px; }
+.td-sum__head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.td-sum__head > svg { color: var(--green); width: 22px; margin-left: auto; }
+.td-notes { font-size: 13.5px; line-height: 1.55; color: var(--ink-2); }
+.td-rx { padding: 14px 16px; }
+.td-rx__head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.td-rx__head svg { width: 19px; color: var(--green); }
+.td-rx__item { padding: 11px 13px; border: 1.5px dashed var(--line); border-radius: var(--r-md); background: var(--field); }
+.td-rx__item b { display: block; font-size: 14.5px; }
+.td-rx__item small { color: var(--muted); font-size: 12.5px; }

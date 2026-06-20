@@ -1170,6 +1170,7 @@
           tile("chat", "blue", "mChat", 'data-go="vita"'),
           tile("progress", "green", "mProgress", 'data-go="progress"'),
           tile("eye", "blue", "mWellness", 'data-go="wellness"'),
+          tile("stethoscope", "crimson", "mTelemed", 'data-go="telemed"'),
           tile("sparkle", "yellow", "mPlus", 'data-go="plus"', V.isPlus() ? "✓" : null),
           tile("bolt", "blue", "mWearable", 'data-go="wearable"', (V.state.wearable && V.state.wearable.connected) ? "✓" : null),
           tile("sparkle", "yellow", "mRewards", 'data-go="rewards"', (V.state.points || 0) || null),

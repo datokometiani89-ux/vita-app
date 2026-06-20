@@ -119,6 +119,15 @@ window.VITA = window.VITA || {};
     { id: "garmin", name: { ka: "Garmin", en: "Garmin" } },
     { id: "fitbit", name: { ka: "Fitbit", en: "Fitbit" } },
   ];
+  /* ---- Telemedicine doctors (demo directory; real availability = clinics/booking seam) ---- */
+  V.DOCTORS = [
+    { id: "d2", name: { ka: "დრ. გიორგი კაპანაძე", en: "Dr. Giorgi Kapanadze" }, spec: { ka: "თერაპევტი", en: "GP / Internist" }, rating: 4.8, price: 30, online: true, tone: "green" },
+    { id: "d1", name: { ka: "დრ. ნინო ბერიძე", en: "Dr. Nino Beridze" }, spec: { ka: "კარდიოლოგი", en: "Cardiologist" }, rating: 4.9, price: 40, online: true, tone: "crimson" },
+    { id: "d4", name: { ka: "დრ. ლევან ჩხეიძე", en: "Dr. Levan Chkheidze" }, spec: { ka: "ფსიქოთერაპევტი", en: "Psychotherapist" }, rating: 5.0, price: 50, online: true, tone: "blue" },
+    { id: "d3", name: { ka: "დრ. თამარ ლომიძე", en: "Dr. Tamar Lomidze" }, spec: { ka: "დერმატოლოგი", en: "Dermatologist" }, rating: 4.9, price: 45, online: false, next: "18:30", tone: "pink" },
+  ];
+  V.doctorById = function (id) { return V.DOCTORS.filter(function (d) { return d.id === id; })[0] || null; };
+
   function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
   function rnd1(a, b) { return Math.round((a + Math.random() * (b - a)) * 10) / 10; }
   // rich demo snapshot for one source (real sync needs native HealthKit / Google Fit OAuth)

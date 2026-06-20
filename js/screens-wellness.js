@@ -2862,6 +2862,137 @@
   };
   V.wireTodayMini = function () { document.querySelectorAll("[data-tm]").forEach(function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-tm")); }); }); };
 
+  /* ===================== TELEMEDICINE (video consult + e-prescription) ===================== */
+  var TD_HEX = { green: "#2BA94C", crimson: "#e8536b", pink: "#e0689f", blue: "#4a90d9" };
+  var TD_RX = {
+    d1: [{ ka: "ომეგა-3, 1000მგ", en: "Omega-3, 1000mg" }, { ka: "დღეში 1× ჭამის შემდეგ", en: "Once daily after meals" }],
+    d2: [{ ka: "ვიტამინი D3, 2000 IU", en: "Vitamin D3, 2000 IU" }, { ka: "დღეში 1×, 8 კვირა", en: "Once daily, 8 weeks" }],
+    d3: [{ ka: "დამატენიანებელი SPF30", en: "Moisturizer SPF30" }, { ka: "დილით, ყოველდღე", en: "Every morning" }],
+    d4: [{ ka: "ცნობიერების ვარჯიში (10წთ/დღე)", en: "Mindfulness practice (10min/day)" }, { ka: "4-კვირიანი გეგმა", en: "4-week plan" }],
+  };
+  V.screens.telemed = function () {
+    var stage = "list", doc = null, startT = 0, ticker = null, chat = [], sIdx = 0, sTimer = null, paid = false, saved = false;
+
+    function clearTimers() { if (ticker) clearInterval(ticker); if (sTimer) clearTimeout(sTimer); ticker = sTimer = null; }
+    function docAv(d, size) { size = size || 46; return '<span class="td-av" style="width:' + size + "px;height:" + size + "px;font-size:" + Math.round(size * 0.36) + "px;background:" + TD_HEX[d.tone] + '">' + V.initials(L(d.name)) + "</span>"; }
+    function fmtDur(s) { var m = Math.floor(s / 60), ss = s % 60; return m + ":" + (ss < 10 ? "0" : "") + ss; }
+
+    function docCard(d) {
+      return '<button class="td-doc" data-doc="' + d.id + '">' + docAv(d) +
+        '<div class="td-doc__t"><b>' + L(d.name) + "</b><small>" + L(d.spec) + " · ★ " + d.rating + "</small></div>" +
+        '<div class="td-doc__r">' + (d.online ? '<span class="td-online">' + t("tdOnline") + "</span>" : '<span class="td-soon">' + d.next + "</span>") +
+          "<b>₾" + d.price + "</b></div></button>";
+    }
+
+    function script() {
+      var ka = V.lang() === "ka";
+      return ka
+        ? ["გამარჯობა, მე ვარ " + L(doc.name) + ". რა გაწუხებთ დღეს?", "გასაგებია. რამდენი ხანია ეს გრძნობა გაქვთ?", "მადლობა ინფორმაციისთვის. გირჩევთ რეჟიმისა და ჰიდრატაციის გაუმჯობესებას — რეცეპტს ვიზიტის ბოლოს გამოგიწერთ."]
+        : ["Hi, I'm " + L(doc.name) + ". What brings you in today?", "I see. How long have you felt this way?", "Thanks for the details. I'd suggest improving your routine and hydration — I'll send a prescription at the end."];
+    }
+    var REPLY = {
+      ka: ["გასაგებია, მესმის.", "კარგი, ეს მნიშვნელოვანია.", "გირჩევთ ამას ყურადღებით მიადევნოთ თვალი.", "თუ გაუარესდა, აუცილებლად მოგვმართეთ."],
+      en: ["I understand.", "Okay, that's important.", "I'd keep an eye on that.", "If it worsens, please reach out."],
+    };
+
+    function pushChat(role, text) { chat.push({ role: role, text: text }); var b = $("#tdChat"); if (b) { b.insertAdjacentHTML("beforeend", chatHTML({ role: role, text: text })); b.scrollTop = b.scrollHeight; } }
+    function chatHTML(m) { return '<div class="td-msg td-msg--' + (m.role === "me" ? "me" : "doc") + '">' + esc(m.text) + "</div>"; }
+
+    function paint() {
+      clearTimers();
+      var bodyInner;
+      if (stage === "list") {
+        var past = (V.state.consults || []).slice(-3).reverse();
+        bodyInner =
+          '<p class="s-sub">' + t("tdSub") + "</p>" +
+          '<div class="section-head"><h3>' + t("tdOnlineNow") + "</h3></div>" +
+          V.DOCTORS.map(docCard).join("") +
+          (past.length ? '<div class="section-head" style="margin-top:18px"><h3>' + t("tdPast") + "</h3></div>" +
+            past.map(function (c) { var d = V.doctorById(c.docId) || { name: { ka: "ექიმი", en: "Doctor" }, tone: "green", spec: { ka: c.spec, en: c.spec } };
+              return '<div class="td-past">' + docAv(d, 36) + '<div class="td-doc__t"><b>' + L(d.name) + "</b><small>" + c.date + " · " + t("tdVideo") + " · " + fmtDur(c.durSec || 0) + "</small></div>" + (c.paid ? '<span class="td-online">₾' + (d.price || "") + "</span>" : "") + "</div>";
+            }).join("") : "") +
+          '<p class="hr-multi-note">' + t("tdDisc") + "</p>";
+      } else if (stage === "call") {
+        bodyInner =
+          '<div class="td-call">' +
+            '<div class="td-stage">' +
+              '<div class="td-vid td-vid--doc">' + docAv(doc, 88) + '<div class="td-vid__name">' + L(doc.name) + "<small>" + L(doc.spec) + "</small></div>" +
+                '<span class="td-live">● ' + t("tdLive") + "</span></div>" +
+              '<div class="td-vid td-vid--me">' + V.avatar(40) + "<small>" + t("tdYou") + "</small></div>" +
+              '<div class="td-timer" id="tdTimer">0:00</div>' +
+            "</div>" +
+            '<div class="td-chat" id="tdChat">' + chat.map(chatHTML).join("") + "</div>" +
+            '<div class="td-input"><input id="tdMsg" class="field" placeholder="' + esc(t("tdType")) + '"><button class="icon-box green" id="tdSend">' + V.icon("send") + "</button></div>" +
+            '<div class="td-ctrls">' +
+              '<button class="td-ctrl" id="tdMute">' + V.icon("mic") + "</button>" +
+              '<button class="td-ctrl" id="tdCam">' + V.icon("camera") + "</button>" +
+              '<button class="td-ctrl td-ctrl--end" id="tdEnd">' + V.icon("x") + " " + t("tdEnd") + "</button>" +
+            "</div></div>";
+      } else { // summary
+        var dur = Math.max(1, Math.round((Date.now() - startT) / 1000));
+        if (!saved) { saveConsult(dur); saved = true; }
+        var rx = TD_RX[doc.id] || TD_RX.d2;
+        bodyInner =
+          '<div class="card-soft td-sum">' +
+            '<div class="td-sum__head">' + docAv(doc, 48) + '<div class="td-doc__t"><b>' + L(doc.name) + "</b><small>" + L(doc.spec) + " · " + t("tdVideo") + " · " + fmtDur(dur) + "</small></div>" + V.icon("check") + "</div>" +
+            '<p class="td-notes">' + t("tdNotes") + "</p>" +
+          "</div>" +
+          '<div class="card-soft td-rx"><div class="td-rx__head">' + V.icon("pill") + " <b>" + t("tdRx") + "</b></div>" +
+            '<div class="td-rx__item"><b>' + L(rx[0]) + "</b><small>" + L(rx[1]) + "</small></div>" +
+            '<button class="btn btn-ghost" id="tdRxSend" style="width:100%;margin-top:10px">' + V.icon("send") + " " + t("tdRxSend") + "</button></div>" +
+          (paid
+            ? '<div class="note-ok">' + V.icon("check") + " " + t("tdPaidNote") + "</div>"
+            : '<button class="btn btn-primary" id="tdPay" style="width:100%">' + t("tdPay") + " ₾" + doc.price + "</button>") +
+          '<p class="cal-note" style="text-align:center;margin:10px 0 0">' + t("tdPayDemo") + "</p>" +
+          '<button class="btn btn-ghost" id="tdDone" style="width:100%;margin-top:14px">' + t("tdDone") + "</button>";
+      }
+
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("stethoscope", "green") + "<h1>" + t("tdTitle") + "</h1></div>" +
+            '<button class="icon-box gray" data-x>' + V.icon(stage === "call" ? "back" : "x") + "</button></div>" +
+          bodyInner +
+        "</div>" +
+        (stage === "call" ? "" : V.tabbar("home")) +
+        "</div>",
+        { onMount: wire }
+      );
+    }
+
+    function startCall(d) { doc = d; chat = []; sIdx = 0; paid = false; saved = false; startT = Date.now(); stage = "call"; paint(); beginCallTimers(); }
+    function beginCallTimers() {
+      ticker = setInterval(function () { var el = $("#tdTimer"); if (!el) { clearInterval(ticker); return; } el.textContent = fmtDur(Math.round((Date.now() - startT) / 1000)); }, 1000);
+      var lines = script();
+      function next() { if (stage !== "call" || sIdx >= lines.length) return; pushChat("doc", lines[sIdx]); sIdx++; sTimer = setTimeout(next, 3800); }
+      sTimer = setTimeout(next, 1400);
+    }
+    function saveConsult(dur) {
+      V.state.consults = V.state.consults || [];
+      V.state.consults.push({ date: today(), docId: doc.id, spec: L(doc.spec), type: "video", durSec: dur, rx: TD_RX[doc.id] ? [L(TD_RX[doc.id][0])] : [], paid: false });
+      if (V.state.consults.length > 40) V.state.consults = V.state.consults.slice(-40);
+      V.awardOnce && V.awardOnce("telemed:" + today(), V.POINTS.task, "task");
+      V.save();
+    }
+
+    function wire() {
+      var x = $("[data-x]");
+      if (x) x.addEventListener("click", function () { clearTimers(); if (stage === "call") { stage = "list"; paint(); } else V.go("menu"); });
+      each("[data-doc]", function (b) { b.addEventListener("click", function () { var d = V.doctorById(b.getAttribute("data-doc")); if (!d) return; if (!d.online) { V.toast && V.toast(t("tdNextAt") + " " + d.next); return; } startCall(d); }); });
+      var send = $("#tdSend"), msg = $("#tdMsg");
+      function doSend() { var v = (msg.value || "").trim(); if (!v) return; pushChat("me", v); msg.value = ""; sTimer = setTimeout(function () { if (stage === "call") pushChat("doc", REPLY[V.lang() === "ka" ? "ka" : "en"][Math.floor(Math.random() * 4)]); }, 1200); }
+      if (send) send.addEventListener("click", doSend);
+      if (msg) msg.addEventListener("keydown", function (e) { if (e.key === "Enter") doSend(); });
+      each(".td-ctrl", function (b) { if (b.id !== "tdEnd") b.addEventListener("click", function () { b.classList.toggle("off"); }); });
+      var end = $("#tdEnd"); if (end) end.addEventListener("click", function () { clearTimers(); stage = "summary"; paint(); });
+      var pay = $("#tdPay"); if (pay) pay.addEventListener("click", function () { paid = true; var c = (V.state.consults || []).slice(-1)[0]; if (c) c.paid = true; V.save(); V.toast && V.toast(t("tdPaidNote")); paint(); });
+      var rxSend = $("#tdRxSend"); if (rxSend) rxSend.addEventListener("click", function () { V.toast && V.toast(t("tdRxSent")); });
+      var done = $("#tdDone"); if (done) done.addEventListener("click", function () { stage = "list"; doc = null; paint(); });
+    }
+
+    paint();
+  };
+
   /* ---------- small shared helpers for the new screens ---------- */
   function head(icon, tone, titleKey) {
     return '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' +

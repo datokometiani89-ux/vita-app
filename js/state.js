@@ -57,6 +57,7 @@ window.VITA = window.VITA || {};
     vitaAccount: { connected: false, email: "", plan: "" }, // link to vitaapp.ge
     plus: { active: false, plan: null, since: null },        // VITA+ subscription (demo; real payment = future seam)
     wearable: { sources: [] }, // connected health-data sources (Apple Health/Google Fit/…); demo import, real sync = OAuth/native seam
+    consults: [],          // [{date, docId, spec, type, durSec, notes, rx:[], paid}] telemedicine visits (demo)
     auth: null,           // { provider:"google"|"facebook"|"email", name, email, connected }
     companion: {          // VITA garden — daily quests grow a virtual plant
       grow: 0,            // lifetime growth points (each completed daily quest +1)
