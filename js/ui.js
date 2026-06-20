@@ -2,18 +2,19 @@
 window.VITA = window.VITA || {};
 
 (function (V) {
-  /* VITA tree mark (per brand guideline) — fan canopy + forked trunk/roots.
-     Drawn as bold round strokes; recolourable. 100×100 viewBox. */
+  /* VITA tree mark (official brand logo) — symmetric canopy fan of three
+     branch-pairs rising from a central junction, with a stem that forks into
+     two roots. Bold round strokes; recolourable. 100×100 viewBox. */
   V.treeMark = function (color) {
     return (
-      '<g fill="none" stroke="' + color + '" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round">' +
-      // trunk + forked roots
-      '<path d="M50 50 V70"/><path d="M50 70 L41 80"/><path d="M50 70 L59 80"/>' +
-      // canopy: central + three pairs fanning out
-      '<path d="M50 50 V25"/>' +
-      '<path d="M50 50 L39 29"/><path d="M50 50 L61 29"/>' +
-      '<path d="M50 50 L30 36"/><path d="M50 50 L70 36"/>' +
-      '<path d="M50 51 L24 47"/><path d="M50 51 L76 47"/>' +
+      '<g fill="none" stroke="' + color + '" stroke-width="11.5" stroke-linecap="round" stroke-linejoin="round">' +
+      // canopy — three symmetric pairs fanning up from the junction (50,54)
+      '<path d="M50 54 L44 19"/><path d="M50 54 L56 19"/>' +
+      '<path d="M50 54 L30 26"/><path d="M50 54 L70 26"/>' +
+      '<path d="M50 54 L23 38"/><path d="M50 54 L77 38"/>' +
+      // stem + forked roots
+      '<path d="M50 54 L50 72"/>' +
+      '<path d="M50 72 L38 88"/><path d="M50 72 L62 88"/>' +
       "</g>"
     );
   };
@@ -33,17 +34,19 @@ window.VITA = window.VITA || {};
     return (
       '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="VITA">' +
       '<path d="M50 5 C75 5 93 19 95 43 C97 67 87 95 50 95 C15 95 3 67 5 43 C7 19 25 5 50 5 Z" fill="var(--green)"/>' +
-      '<g transform="translate(19,18) scale(0.62)">' + V.treeMark("#ffffff") + "</g>" +
+      '<g transform="translate(15,15) scale(0.70)">' + V.treeMark("#ffffff") + "</g>" +
       "</svg>"
     );
   };
 
-  /* circular badge (matches the merchandise stickers) — green disc + white tree */
+  /* brand badge — the official organic green blob + white tree (primary mark).
+     Wrapped so existing header layouts keep their sizing/alignment. */
   V.logoBadge = function (size) {
     size = size || 30;
     return (
-      '<span class="logo-badge" style="width:' + size + "px;height:" + size + 'px">' +
-      V.logo(Math.round(size * 0.66), "#ffffff") +
+      '<span class="logo-badge" style="width:' + size + "px;height:" + size +
+      'px;background:none;display:inline-flex">' +
+      V.mark(size) +
       "</span>"
     );
   };

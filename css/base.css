@@ -2,6 +2,18 @@
    VITA AI — Design System (from Figma "Medical App")
    ============================================ */
 
+/* Brand typeface — Avenir Next Georgian (Monotype, licensed).
+   Note: only the Demi weight is bundled (the supplied "Regular" file was a
+   byte-identical copy of Demi). It's declared as the base weight; heavier
+   UI weights are browser-synthesised until the true Regular/Bold are added. */
+@font-face {
+  font-family: "Avenir Next Georgian";
+  src: url("../fonts/AvenirNextGeorgian-Demi.otf") format("opentype");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* Brand (VITA brand guideline) */
   --green: #2BA94C;
@@ -38,10 +50,8 @@
   --shadow-card: 0 2px 10px rgba(20, 24, 31, 0.05);
   --shadow-pop: 0 12px 32px rgba(20, 24, 31, 0.16);
 
-  /* Brand typeface is Avenir Next Georgian (licensed). Closest free pairing:
-     Mulish (Latin, Avenir-like) + Noto Sans Georgian. To use the real brand
-     font, drop the Avenir Next Georgian files in /fonts and add @font-face,
-     then put "Avenir Next Georgian" first in this list. */
+  /* Brand typeface — real Avenir Next Georgian now bundled (@font-face above).
+     Mulish + Noto Sans Georgian remain as fallbacks while the font loads. */
   --font: "Avenir Next Georgian", "Mulish", "Noto Sans Georgian",
     -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
