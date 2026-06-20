@@ -559,7 +559,60 @@
     if (m.bpm) s += (m.bpm >= 55 && m.bpm <= 75) ? 12 : (m.bpm <= 90 ? 4 : -8);
     if (m.hrv) s += m.hrv >= 45 ? 12 : m.hrv >= 25 ? 4 : -6;
     if (m.rr) s += (m.rr >= 10 && m.rr <= 18) ? 6 : -4;
+    if (m.spo2) s += m.spo2 >= 96 ? 4 : m.spo2 >= 94 ? 0 : -8;
     return Math.max(25, Math.min(99, Math.round(s)));
+  };
+
+  // SpO2 estimate from camera PPG — ratio-of-ratios of red vs blue channel
+  // (standard empirical R-curve; UNCALIBRATED → wellness estimate, not medical).
+  // Returns rounded % (90–100) or null if the signal is too weak to trust.
+  V.ppgSpO2 = function (red, blue, durSec) {
+    if (!red || !blue || durSec < 12 || red.length < 60 || blue.length < 60) return null;
+    function acdc(a) {
+      var n = a.length, mean = 0; for (var i = 0; i < n; i++) mean += a[i]; mean /= n;
+      if (mean <= 0) return null;
+      var ss = 0; for (var j = 0; j < n; j++) { var d = a[j] - mean; ss += d * d; }
+      return { ac: Math.sqrt(ss / n), dc: mean };
+    }
+    var r = acdc(red), b = acdc(blue);
+    if (!r || !b || r.ac < 0.3 || b.ac < 0.15) return null; // pulsatile signal too small
+    var R = (r.ac / r.dc) / (b.ac / b.dc);
+    if (!isFinite(R) || R <= 0) return null;
+    var spo2 = Math.round(110 - 25 * R);
+    return (spo2 >= 90 && spo2 <= 100) ? spo2 : null;
+  };
+
+  // Biological "health age" — chronological age nudged by modifiable factors +
+  // the latest camera-scan signals (HRV, resting HR, stress). Wellness estimate.
+  V.healthAge = function () {
+    var p = V.state.profile || {};
+    var chrono = p.age;
+    if (!chrono || chrono < 12 || chrono > 100) return null;
+    var d = 0;
+    var bmi = V.bmi && V.bmi();
+    if (bmi != null) { if (bmi >= 30) d += 4; else if (bmi >= 25) d += 2; else if (bmi < 18.5) d += 2; }
+    if (p.smoking === "daily") d += 6; else if (p.smoking === "occ") d += 2;
+    if (p.activity === "sitting") d += 3; else if (p.activity === "light") d += 1;
+    else if (p.activity === "active") d -= 1; else if (p.activity === "very") d -= 2;
+    var c = p.conditions || [];
+    if (c.indexOf("hyper") >= 0) d += 3;
+    if (c.indexOf("chol") >= 0) d += 2;
+    if (c.indexOf("pre") >= 0) d += 4;
+    if (c.indexOf("thyroid") >= 0) d += 1;
+    if (p.sleep === "<5") d += 2; else if (p.sleep === "8+") d -= 1;
+    if (p.stress === "burn") d += 2; else if (p.stress === "high") d += 1;
+    // latest camera-scan biomarkers (strongest age signal: HRV)
+    var w = V.state.wellness || {}, scan = (w.scan && w.scan.length) ? w.scan[w.scan.length - 1] : null;
+    var usedScan = false;
+    if (scan) {
+      if (scan.hrv) { usedScan = true; if (scan.hrv >= 50) d -= 3; else if (scan.hrv >= 35) d -= 1; else if (scan.hrv < 20) d += 3; }
+      if (scan.bpm) { usedScan = true; if (scan.bpm <= 60) d -= 2; else if (scan.bpm <= 75) d += 0; else if (scan.bpm <= 90) d += 2; else d += 4; }
+      if (scan.stress != null && scan.stress >= 60) { usedScan = true; d += 2; }
+    }
+    var bio = Math.max(18, Math.min(95, Math.round(chrono + d)));
+    var delta = bio - chrono;
+    var tone = delta <= -1 ? "green" : delta <= 3 ? "yellow" : "crimson";
+    return { chrono: chrono, bio: bio, delta: delta, tone: tone, usedScan: usedScan };
   };
 
   /* ---- reusable camera-PPG capture (platform foundation: heart rate + AI Health Scan) ---- */
@@ -568,7 +621,7 @@
   function ppgCapture(videoEl, canvasEl, opts) {
     opts = opts || {};
     var stream = null, raf = 0, running = false, video = videoEl, canvas = canvasEl, ctx, hidden, hctx;
-    var waveBuf = [], rawBuf = [], beatTimes = [], baseline = 0, lastBeat = 0, beats = 0, startT = 0, measT = 0, prevSig = 0, ampEMA = 0, _firstBeat = 0;
+    var waveBuf = [], rawBuf = [], blueBuf = [], beatTimes = [], baseline = 0, lastBeat = 0, beats = 0, startT = 0, measT = 0, prevSig = 0, ampEMA = 0, _firstBeat = 0;
     function status(k) { if (opts.onStatus) opts.onStatus(k); }
     function err(k) { stop(); if (opts.onError) opts.onError(k); }
 
@@ -587,7 +640,7 @@
       video.srcObject = s; var pp = video.play(); if (pp && pp.catch) pp.catch(function () {});
       ctx = canvas.getContext("2d");
       hidden = document.createElement("canvas"); hidden.width = 60; hidden.height = 60; hctx = hidden.getContext("2d");
-      waveBuf = []; rawBuf = []; beatTimes = []; baseline = 0; lastBeat = 0; beats = 0; prevSig = 0; ampEMA = 0; measT = 0; _firstBeat = 0; startT = performance.now();
+      waveBuf = []; rawBuf = []; blueBuf = []; beatTimes = []; baseline = 0; lastBeat = 0; beats = 0; prevSig = 0; ampEMA = 0; measT = 0; _firstBeat = 0; startT = performance.now();
       running = true; status("hrPlace"); loop();
     }
     function camFail(e) {
@@ -601,9 +654,9 @@
       raf = requestAnimationFrame(loop);
       if (!video || video.readyState < 2) return;
       hctx.drawImage(video, 0, 0, 60, 60);
-      var d = hctx.getImageData(20, 20, 20, 20).data, rSum = 0, n = 0;
-      for (var i = 0; i < d.length; i += 4) { rSum += d[i]; n++; }
-      var v = rSum / n, now = performance.now(), elapsed = (now - startT) / 1000;
+      var d = hctx.getImageData(20, 20, 20, 20).data, rSum = 0, bSum = 0, n = 0;
+      for (var i = 0; i < d.length; i += 4) { rSum += d[i]; bSum += d[i + 2]; n++; }
+      var v = rSum / n, vb = bSum / n, now = performance.now(), elapsed = (now - startT) / 1000;
       baseline = baseline ? baseline * 0.92 + v * 0.08 : v;
       var sig = v - baseline; ampEMA = ampEMA * 0.95 + Math.abs(sig) * 0.05;
       waveBuf.push(sig); if (waveBuf.length > 200) waveBuf.shift();
@@ -614,6 +667,7 @@
         status("hrMeasuring");
         if (!measT) measT = now;
         rawBuf.push(v); if (rawBuf.length > 4000) rawBuf.shift();
+        blueBuf.push(vb); if (blueBuf.length > 4000) blueBuf.shift();
         if (prevSig > 0 && sig <= 0 && (now - lastBeat) > 300) { if (lastBeat) beats++; beatTimes.push(now); lastBeat = now; }
         if (elapsed > 5 && beats >= 2) { var bpm = Math.round(beats / ((now - firstBeatT()) / 60000)); if (bpm >= 35 && bpm <= 210 && opts.onTick) opts.onTick(bpm); }
       }
@@ -632,9 +686,10 @@
     function finish() {
       var endT = performance.now(), spanMin = (endT - firstBeatT()) / 60000, bpm = Math.round(beats / spanMin);
       var measSec = measT ? (endT - measT) / 1000 : 0, rr = V.ppgRR(rawBuf, measSec), hrv = V.ppgHRV(beatTimes);
+      var spo2 = V.ppgSpO2(rawBuf, blueBuf, measSec);
       stop();
       if (bpm < 35 || bpm > 210) { if (opts.onError) opts.onError("hrWeak"); return; }
-      if (opts.onDone) opts.onDone({ bpm: bpm, rr: rr, hrv: hrv });
+      if (opts.onDone) opts.onDone({ bpm: bpm, rr: rr, hrv: hrv, spo2: spo2 });
     }
     function stop() {
       running = false; if (raf) cancelAnimationFrame(raf);
@@ -879,6 +934,106 @@
   /* ===================== AI HEALTH SCAN (multimodal camera scan) ===================== */
   function scanScoreTone(s) { return s >= 75 ? "green" : s >= 50 ? "yellow" : "crimson"; }
   function hrBandKey(bpm) { return bpm < 60 ? "hrLow" : bpm <= 90 ? "hrNormal" : bpm <= 100 ? "hrElevated" : "hrHigh"; }
+  var SKIN_TONE = { skLow: "green", skWatch: "yellow", skHigh: "crimson" };
+  var VOICE_TONE = { vcGood: "green", vcMid: "yellow", vcLow: "crimson" };
+
+  /* ---- shared scan helpers (used by #/scan and #/fullscan) ---- */
+  function lastOf(key) { var a = W()[key]; return (a && a.length) ? a[a.length - 1] : null; }
+
+  // Biological "health age" card
+  function bioAgeCard() {
+    var h = V.healthAge();
+    if (!h) return '<button class="card-soft scn-bioage scn-bioage--empty" data-go="profile">' +
+      V.iconBox("user", "blue") + '<div class="scn-bioage__t"><b>' + t("haTitle") + "</b><small>" + t("haNeedAge") + "</small></div>" + V.icon("next") + "</button>";
+    var sign = h.delta > 0 ? "+" + h.delta : "" + h.delta;
+    var verdict = h.delta <= -1 ? t("haYounger") : h.delta >= 4 ? t("haOlder") : t("haOnPar");
+    return '<div class="card-soft scn-bioage rd-tone-' + h.tone + '">' +
+      '<div class="scn-bioage__ring rd-tone-' + h.tone + '"><b>' + h.bio + "</b><small>" + t("haYears") + "</small></div>" +
+      '<div class="scn-bioage__t"><b>' + t("haTitle") + "</b>" +
+        '<small>' + t("haChrono") + " " + h.chrono + " · <span class='scn-bioage__delta tone-" + h.tone + "'>" + sign + " " + t("haYears") + "</span> · " + verdict + "</small>" +
+        (h.usedScan ? "" : '<small class="scn-bioage__hint">' + t("haScanHint") + "</small>") +
+      "</div></div>";
+  }
+
+  // human-readable multimodal summary (for AI prompt, chat handoff, offline report)
+  V.scanSummaryText = function () {
+    var ka = V.lang() === "ka";
+    var scan = lastOf("scan"), skin = lastOf("skinScan"), voice = lastOf("voiceScan"), h = V.healthAge();
+    var parts = [];
+    if (h) parts.push((ka ? "ბიო-ასაკი " : "Bio-age ") + h.bio + (ka ? " (ქრონ. " : " (chrono ") + h.chrono + ", " + (h.delta > 0 ? "+" + h.delta : h.delta) + ")");
+    if (scan) parts.push((ka ? "გულ-სისხლძარღვი: ქულა " : "Cardio: score ") + scan.score + ", HR " + scan.bpm +
+      (scan.hrv ? ", HRV " + scan.hrv + "ms" : "") + (scan.rr ? ", " + (ka ? "სუნთქვა " : "resp ") + scan.rr : "") +
+      (scan.spo2 ? ", SpO2 " + scan.spo2 + "%" : "") + (scan.stress != null ? ", " + (ka ? "სტრესი " : "stress ") + scan.stress : ""));
+    if (skin) parts.push((ka ? "კანი: " : "Skin: ") + t(skin.band));
+    if (voice) parts.push((ka ? "ხმა: " : "Voice: ") + t(voice.band) + " (" + voice.steadiness + "%)");
+    return parts.length ? parts.join(". ") : "";
+  };
+
+  function reportPrompt(summary) {
+    var ka = V.lang() === "ka";
+    return (ka
+      ? "ეს ჩემი VITA AI-ჯანმრთელობის სკანის შედეგებია: " + summary + ". "
+        + "დაწერე მოკლე, პერსონალური wellness-ანგარიში: (1) 2-3 წინადადება რას ნიშნავს ეს ჩემთვის მარტივი ენით, (2) 3 კონკრეტული ქმედითი რეკომენდაცია bullet-ებად. "
+        + "ეს არ არის სამედიცინო დიაგნოზი. უპასუხე ქართულად, მოკლედ."
+      : "These are my VITA AI health-scan results: " + summary + ". "
+        + "Write a short personalized wellness report: (1) 2-3 sentences on what this means for me in plain language, (2) 3 concrete actionable recommendations as bullets. "
+        + "This is not a medical diagnosis. Answer concisely.");
+  }
+
+  // deterministic offline report when the AI proxy is unavailable
+  function reportOffline() {
+    var ka = V.lang() === "ka";
+    var scan = lastOf("scan"), voice = lastOf("voiceScan"), skin = lastOf("skinScan"), h = V.healthAge();
+    var intro, recs = [];
+    if (scan) {
+      var good = scan.score >= 75;
+      intro = ka ? ("შენი გულ-სისხლძარღვთა სკან-ქულაა " + scan.score + "/100" + (good ? " — ჯანსაღ დიაპაზონში." : ", რაც გაუმჯობესების სივრცეს ტოვებს.")) :
+        ("Your cardiovascular scan score is " + scan.score + "/100" + (good ? " — in a healthy range." : ", leaving room to improve."));
+      if (scan.hrv && scan.hrv < 30) recs.push(ka ? "გაზარდე HRV — რეგულარული ძილი და სუნთქვის ვარჯიში დაგეხმარება." : "Raise HRV — consistent sleep and breathing exercises help.");
+      if (scan.bpm > 80) recs.push(ka ? "მოსვენების პულსი ოდნავ მაღალია — კარდიო-აქტივობა და ჰიდრატაცია." : "Resting pulse is a bit high — add cardio activity and hydration.");
+      if (scan.spo2 && scan.spo2 < 95) recs.push(ka ? "SpO2 ოდნავ დაბალია — გაიმეორე მშვიდად; თუ მდგრადია, მიმართე ექიმს." : "SpO2 slightly low — re-measure calmly; if persistent, see a doctor.");
+    } else intro = ka ? "ჯერ გაუშვი მთავარი კამერა-სკანი სრული ანგარიშისთვის." : "Run the main camera scan first for a full report.";
+    if (h && h.delta >= 4) recs.push(ka ? "ბიო-ასაკი ქრონოლოგიურზე მაღალია — აქტივობა, ძილი და მოწევაზე უარი ყველაზე მეტს ცვლის." : "Bio-age above chronological — activity, sleep and quitting smoking move it most.");
+    if (voice && voice.band === "vcLow") recs.push(ka ? "ხმის სტაბილურობა დაბალია — დაისვენე ხმა და დაიტენე სითხით." : "Voice steadiness is low — rest the voice and hydrate.");
+    if (skin && skin.band === "skHigh") recs.push(ka ? "კანის შემოწმებამ ყურადღება მოითხოვა — დაჯავშნე დერმატოლოგი." : "Skin check flagged attention — book a dermatologist.");
+    var fillers = ka
+      ? ["დღეში 7–8 სთ ძილი და ჰიდრატაცია თითქმის ყველა სიგნალს აუმჯობესებს.",
+         "კვირაში 150 წთ ზომიერი აქტივობა გულის ჯანმრთელობას უწყობს ხელს.",
+         "შეინარჩუნე რეგულარული სკანი ტენდენციის სანახავად."]
+      : ["7–8 h of sleep and steady hydration improve nearly every signal.",
+         "150 min/week of moderate activity supports heart health.",
+         "Keep scanning regularly to track your trend."];
+    for (var fi = 0; recs.length < 3 && fi < fillers.length; fi++) recs.push(fillers[fi]);
+    return "<p>" + esc(intro) + "</p><ul>" + recs.slice(0, 4).map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>";
+  }
+
+  function reportFmt(s) { return esc(s || "").replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>").replace(/^/, "<p>").replace(/$/, "</p>"); }
+  function reportWrap(inner, off) {
+    return '<div class="scn-report fade-in"><div class="scn-report__head">' + V.icon("sparkle") + " <b>" + t("haReportTitle") + "</b>" +
+      (off ? '<span class="scn-report__tag">' + t("haOffline") + "</span>" : "") + "</div>" +
+      '<div class="scn-report__body" id="scnRepBody">' + inner + "</div>" +
+      '<div class="scn-report__foot">' + V.icon("info") + " " + t("scnDisc") + "</div></div>";
+  }
+  // orchestrate AI report: stream from proxy, fall back to deterministic offline
+  function runScanReport(btn, out) {
+    var summary = V.scanSummaryText();
+    if (!summary) { out.innerHTML = warn(t("haNeedScan")); return; }
+    if (btn) btn.disabled = true;
+    out.innerHTML = '<div class="scn-rep-load">' + V.icon("sparkle") + " " + t("haReportGen") + "</div>";
+    var done = false;
+    function offline() { if (done) return; done = true; out.innerHTML = reportWrap(reportOffline(), true); if (btn) btn.disabled = false; }
+    if (!V.api || !V.api.chat) { offline(); return; }
+    V.api.ready().then(function (on) {
+      if (done) return;
+      if (!on) { offline(); return; }
+      out.innerHTML = reportWrap('<span class="scn-rep-cursor">▍</span>', false);
+      var acc = "";
+      V.api.chat([{ role: "user", text: reportPrompt(summary) }],
+        function (tok, full) { acc = full || (acc + tok); var b = out.querySelector("#scnRepBody"); if (b) b.innerHTML = reportFmt(acc) + '<span class="scn-rep-cursor">▍</span>'; },
+        function (full) { done = true; var b = out.querySelector("#scnRepBody"); if (b) b.innerHTML = reportFmt(full || acc); if (btn) btn.disabled = false; },
+        function () { offline(); });
+    }).catch(offline);
+  }
 
   V.screens.scan = function () {
     var w = W(); w.scan = w.scan || [];
@@ -904,6 +1059,7 @@
                 scnMetric("heart", result.bpm, t("scnHR"), t(hrBandKey(result.bpm))) +
                 (result.hrv ? scnMetric("trend", result.hrv + " ms", t("scnHRV"), null) : "") +
                 (result.rr ? scnMetric("lungs", result.rr + " " + t("hrRRUnit"), t("scnResp"), null) : "") +
+                (result.spo2 ? scnMetric("drop", result.spo2 + "%", t("scnSpO2"), null) : "") +
                 (st ? scnMetric("brain", st.recovery + "%", t("scnRecovery"), t(st.band.k)) : "") +
               "</div>" +
               '<button class="btn btn-primary" id="scnStart" style="width:100%;margin-top:6px">' + V.icon("heart") + " " + t("scnAgain") + "</button>" +
@@ -921,12 +1077,16 @@
           head("heart", "crimson", "scnTitle") +
           '<p class="s-sub">' + t("scnSub") + "</p>" +
           modalityStrip() +
+          '<button class="scn-fullcta" data-go="fullscan">' + V.iconBox("shield", "green") +
+            '<div class="scn-fullcta__t"><b>' + t("fbTitle") + "</b><small>" + t("fbCardSub") + "</small></div>" + V.icon("next") + "</button>" +
           '<div class="card-soft scn-card">' + stage + "</div>" +
           '<div class="hr-manual">' +
             '<input id="hrManual" class="field" type="number" inputmode="numeric" min="30" max="220" placeholder="' + esc(t("hrManualPh")) + '">' +
             '<button class="btn btn-ghost" id="hrManualSave">' + t("hrManual") + "</button>" +
           "</div>" +
           '<div id="scnMsg"></div>' +
+          bioAgeCard() +
+          '<div class="scn-report-wrap"><button class="btn btn-ghost scn-report-btn" id="scnReport">' + V.icon("sparkle") + " " + t("haReportCta") + '</button><div id="scnReportOut"></div></div>' +
           scanHistory() +
           '<p class="hr-multi-note">' + t("scnDisc") + "</p>" +
           '<video id="hrVideo" playsinline muted style="display:none"></video>' +
@@ -938,6 +1098,8 @@
           $("[data-x]").addEventListener("click", function () { if (stopCap) stopCap(); });
           each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
           $("#scnStart").addEventListener("click", startScan);
+          var rep = $("#scnReport");
+          if (rep) rep.addEventListener("click", function () { runScanReport(rep, $("#scnReportOut")); });
           $("#hrManualSave").addEventListener("click", function () {
             var v = parseInt($("#hrManual").value, 10);
             if (!v || v < 30 || v > 220) { $("#scnMsg").innerHTML = warn(t("hrManualPh")); return; }
@@ -1016,6 +1178,7 @@
       var rec = { date: today(), bpm: m.bpm, score: score };
       if (m.hrv) rec.hrv = m.hrv;
       if (m.rr) rec.rr = m.rr;
+      if (m.spo2) rec.spo2 = m.spo2;
       if (st) rec.stress = st.stress;
       w.scan.push(rec); if (w.scan.length > 60) w.scan = w.scan.slice(-60);
       // also feed the resting-HR log so Progress/readiness see it
@@ -1023,11 +1186,99 @@
       V.awardOnce && V.awardOnce("scan:" + today(), V.POINTS.task, "task");
       V.save();
       if (navigator.vibrate) navigator.vibrate(40);
-      render({ bpm: m.bpm, hrv: m.hrv, rr: m.rr, score: score });
+      render({ bpm: m.bpm, hrv: m.hrv, rr: m.rr, spo2: m.spo2, score: score });
       var msg = $("#scnMsg"); if (msg) msg.innerHTML = '<div class="note-ok">' + V.icon("check") + " " + t("scnSaved") + "</div>";
     }
 
     render(null);
+  };
+
+  /* ===================== FULL BODY SCAN (unified flow + body-system map) ===================== */
+  var TONE_HEX = { green: "#2BA94C", yellow: "#E0A92E", crimson: "#E8536B", gray: "#C4CDD6" };
+
+  // whole-body composite from the latest of each modality (null if none yet)
+  V.scanComposite = function () {
+    var vals = [];
+    var sc = lastOf("scan"); if (sc) vals.push(sc.score);
+    var vo = lastOf("voiceScan"); if (vo && vo.steadiness != null) vals.push(vo.steadiness);
+    var sk = lastOf("skinScan"); if (sk) vals.push(sk.band === "skLow" ? 90 : sk.band === "skWatch" ? 60 : 30);
+    if (!vals.length) return null;
+    return Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length);
+  };
+
+  V.screens.fullscan = function () {
+    var cardio = lastOf("scan"), skin = lastOf("skinScan"), voice = lastOf("voiceScan");
+    var cTone = cardio ? scanScoreTone(cardio.score) : "gray";
+    var sTone = skin ? SKIN_TONE[skin.band] : "gray";
+    var vTone = voice ? VOICE_TONE[voice.band] : "gray";
+    var comp = V.scanComposite();
+
+    function bodyMap() {
+      function dot(cx, cy, tone) { return '<circle cx="' + cx + '" cy="' + cy + '" r="9" fill="' + TONE_HEX[tone] + '" stroke="#fff" stroke-width="3"/>'; }
+      return '<svg class="fs-body" viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<g fill="var(--field)" stroke="var(--line)" stroke-width="1.5">' +
+          '<circle cx="100" cy="34" r="22"/>' +
+          '<path d="M78 60 h44 q14 0 14 16 v54 q0 10 -8 12 l-6 70 h-16 l-4 -52 -4 52 h-16 l-6 -70 q-8 -2 -8 -12 v-54 q0 -16 14 -16 Z"/>' +
+          '<path d="M70 78 l-16 46 8 4 18 -40 Z"/><path d="M130 78 l16 46 -8 4 -18 -40 Z"/>' +
+        "</g>" +
+        dot(86, 96, cTone) +   // heart — upper-left chest
+        dot(100, 34, sTone) +  // skin — face
+        dot(114, 110, vTone) + // respiratory/voice — chest
+        "</svg>";
+    }
+    function legend(icon, name, tone, val) {
+      return '<div class="fs-leg"><span class="fs-leg__dot" style="background:' + TONE_HEX[tone] + '"></span>' +
+        V.icon(icon) + '<div class="fs-leg__t"><b>' + name + "</b><small>" + (val || t("fbTodo")) + "</small></div></div>";
+    }
+    function step(icon, name, route, val, tone, done) {
+      return '<button class="fs-step" data-go="' + route + '">' +
+        '<span class="fs-step__ic rd-tone-' + (tone || "gray") + '">' + V.icon(icon) + "</span>" +
+        '<span class="fs-step__t"><b>' + name + "</b><small>" + (val || t("fbTodo")) + "</small></span>" +
+        (done ? '<span class="fs-step__chk">' + V.icon("check") + "</span>" : V.icon("next")) + "</button>";
+    }
+    var dToday = function (r) { return r && r.date === today(); };
+    var cVal = cardio ? t("scnScore") + " " + cardio.score : null;
+    var sVal = skin ? t(skin.band) : null;
+    var vVal = voice ? t(voice.band) + " · " + voice.steadiness + "%" : null;
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        head("shield", "green", "fbTitle") +
+        '<p class="s-sub">' + t("fbSub") + "</p>" +
+
+        '<div class="card-soft fs-hero">' +
+          '<div class="fs-hero__map">' + bodyMap() + "</div>" +
+          '<div class="fs-hero__r">' +
+            (comp != null
+              ? '<div class="fs-comp rd-tone-' + scanScoreTone(comp) + '"><b>' + comp + '</b><small>' + t("fbComposite") + "</small></div>"
+              : '<div class="fs-comp fs-comp--empty"><b>—</b><small>' + t("fbComposite") + "</small></div>") +
+            legend("heart", t("fbSysCardio"), cTone, cVal) +
+            legend("skin", t("fbSysSkin"), sTone, sVal) +
+            legend("lungs", t("fbSysResp"), vTone, vVal) +
+          "</div>" +
+        "</div>" +
+
+        bioAgeCard() +
+
+        '<div class="section-head"><h3>' + t("fbSteps") + "</h3></div>" +
+        step("heart", t("fbSysCardio"), "scan", cVal, cTone, dToday(cardio)) +
+        step("skin", t("fbSysSkin"), "skinscan", sVal, sTone, dToday(skin)) +
+        step("lungs", t("fbSysResp"), "voicescan", vVal, vTone, dToday(voice)) +
+
+        '<div class="scn-report-wrap"><button class="btn btn-primary scn-report-btn" id="fsReport" style="width:100%">' + V.icon("sparkle") + " " + t("haReportCta") + '</button><div id="fsReportOut"></div></div>' +
+
+        '<p class="hr-multi-note">' + t("scnDisc") + "</p>" +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        backX();
+        each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
+        var rep = $("#fsReport");
+        if (rep) rep.addEventListener("click", function () { runScanReport(rep, $("#fsReportOut")); });
+      } }
+    );
   };
 
   // home flagship card for the AI Health Scan

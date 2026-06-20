@@ -99,7 +99,17 @@ The strategic "smartphone = diagnostic" play. `#/scan` is the hub; modality stri
 - **Skin** (`#/skinscan`) — photo + ABCDE guided self-check + on-device `V.skinColorVar` (pixel colour-variation) → `V.skinFlag` band → dermatologist deep-link. `state.wellness.skinScan`.
 - **Voice** (`#/voicescan`) — 5s sustained vowel → Web Audio per-frame pitch (autocorrelation) + RMS → `V.voiceSteadiness` (jitter/shimmer CV) + `V.voiceBand` → breathing deep-link. `state.wellness.voiceScan`.
 All wellness-grade + disclaimers; pure analysis fns unit-tested; camera/mic paths fail gracefully (denied/no-device messages). Real ML models are a future seam. Pure fns: `V.scanStress/scanScore/skinColorVar/skinFlag/voiceSteadiness/voiceBand`, capture helpers `V.ppgCapture` (+ internal `voiceCapture`).
+
+**Depth layer — DONE (v55, "3 modalities felt too easy"):**
+- ✅ **Bio-age** `V.healthAge()` — chronological age nudged by profile factors + latest camera-scan biomarkers (HRV/HR/stress) → `{bio, chrono, delta, tone}`. Card `bioAgeCard()` on `#/scan` + `#/fullscan`; empty-state deep-links to profile.
+- ✅ **AI personalized report** — `runScanReport()` builds a summary (`V.scanSummaryText()`), streams a narrative + 3 recs from the AI proxy (`V.api.chat`), falls back to a deterministic `reportOffline()` when the proxy is down (verified offline path). Button on `#/scan` + `#/fullscan`.
+- ✅ **More PPG signals** — `V.ppgSpO2(red, blue, durSec)` (ratio-of-ratios, **uncalibrated → wellness estimate, returns null when signal too weak**); `ppgCapture` now samples the blue channel too and returns `spo2` in `onDone`; folded into `scanScore` + a SpO₂ metric chip.
+- ✅ **Full body scan** `#/fullscan` (`V.screens.fullscan`) — unified hub over all 3 modalities: SVG **body-system map** (heart/skin/respiration dots coloured by each band's tone), `V.scanComposite()` whole-body score, bio-age, per-modality step rows (done-today ✓ + deep-link to run), and the AI report. CTA card on `#/scan`. i18n prefix `fb*`/`ha*` (NB: `fs*` was already taken by the fasting timer).
+
 **Hard rules from research:** never label camera-vitals or AI triage as clinical/diagnostic — wellness/informational + disclaimer; do NOT cite any symptom-checker accuracy %; camera-PPG degrades on dark skin (fairness caveat). Open: Georgian medical-device regulation + whether the local market supports B2B2C subsidized telehealth.
 
+## ▶ Brand assets (v52–v53)
+Official **Avenir Next Georgian** font now bundled in `/fonts` (`@font-face` in `css/base.css`; only the **Demi** weight — the supplied "Regular" was a byte-identical copy of Demi, so heavier weights are browser-synthesised until a true Regular is added). The **logo** mark in `js/ui.js` (`V.treeMark`/`V.mark`/`V.logoBadge` — `logoBadge` now renders the organic blob, not a circle) is still a **hand-built reconstruction** of the official tree+blob — **pending the designer's real `.svg`** to drop in verbatim (user will provide; do not keep approximating once it arrives).
+
 ### How to verify (preview)
-rsync to `/tmp/vita-preview`, bump `?v=NN` (app.html) + `sw.js` CACHE, reload with `?cb=`, drive the UI, check `preview_console_logs`. Currently at **v50**. Launch config `.claude/launch.json` runs `python3 http.server` on the mirror, port 8011 (note: it `chdir`s first — the launched cwd is sandboxed/inaccessible, so `--directory` fails).
+rsync to `/tmp/vita-preview`, bump `?v=NN` (app.html) + `sw.js` CACHE, reload with `?cb=`, drive the UI, check `preview_console_logs`. Currently at **v55**. Launch config `.claude/launch.json` runs `python3 http.server` on the mirror, port 8011 (note: it `chdir`s first — the launched cwd is sandboxed/inaccessible, so `--directory` fails).
