@@ -2911,7 +2911,8 @@
             past.map(function (c) { var d = V.doctorById(c.docId) || { name: { ka: "ექიმი", en: "Doctor" }, tone: "green", spec: { ka: c.spec, en: c.spec } };
               return '<div class="td-past">' + docAv(d, 36) + '<div class="td-doc__t"><b>' + L(d.name) + "</b><small>" + c.date + " · " + t("tdVideo") + " · " + fmtDur(c.durSec || 0) + "</small></div>" + (c.paid ? '<span class="td-online">₾' + (d.price || "") + "</span>" : "") + "</div>";
             }).join("") : "") +
-          '<p class="hr-multi-note">' + t("tdDisc") + "</p>";
+          '<p class="hr-multi-note">' + t("tdDisc") + "</p>" +
+          '<a class="td-docapp" href="doctor.html">' + V.icon("stethoscope") + " " + t("tdForDoctors") + " " + V.icon("next") + "</a>";
       } else if (stage === "call") {
         bodyInner =
           '<div class="td-call">' +

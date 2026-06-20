@@ -1,0 +1,99 @@
+/* VITA for Doctors — clinician console (standalone). Builds on css/base.css tokens. */
+.doc-body { background: var(--bg); color: var(--ink); min-height: 100vh; }
+#docapp { max-width: 920px; margin: 0 auto; padding: 0 16px 40px; }
+.doc-svg { width: 100%; height: auto; display: block; }
+.doc-bv { font-size: 9px; font-weight: 700; fill: var(--ink-2); }
+.doc-ax { font-size: 9px; fill: var(--muted); }
+
+/* top bar */
+.doc-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 4px; flex-wrap: wrap; }
+.doc-brand { display: flex; align-items: center; gap: 11px; }
+.doc-brand b { font-size: 18px; font-weight: 800; display: block; line-height: 1.1; }
+.doc-brand b span { color: var(--green); font-weight: 700; }
+.doc-brand small { color: var(--muted); font-size: 12px; }
+.doc-top__r { display: flex; align-items: center; gap: 10px; }
+.doc-online { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--muted); background: var(--card); border: 1.5px solid var(--line); border-radius: 99px; padding: 7px 14px; }
+.doc-online i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.doc-online.on { color: var(--green-dark); border-color: color-mix(in srgb, var(--green) 35%, var(--line)); }
+.doc-online.on i { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 22%, transparent); }
+.doc-lang { font-size: 13px; font-weight: 700; color: var(--ink-2); background: var(--card); border: 1.5px solid var(--line); border-radius: 10px; padding: 7px 12px; }
+.doc-me { display: flex; align-items: center; gap: 9px; }
+.doc-me__t b { display: block; font-size: 13.5px; line-height: 1.1; }
+.doc-me__t small { color: var(--muted); font-size: 11.5px; }
+@media (max-width: 560px) { .doc-me__t { display: none; } }
+
+/* avatars + chips */
+.doc-av { display: grid; place-content: center; border-radius: 50%; color: #fff; font-weight: 800; flex: none; }
+.doc-urg { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 99px; white-space: nowrap; }
+
+/* nav */
+.doc-nav { display: flex; gap: 8px; background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 5px; margin-bottom: 18px; }
+.doc-nav__b { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px; border-radius: 10px; font-size: 14px; font-weight: 600; color: var(--muted); }
+.doc-nav__b svg { width: 17px; }
+.doc-nav__b.on { background: var(--green); color: #fff; }
+
+/* kpis */
+.doc-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+.doc-kpi { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: 16px; box-shadow: var(--shadow-card); }
+.doc-kpi b { font-size: 27px; font-weight: 800; display: block; line-height: 1; }
+.doc-kpi small { color: var(--muted); font-size: 12.5px; display: block; margin-top: 5px; }
+.doc-kpi__sub { color: var(--muted); font-size: 11px; font-style: normal; }
+@media (max-width: 560px) { .doc-kpis { grid-template-columns: 1fr 1fr; } }
+
+/* sections */
+.doc-sec { display: flex; align-items: center; justify-content: space-between; margin: 4px 2px 12px; }
+.doc-sec h2 { display: flex; align-items: center; gap: 9px; font-size: 17px; font-weight: 700; }
+.doc-sec h2 svg { width: 19px; color: var(--green); }
+.doc-badge { background: var(--crimson, #e8536b); color: #fff; font-size: 12px; font-weight: 700; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; display: inline-grid; place-content: center; }
+.doc-empty { text-align: center; color: var(--muted); padding: 30px; background: var(--card); border: 1.5px dashed var(--line); border-radius: var(--r-lg); }
+.doc-empty svg { width: 18px; vertical-align: -3px; color: var(--green); }
+
+/* queue cards */
+.doc-qcard { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 12px; box-shadow: var(--shadow-card); }
+.doc-qcard__t { flex: 1; min-width: 0; }
+.doc-qcard__top { display: flex; align-items: center; gap: 9px; }
+.doc-qcard__top b { font-size: 15.5px; }
+.doc-qcard__t small { display: block; color: var(--ink-2); font-size: 13px; margin: 3px 0; }
+.doc-wait { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; font-style: normal; }
+.doc-wait svg { width: 13px; }
+.doc-accept { display: inline-flex; align-items: center; gap: 7px; background: var(--green); color: #fff; font-weight: 700; font-size: 14px; padding: 11px 18px; border-radius: 12px; flex: none; cursor: pointer; transition: transform .1s, background .12s; }
+.doc-accept:hover { background: var(--green-dark); } .doc-accept:active { transform: scale(.97); }
+.doc-accept svg { width: 17px; }
+@media (max-width: 560px) { .doc-qcard { flex-wrap: wrap; } .doc-accept { width: 100%; justify-content: center; } }
+
+/* roster */
+.doc-rrow { display: flex; align-items: center; gap: 13px; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 10px; }
+.doc-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.doc-tag { font-size: 11.5px; font-weight: 600; color: var(--ink-2); background: var(--field); border-radius: 99px; padding: 3px 10px; }
+
+/* cards / charts */
+.doc-card { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow-card); }
+.doc-card__h { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14.5px; }
+.doc-card__h svg { width: 18px; color: var(--green); }
+.doc-2up { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.doc-card--c { display: flex; flex-direction: column; align-items: center; }
+.doc-donut { width: 88px; height: 88px; }
+.doc-donut__t { font-size: 16px; font-weight: 800; fill: var(--ink); }
+
+/* consult console */
+.doc-back { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+.doc-back svg { width: 17px; }
+.doc-pt__h { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.doc-vitals { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.doc-vital { text-align: center; background: var(--field); border-radius: var(--r-md); padding: 10px 4px; }
+.doc-vital svg { width: 17px; color: var(--green); }
+.doc-vital b { display: block; font-size: 17px; font-weight: 800; }
+.doc-vital small { color: var(--muted); font-size: 10.5px; }
+@media (max-width: 560px) { .doc-vitals { grid-template-columns: repeat(3, 1fr); } }
+
+.doc-vstage { position: relative; height: 280px; border-radius: var(--r-lg); background: linear-gradient(160deg, #1b2733, #0f1a14); display: grid; place-content: center; overflow: hidden; margin-bottom: 16px; }
+.doc-vbig { display: flex; flex-direction: column; align-items: center; gap: 10px; color: #fff; }
+.doc-vname { font-weight: 700; }
+.doc-live { position: absolute; top: 12px; left: 12px; font-size: 11px; font-weight: 800; color: #fff; background: #e8536b; padding: 3px 10px; border-radius: 99px; }
+.doc-vme { position: absolute; bottom: 12px; right: 12px; width: 76px; height: 96px; border-radius: 12px; background: #2a3744; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border: 2px solid rgba(255,255,255,.15); }
+.doc-vme small { color: rgba(255,255,255,.7); font-size: 10px; }
+.doc-vtimer { position: absolute; top: 12px; right: 12px; font-size: 13px; font-weight: 700; color: #fff; background: rgba(0,0,0,.35); padding: 3px 10px; border-radius: 99px; }
+.doc-ta { width: 100%; min-height: 92px; resize: vertical; border: 1.5px solid var(--line); border-radius: var(--r-md); background: var(--field); color: var(--ink); padding: 11px 13px; font-family: var(--font); font-size: 14px; }
+.doc-complete { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--green); color: #fff; font-weight: 700; font-size: 15px; padding: 14px; border-radius: 14px; cursor: pointer; transition: background .12s, transform .1s; }
+.doc-complete:hover { background: var(--green-dark); } .doc-complete:active { transform: scale(.99); }
+.doc-complete svg { width: 18px; }

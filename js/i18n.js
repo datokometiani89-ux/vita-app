@@ -720,6 +720,7 @@ window.VITA = window.VITA || {};
     tdPayDemo: { ka: "დემო — რეალური გადახდა არ ხდება. Stripe/Apple Pay მომავალი seam-ია.", en: "Demo — no real charge. Stripe/Apple Pay is a future seam." },
     tdDone: { ka: "დასრულება", en: "Done" },
     tdDisc: { ka: "დემო ტელემედიცინაა; გადაუდებელ შემთხვევაში დარეკეთ 112.", en: "Demo telemedicine; in an emergency call your local emergency number." },
+    tdForDoctors: { ka: "ექიმი ხართ? VITA for Doctors", en: "Are you a doctor? VITA for Doctors" },
     mCycle: { ka: "ციკლი", en: "Cycle" },
     /* VITA+ subscription */
     vpIntro: { ka: "გახსენი მთელი ძალა — AI ანგარიშები, ექიმის რეპორტი და მეტი.", en: "Unlock the full power — AI reports, doctor exports and more." },
