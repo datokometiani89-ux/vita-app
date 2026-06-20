@@ -1513,3 +1513,17 @@
 .fs-step__t small { color: var(--muted); font-size: 12px; }
 .fs-step__chk { color: var(--green); flex: none; } .fs-step__chk svg { width: 20px; }
 .fs-step > svg:last-child { color: var(--muted); width: 16px; transform: rotate(180deg); flex: none; }
+
+/* ---- cognitive reaction-time test ---- */
+.rx-card { padding: 16px; }
+.rx-pad { width: 100%; border: 0; border-radius: var(--r-lg); min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: background .12s, color .12s; user-select: none; -webkit-user-select: none; }
+.rx-pad b { font-size: 27px; font-weight: 800; }
+.rx-pad small { font-size: 13px; opacity: .85; }
+.rx-idle, .rx-step { background: var(--field); color: var(--ink); }
+.rx-wait { background: #e8536b; color: #fff; }
+.rx-go { background: var(--green); color: #fff; }
+.rx-early { background: #f3c34b; color: #3a2c00; }
+.rx-result { background: color-mix(in srgb, var(--rdc, var(--green)) 14%, var(--card)); color: var(--ink); border: 2px solid var(--rdc, var(--green)); }
+.rx-prog { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+.rx-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--line); transition: background .15s; }
+.rx-dot.on { background: var(--green); }

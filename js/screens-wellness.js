@@ -615,6 +615,19 @@
     return { chrono: chrono, bio: bio, delta: delta, tone: tone, usedScan: usedScan };
   };
 
+  // cognitive processing-speed band from median visual reaction time (ms)
+  V.reactionBand = function (ms) {
+    if (ms == null) return null;
+    if (ms <= 300) return { k: "rxSharp", tone: "green" };
+    if (ms <= 420) return { k: "rxOk", tone: "yellow" };
+    return { k: "rxSlow", tone: "crimson" };
+  };
+  // reaction time → 0-100 cognition sub-score (for the whole-body composite)
+  V.reactionScore = function (ms) {
+    if (ms == null) return null;
+    return Math.max(20, Math.min(99, Math.round(100 - (ms - 220) / 4)));
+  };
+
   /* ---- reusable camera-PPG capture (platform foundation: heart rate + AI Health Scan) ---- */
   // opts: { onStatus(key), onTick(bpm), onDone({bpm,rr,hrv,beatTimes}), onError(key) }
   // returns a stop() function. Caller provides a hidden <video> el id and a wave <canvas> el id.
@@ -958,12 +971,13 @@
   // human-readable multimodal summary (for AI prompt, chat handoff, offline report)
   V.scanSummaryText = function () {
     var ka = V.lang() === "ka";
-    var scan = lastOf("scan"), skin = lastOf("skinScan"), voice = lastOf("voiceScan"), h = V.healthAge();
+    var scan = lastOf("scan"), skin = lastOf("skinScan"), voice = lastOf("voiceScan"), cog = lastOf("reaction"), h = V.healthAge();
     var parts = [];
     if (h) parts.push((ka ? "ბიო-ასაკი " : "Bio-age ") + h.bio + (ka ? " (ქრონ. " : " (chrono ") + h.chrono + ", " + (h.delta > 0 ? "+" + h.delta : h.delta) + ")");
     if (scan) parts.push((ka ? "გულ-სისხლძარღვი: ქულა " : "Cardio: score ") + scan.score + ", HR " + scan.bpm +
       (scan.hrv ? ", HRV " + scan.hrv + "ms" : "") + (scan.rr ? ", " + (ka ? "სუნთქვა " : "resp ") + scan.rr : "") +
       (scan.spo2 ? ", SpO2 " + scan.spo2 + "%" : "") + (scan.stress != null ? ", " + (ka ? "სტრესი " : "stress ") + scan.stress : ""));
+    if (cog) parts.push((ka ? "კოგნიცია: რეაქცია " : "Cognition: reaction ") + cog.ms + "ms (" + t(cog.band) + ")");
     if (skin) parts.push((ka ? "კანი: " : "Skin: ") + t(skin.band));
     if (voice) parts.push((ka ? "ხმა: " : "Voice: ") + t(voice.band) + " (" + voice.steadiness + "%)");
     return parts.length ? parts.join(". ") : "";
@@ -995,6 +1009,8 @@
     } else intro = ka ? "ჯერ გაუშვი მთავარი კამერა-სკანი სრული ანგარიშისთვის." : "Run the main camera scan first for a full report.";
     if (h && h.delta >= 4) recs.push(ka ? "ბიო-ასაკი ქრონოლოგიურზე მაღალია — აქტივობა, ძილი და მოწევაზე უარი ყველაზე მეტს ცვლის." : "Bio-age above chronological — activity, sleep and quitting smoking move it most.");
     if (voice && voice.band === "vcLow") recs.push(ka ? "ხმის სტაბილურობა დაბალია — დაისვენე ხმა და დაიტენე სითხით." : "Voice steadiness is low — rest the voice and hydrate.");
+    var cog = lastOf("reaction");
+    if (cog && cog.band === "rxSlow") recs.push(ka ? "რეაქცია ნელია — ძილი, ჰიდრატაცია და ნაკლები ეკრანი დაღლამდე აუმჯობესებს." : "Reaction is slow — sleep, hydration and less pre-test screen time help.");
     if (skin && skin.band === "skHigh") recs.push(ka ? "კანის შემოწმებამ ყურადღება მოითხოვა — დაჯავშნე დერმატოლოგი." : "Skin check flagged attention — book a dermatologist.");
     var fillers = ka
       ? ["დღეში 7–8 სთ ძილი და ჰიდრატაცია თითქმის ყველა სიგნალს აუმჯობესებს.",
@@ -1044,6 +1060,7 @@
         '<span class="scn-mod on">' + V.icon("heart") + L({ ka: "გულსისხლძარღვთა", en: "Cardiovascular" }) + ' <i>' + t("scnActive") + "</i></span>" +
         '<button class="scn-mod scn-mod--btn" data-go="skinscan">' + V.icon("camera") + L({ ka: "კანი", en: "Skin" }) + ' <i>' + t("scnActive") + "</i></button>" +
         '<button class="scn-mod scn-mod--btn" data-go="voicescan">' + V.icon("mic") + L({ ka: "ხმა", en: "Voice" }) + ' <i>' + t("scnActive") + "</i></button>" +
+        '<button class="scn-mod scn-mod--btn" data-go="reactionscan">' + V.icon("brain") + L({ ka: "კოგნიცია", en: "Cognition" }) + ' <i>' + t("scnActive") + "</i></button>" +
       "</div>";
     }
 
@@ -1202,15 +1219,17 @@
     var sc = lastOf("scan"); if (sc) vals.push(sc.score);
     var vo = lastOf("voiceScan"); if (vo && vo.steadiness != null) vals.push(vo.steadiness);
     var sk = lastOf("skinScan"); if (sk) vals.push(sk.band === "skLow" ? 90 : sk.band === "skWatch" ? 60 : 30);
+    var rx = lastOf("reaction"); if (rx) vals.push(V.reactionScore(rx.ms));
     if (!vals.length) return null;
     return Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length);
   };
 
   V.screens.fullscan = function () {
-    var cardio = lastOf("scan"), skin = lastOf("skinScan"), voice = lastOf("voiceScan");
+    var cardio = lastOf("scan"), skin = lastOf("skinScan"), voice = lastOf("voiceScan"), cog = lastOf("reaction");
     var cTone = cardio ? scanScoreTone(cardio.score) : "gray";
     var sTone = skin ? SKIN_TONE[skin.band] : "gray";
     var vTone = voice ? VOICE_TONE[voice.band] : "gray";
+    var gTone = cog ? REACT_TONE(cog.band) : "gray";
     var comp = V.scanComposite();
 
     function bodyMap() {
@@ -1221,9 +1240,10 @@
           '<path d="M78 60 h44 q14 0 14 16 v54 q0 10 -8 12 l-6 70 h-16 l-4 -52 -4 52 h-16 l-6 -70 q-8 -2 -8 -12 v-54 q0 -16 14 -16 Z"/>' +
           '<path d="M70 78 l-16 46 8 4 18 -40 Z"/><path d="M130 78 l16 46 -8 4 -18 -40 Z"/>' +
         "</g>" +
+        dot(100, 30, gTone) +  // cognition — head/brain
         dot(86, 96, cTone) +   // heart — upper-left chest
-        dot(100, 34, sTone) +  // skin — face
         dot(114, 110, vTone) + // respiratory/voice — chest
+        dot(140, 108, sTone) + // skin — forearm
         "</svg>";
     }
     function legend(icon, name, tone, val) {
@@ -1240,6 +1260,7 @@
     var cVal = cardio ? t("scnScore") + " " + cardio.score : null;
     var sVal = skin ? t(skin.band) : null;
     var vVal = voice ? t(voice.band) + " · " + voice.steadiness + "%" : null;
+    var gVal = cog ? t(cog.band) + " · " + cog.ms + " " + t("rxMs") : null;
 
     V.mount(
       V.statusbar() +
@@ -1254,8 +1275,9 @@
               ? '<div class="fs-comp rd-tone-' + scanScoreTone(comp) + '"><b>' + comp + '</b><small>' + t("fbComposite") + "</small></div>"
               : '<div class="fs-comp fs-comp--empty"><b>—</b><small>' + t("fbComposite") + "</small></div>") +
             legend("heart", t("fbSysCardio"), cTone, cVal) +
-            legend("skin", t("fbSysSkin"), sTone, sVal) +
+            legend("brain", t("fbSysCog"), gTone, gVal) +
             legend("lungs", t("fbSysResp"), vTone, vVal) +
+            legend("skin", t("fbSysSkin"), sTone, sVal) +
           "</div>" +
         "</div>" +
 
@@ -1263,8 +1285,9 @@
 
         '<div class="section-head"><h3>' + t("fbSteps") + "</h3></div>" +
         step("heart", t("fbSysCardio"), "scan", cVal, cTone, dToday(cardio)) +
-        step("skin", t("fbSysSkin"), "skinscan", sVal, sTone, dToday(skin)) +
+        step("brain", t("fbSysCog"), "reactionscan", gVal, gTone, dToday(cog)) +
         step("lungs", t("fbSysResp"), "voicescan", vVal, vTone, dToday(voice)) +
+        step("skin", t("fbSysSkin"), "skinscan", sVal, sTone, dToday(skin)) +
 
         '<div class="scn-report-wrap"><button class="btn btn-primary scn-report-btn" id="fsReport" style="width:100%">' + V.icon("sparkle") + " " + t("haReportCta") + '</button><div id="fsReportOut"></div></div>' +
 
@@ -1634,6 +1657,86 @@
     }
 
     renderPick();
+  };
+
+  /* ===================== COGNITIVE REACTION TIME (processing speed) ===================== */
+  function REACT_TONE(k) { return k === "rxSharp" ? "green" : k === "rxOk" ? "yellow" : "crimson"; }
+  V.screens.reactionscan = function () {
+    var w = W(); w.reaction = w.reaction || [];
+    var N = 5, trials = [], state = "idle", timer = null, startedAt = 0;
+
+    function setPad(cls, big, small) {
+      var pad = $("#rxPad"); if (!pad) return;
+      pad.className = "rx-pad " + cls;
+      var bb = $("#rxBig"); if (bb) bb.textContent = big;
+      var ss = $("#rxSmall"); if (ss) ss.textContent = small || "";
+    }
+    function prog() {
+      var p = $("#rxProg"); if (!p) return;
+      var d = ""; for (var i = 0; i < N; i++) d += '<span class="rx-dot' + (i < trials.length ? " on" : "") + '"></span>';
+      p.innerHTML = d;
+    }
+    function beginTrial() {
+      state = "waiting"; setPad("rx-wait", t("rxWait"), "");
+      var delay = 1200 + Math.floor(Math.random() * 2300);
+      timer = setTimeout(function () {
+        if (!alive($("#rxPad"))) return;
+        state = "go"; startedAt = performance.now(); setPad("rx-go", t("rxTap"), "");
+      }, delay);
+    }
+    function median(a) { var s = a.slice().sort(function (x, y) { return x - y; }); var m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2); }
+    function finish() {
+      var ms = median(trials), band = V.reactionBand(ms);
+      w.reaction.push({ date: today(), ms: ms, band: band.k }); if (w.reaction.length > 40) w.reaction = w.reaction.slice(-40);
+      V.awardOnce && V.awardOnce("reaction:" + today(), V.POINTS.task, "task");
+      V.save();
+      state = "finished"; setPad("rx-result rd-tone-" + band.tone, ms + " " + t("rxMs"), t(band.k) + " · " + t("rxTapRetake"));
+      if (navigator.vibrate) navigator.vibrate(40);
+      var msg = $("#rxMsg"); if (msg) msg.innerHTML = '<div class="note-ok">' + V.icon("check") + " " + t("rxSaved") + " — " + t(band.k) + " (" + ms + " " + t("rxMs") + ")</div>";
+      trials = [];
+    }
+    function padClick() {
+      if (state === "idle" || state === "finished") { if (state === "finished") prog(); beginTrial(); return; }
+      if (state === "waiting") { clearTimeout(timer); state = "idle"; setPad("rx-early", t("rxEarly"), t("rxTapRetry")); return; }
+      if (state === "go") {
+        var ms = Math.round(performance.now() - startedAt);
+        trials.push(ms); prog();
+        if (trials.length >= N) finish();
+        else { state = "idle"; setPad("rx-step", ms + " " + t("rxMs"), t("rxTapNext")); }
+      }
+    }
+    function history() {
+      var arr = w.reaction || []; if (!arr.length) return "";
+      var recent = arr.slice(-10);
+      var bars = recent.map(function (r) {
+        var tone = REACT_TONE(r.band), h = V.reactionScore(r.ms);
+        return '<div class="mo-bar" title="' + r.date + " · " + r.ms + 'ms"><span class="mo-bar__fill tone-' + tone + '" style="height:' + h + '%"></span><i>' + r.date.slice(8) + "</i></div>";
+      }).join("");
+      return '<div class="section-head"><h3>' + t("rxHistory") + "</h3></div><div class=\"mo-chart\">" + bars + "</div>";
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        head("brain", "blue", "rxTitle") +
+        '<p class="s-sub">' + t("rxSub") + "</p>" +
+        '<div class="card-soft rx-card">' +
+          '<button class="rx-pad rx-idle" id="rxPad"><b id="rxBig">' + t("rxTapStart") + '</b><small id="rxSmall">' + t("rxHint") + "</small></button>" +
+          '<div class="rx-prog" id="rxProg"></div>' +
+        "</div>" +
+        '<div id="rxMsg"></div>' +
+        history() +
+        '<p class="hr-multi-note">' + t("rxDisc") + "</p>" +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        backX();
+        $("[data-x]").addEventListener("click", function () { if (timer) clearTimeout(timer); });
+        prog();
+        $("#rxPad").addEventListener("click", padClick);
+      } }
+    );
   };
 
   /* ===================== MOOD JOURNAL ===================== */

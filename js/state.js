@@ -68,6 +68,7 @@ window.VITA = window.VITA || {};
       scan: [],           // [{date, bpm, hrv, rr, stress, score}] multimodal AI Health Scan results
       skinScan: [],       // [{date, band}] guided skin (ABCDE) self-checks
       voiceScan: [],      // [{date, steadiness, band}] voice-biomarker checks
+      reaction: [],       // [{date, ms, band}] cognitive reaction-time (processing speed) checks
       bp: [],             // [{date, sys, dia}] blood-pressure log
       mood: {},           // { "2026-06-19": {score:1..5, note, tags:[]} }
       phq: [],            // [{date, score, severity}]
