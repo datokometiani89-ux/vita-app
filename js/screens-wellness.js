@@ -953,6 +953,10 @@
 
   /* ---- shared scan helpers (used by #/scan and #/fullscan) ---- */
   function lastOf(key) { var a = W()[key]; return (a && a.length) ? a[a.length - 1] : null; }
+  // VITA+ gate: premium perks (AI report, doctor print) show a lock until subscribed
+  function isPlus() { return V.isPlus && V.isPlus(); }
+  function plusChip() { return isPlus() ? "" : ' <span class="vp-lock">VITA+</span>'; }
+  function plusGate(fn) { return function () { if (!isPlus()) { V.go("plus"); return; } fn.apply(this, arguments); }; }
 
   // Biological "health age" card
   function bioAgeCard() {
@@ -1164,9 +1168,9 @@
           "</div>" +
           '<div id="scnMsg"></div>' +
           bioAgeCard() +
-          '<div class="scn-report-wrap"><button class="btn btn-ghost scn-report-btn" id="scnReport">' + V.icon("sparkle") + " " + t("haReportCta") + '</button><div id="scnReportOut"></div></div>' +
+          '<div class="scn-report-wrap"><button class="btn btn-ghost scn-report-btn" id="scnReport">' + V.icon("sparkle") + " " + t("haReportCta") + plusChip() + '</button><div id="scnReportOut"></div></div>' +
           (last ? '<div class="scn-actions">' +
-            '<button class="scn-act" id="scnPrint">' + V.icon("file") + "<span>" + t("scnPrint") + "</span></button>" +
+            '<button class="scn-act" id="scnPrint">' + V.icon("file") + "<span>" + t("scnPrint") + plusChip() + "</span></button>" +
             '<button class="scn-act" id="scnShare">' + V.icon("send") + "<span>" + t("scnShare") + "</span></button>" +
             '<button class="scn-act" id="scnRemind">' + V.icon("bell") + "<span>" + t("scnRemind") + "</span></button>" +
           "</div>" : "") +
@@ -1189,8 +1193,8 @@
             });
           });
           var rep = $("#scnReport");
-          if (rep) rep.addEventListener("click", function () { runScanReport(rep, $("#scnReportOut")); });
-          var pr = $("#scnPrint"); if (pr) pr.addEventListener("click", printScanReport);
+          if (rep) rep.addEventListener("click", plusGate(function () { runScanReport(rep, $("#scnReportOut")); }));
+          var pr = $("#scnPrint"); if (pr) pr.addEventListener("click", plusGate(printScanReport));
           var sh = $("#scnShare"); if (sh) sh.addEventListener("click", shareScanReport);
           var rm = $("#scnRemind"); if (rm) rm.addEventListener("click", function () {
             V.features && V.features.exportScanReminder(9);
@@ -1369,10 +1373,10 @@
         step("lungs", t("fbSysResp"), "voicescan", vVal, vTone, dToday(voice)) +
         step("skin", t("fbSysSkin"), "skinscan", sVal, sTone, dToday(skin)) +
 
-        '<div class="scn-report-wrap"><button class="btn btn-primary scn-report-btn" id="fsReport" style="width:100%">' + V.icon("sparkle") + " " + t("haReportCta") + '</button><div id="fsReportOut"></div></div>' +
+        '<div class="scn-report-wrap"><button class="btn btn-primary scn-report-btn" id="fsReport" style="width:100%">' + V.icon("sparkle") + " " + t("haReportCta") + plusChip() + '</button><div id="fsReportOut"></div></div>' +
 
         (comp != null ? '<div class="scn-actions">' +
-          '<button class="scn-act" id="fsPrint">' + V.icon("file") + "<span>" + t("scnPrint") + "</span></button>" +
+          '<button class="scn-act" id="fsPrint">' + V.icon("file") + "<span>" + t("scnPrint") + plusChip() + "</span></button>" +
           '<button class="scn-act" id="fsShare">' + V.icon("send") + "<span>" + t("scnShare") + "</span></button>" +
           '<button class="scn-act" id="fsRemind">' + V.icon("bell") + "<span>" + t("scnRemind") + "</span></button>" +
         "</div>" : "") +
@@ -1385,8 +1389,8 @@
         backX();
         each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
         var rep = $("#fsReport");
-        if (rep) rep.addEventListener("click", function () { runScanReport(rep, $("#fsReportOut")); });
-        var pr = $("#fsPrint"); if (pr) pr.addEventListener("click", printScanReport);
+        if (rep) rep.addEventListener("click", plusGate(function () { runScanReport(rep, $("#fsReportOut")); }));
+        var pr = $("#fsPrint"); if (pr) pr.addEventListener("click", plusGate(printScanReport));
         var sh = $("#fsShare"); if (sh) sh.addEventListener("click", shareScanReport);
         var rm = $("#fsRemind"); if (rm) rm.addEventListener("click", function () {
           V.features && V.features.exportScanReminder(9);

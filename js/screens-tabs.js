@@ -1170,6 +1170,8 @@
           tile("chat", "blue", "mChat", 'data-go="vita"'),
           tile("progress", "green", "mProgress", 'data-go="progress"'),
           tile("eye", "blue", "mWellness", 'data-go="wellness"'),
+          tile("sparkle", "yellow", "mPlus", 'data-go="plus"', V.isPlus() ? "✓" : null),
+          tile("bolt", "blue", "mWearable", 'data-go="wearable"', (V.state.wearable && V.state.wearable.connected) ? "✓" : null),
           tile("sparkle", "yellow", "mRewards", 'data-go="rewards"', (V.state.points || 0) || null),
           tile("globe", "green", "mVitaapp", 'data-go="vitaapp"'),
         ]) +
@@ -1706,5 +1708,102 @@
       // keep "none" from lingering once a real diagnosis exists
       if (p.conditions.length > 1) drop(p.conditions, "none");
     }
+  };
+
+  /* ===================== VITA+ subscription (freemium) ===================== */
+  V.screens.plus = function () {
+    var active = V.isPlus();
+    var benefits = ["vpB1", "vpB2", "vpB3", "vpB4", "vpB5"];
+    function planCard(id, price, per, sub, best) {
+      return '<button class="vp-plan' + (best ? " vp-plan--best" : "") + '" data-plan="' + id + '">' +
+        (best ? '<span class="vp-plan__badge">' + t("vpBest") + "</span>" : "") +
+        '<b class="vp-plan__price">' + price + '</b><small class="vp-plan__per">' + per + "</small>" +
+        '<span class="vp-plan__sub">' + sub + "</span></button>";
+    }
+    var body = active
+      ? '<div class="vp-hero vp-hero--on">' + V.iconBox("sparkle", "green") +
+          '<div><b>' + t("vpActiveTitle") + "</b><small>" + t("vpActiveSince") + " " + esc(V.state.plus.since || "") + " · " + t("vp_" + (V.state.plus.plan || "monthly")) + "</small></div></div>" +
+        '<ul class="vp-benefits">' + benefits.map(function (k) { return "<li>" + V.icon("check") + t(k) + "</li>"; }).join("") + "</ul>" +
+        '<button class="btn btn-ghost" id="vpCancel" style="width:100%">' + t("vpCancel") + "</button>"
+      : '<div class="vp-hero">' + V.iconBox("sparkle", "yellow") +
+          '<div><b>VITA+</b><small>' + t("vpTagline") + "</small></div></div>" +
+        '<ul class="vp-benefits">' + benefits.map(function (k) { return "<li>" + V.icon("check") + t(k) + "</li>"; }).join("") + "</ul>" +
+        '<div class="vp-plans">' +
+          planCard("monthly", "₾9.99", t("vpPerMonth"), t("vpMonthlySub"), false) +
+          planCard("yearly", "₾79", t("vpPerYear"), t("vpYearlySub"), true) +
+        "</div>" +
+        '<p class="cal-note" style="text-align:center;margin:14px 0 0">' + t("vpDemoNote") + "</p>";
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>VITA+</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("x") + "</button></div>" +
+        '<p class="s-sub">' + t("vpIntro") + "</p>" +
+        body +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("menu"); });
+        each("[data-plan]", function (b) {
+          b.addEventListener("click", function () {
+            V.activatePlus(b.getAttribute("data-plan"));
+            V.toast && V.toast(t("vpActivated"));
+            V.render();
+          });
+        });
+        var c = $("#vpCancel");
+        if (c) c.addEventListener("click", function () { V.cancelPlus(); V.toast && V.toast(t("vpCancelled")); V.render(); });
+      } }
+    );
+  };
+
+  /* ===================== Wearable / health-data integration (seam + demo) ===================== */
+  V.screens.wearable = function () {
+    var wb = V.state.wearable || { connected: false };
+    function srcName(id) { var s = (V.WEARABLES || []).filter(function (x) { return x.id === id; })[0]; return s ? L(s.name) : id; }
+
+    var body = wb.connected
+      ? '<div class="we-hero on">' + V.iconBox("bolt", "green") +
+          '<div><b>' + esc(srcName(wb.source)) + "</b><small>" + t("weSynced") + " " + esc(wb.since || "") + "</small></div></div>" +
+        '<div class="we-stats">' +
+          weStat("walk", (wb.snap && wb.snap.steps) || 0, t("weSteps")) +
+          weStat("moon", (wb.snap && wb.snap.sleepH) || 0, t("weSleep")) +
+          weStat("heart", (wb.snap && wb.snap.restHR) || 0, t("weRestHR")) +
+          weStat("flame", (wb.snap && wb.snap.kcal) || 0, t("weKcal")) +
+        "</div>" +
+        '<p class="cal-note" style="text-align:left;margin:2px 0 14px">' + t("weFeeds") + "</p>" +
+        '<button class="btn btn-ghost" id="weDisc" style="width:100%">' + t("weDisconnect") + "</button>"
+      : '<div class="we-hero">' + V.iconBox("bolt", "blue") +
+          '<div><b>' + t("weTitle") + "</b><small>" + t("weSub") + "</small></div></div>" +
+        '<div class="we-srcs">' + (V.WEARABLES || []).map(function (s) {
+          return '<button class="we-src" data-src="' + s.id + '">' + V.iconBox("bolt", "gray") + "<span>" + L(s.name) + "</span>" + V.icon("next") + "</button>";
+        }).join("") + "</div>" +
+        '<p class="cal-note" style="text-align:left;margin:14px 0 0">' + t("weSeamNote") + "</p>";
+
+    function weStat(icon, val, label) {
+      return '<div class="we-stat">' + V.icon(icon) + "<b>" + val + "</b><small>" + label + "</small></div>";
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("weHeader") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("x") + "</button></div>" +
+        '<p class="s-sub">' + t("weIntro") + "</p>" +
+        body +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("menu"); });
+        each("[data-src]", function (b) {
+          b.addEventListener("click", function () { V.connectWearable(b.getAttribute("data-src")); V.toast && V.toast(t("weConnected")); V.render(); });
+        });
+        var d = $("#weDisc");
+        if (d) d.addEventListener("click", function () { V.disconnectWearable(); V.render(); });
+      } }
+    );
   };
 })();

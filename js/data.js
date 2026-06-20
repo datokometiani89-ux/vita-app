@@ -100,6 +100,39 @@ window.VITA = window.VITA || {};
     V.state.vitaAccount = { connected: false, email: "", plan: "" };
     V.save();
   };
+
+  /* ---- VITA+ subscription (demo; real payment is a future seam) ---- */
+  V.isPlus = function () { return !!(V.state.plus && V.state.plus.active); };
+  V.activatePlus = function (plan) {
+    V.state.plus = { active: true, plan: plan || "monthly", since: V.todayISO() };
+    V.save();
+  };
+  V.cancelPlus = function () {
+    V.state.plus = { active: false, plan: null, since: null };
+    V.save();
+  };
+
+  /* ---- Wearable / health-data integration (demo import; real sync = native HealthKit / Google Fit OAuth seam) ---- */
+  V.WEARABLES = [
+    { id: "apple", name: { ka: "Apple Health", en: "Apple Health" } },
+    { id: "googlefit", name: { ka: "Google Fit", en: "Google Fit" } },
+    { id: "garmin", name: { ka: "Garmin", en: "Garmin" } },
+    { id: "fitbit", name: { ka: "Fitbit", en: "Fitbit" } },
+  ];
+  V.connectWearable = function (source) {
+    // demo snapshot — plausible daily values (real sync needs the native app / OAuth)
+    var snap = { steps: 6500 + Math.floor(Math.random() * 4000), sleepH: Math.round((6 + Math.random() * 2.5) * 10) / 10, restHR: 58 + Math.floor(Math.random() * 14), kcal: 1900 + Math.floor(Math.random() * 600) };
+    V.state.wearable = { connected: true, source: source, since: V.todayISO(), snap: snap };
+    // feed the resting-HR + sleep logs so readiness / bio-age can use them (once/day, no dup)
+    var w = (V.state.wellness = V.state.wellness || {}); var d = V.todayISO();
+    w.hr = w.hr || []; if (!w.hr.some(function (r) { return r.date === d; })) w.hr.push({ date: d, bpm: snap.restHR });
+    w.sleep = w.sleep || []; if (!w.sleep.some(function (r) { return r.date === d; })) w.sleep.push({ date: d, hours: snap.sleepH, quality: snap.sleepH >= 7 ? "great" : "ok" });
+    V.save();
+  };
+  V.disconnectWearable = function () {
+    V.state.wearable = { connected: false, source: null, since: null, snap: null };
+    V.save();
+  };
   V.clinicsFor = function (category, sort) {
     var grp = clinicData[category] || clinicData.medical;
     var items = grp.items.map(function (c, i) { return Object.assign({ id: category + i }, c); });
