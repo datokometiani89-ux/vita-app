@@ -887,8 +887,8 @@
     function modalityStrip() {
       return '<div class="scn-mods">' +
         '<span class="scn-mod on">' + V.icon("heart") + L({ ka: "გულსისხლძარღვთა", en: "Cardiovascular" }) + ' <i>' + t("scnActive") + "</i></span>" +
-        '<span class="scn-mod">' + V.icon("camera") + L({ ka: "კანი", en: "Skin" }) + " <i>" + t("scnSoon") + "</i></span>" +
-        '<span class="scn-mod">' + V.icon("mic") + L({ ka: "ხმა", en: "Voice" }) + " <i>" + t("scnSoon") + "</i></span>" +
+        '<button class="scn-mod scn-mod--btn" data-go="skinscan">' + V.icon("camera") + L({ ka: "კანი", en: "Skin" }) + ' <i>' + t("scnActive") + "</i></button>" +
+        '<button class="scn-mod scn-mod--btn" data-go="voicescan">' + V.icon("mic") + L({ ka: "ხმა", en: "Voice" }) + ' <i>' + t("scnActive") + "</i></button>" +
       "</div>";
     }
 
@@ -936,6 +936,7 @@
         { onMount: function () {
           backX();
           $("[data-x]").addEventListener("click", function () { if (stopCap) stopCap(); });
+          each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
           $("#scnStart").addEventListener("click", startScan);
           $("#hrManualSave").addEventListener("click", function () {
             var v = parseInt($("#hrManual").value, 10);
@@ -1040,6 +1041,99 @@
       V.icon("next") + "</button>";
   };
   V.wireScanHome = function () { var c = document.getElementById("scanHome"); if (c) c.addEventListener("click", function () { V.go("scan"); }); };
+
+  /* ===================== SKIN SCAN (guided ABCDE self-check + on-device hint) ===================== */
+  // on-device colour-variation of a lesion photo (real, wellness-grade — not a diagnosis)
+  V.skinColorVar = function (data) {
+    if (!data || !data.length) return 0;
+    var n = 0, sum = 0, sumsq = 0;
+    for (var i = 0; i < data.length; i += 16) {
+      var r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+      if (a < 200) continue;
+      var spread = Math.max(r, g, b) - Math.min(r, g, b);
+      sum += spread; sumsq += spread * spread; n++;
+    }
+    if (!n) return 0;
+    var mean = sum / n, varr = sumsq / n - mean * mean, sd = Math.sqrt(Math.max(0, varr));
+    return Math.round(Math.min(1, sd / 55) * 100) / 100;
+  };
+  V.skinFlag = function (yesCount, colorVar) {
+    var score = yesCount + ((colorVar || 0) > 0.5 ? 1 : 0);
+    if (score <= 1) return { k: "skLow", tone: "green", score: score };
+    if (score <= 3) return { k: "skWatch", tone: "yellow", score: score };
+    return { k: "skHigh", tone: "crimson", score: score };
+  };
+  var ABCDE = [
+    { k: "skA", icon: "A" }, { k: "skB", icon: "B" }, { k: "skC", icon: "C" }, { k: "skD", icon: "D" }, { k: "skE", icon: "E" },
+  ];
+
+  V.screens.skinscan = function () {
+    var w = W(); w.skinScan = w.skinScan || [];
+    var answers = {}, colorVar = null, hasPhoto = false;
+
+    function render(result) {
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          head("camera", "blue", "skTitle") +
+          '<p class="s-sub">' + t("skSub") + "</p>" +
+          '<div class="card-soft" style="padding:16px">' +
+            '<label class="skin-photo" id="skinPhotoLbl"><canvas id="skinCanvas" width="220" height="220"></canvas>' +
+              '<div class="skin-photo__hint" id="skinHint">' + V.icon("camera") + "<span>" + t("skPhoto") + "</span></div>" +
+              '<input type="file" accept="image/*" capture="environment" id="skinFile" hidden></label>' +
+            '<p class="mo-how" style="margin:14px 0 8px">' + t("skChecklist") + "</p>" +
+            '<div class="skin-checks">' + ABCDE.map(function (q) {
+              return '<button class="skin-chk" data-abcde="' + q.k + '"><span class="skin-chk__l">' + q.icon + "</span>" +
+                '<span class="skin-chk__t">' + t(q.k) + "</span>" + V.icon("check") + "</button>";
+            }).join("") + "</div>" +
+            '<button class="btn btn-primary" id="skinGo" style="width:100%;margin-top:14px">' + V.icon("shield") + " " + t("skAnalyze") + "</button>" +
+          "</div>" +
+          '<div id="skinResult"></div>' +
+          '<p class="hr-multi-note">' + t("skDisc") + "</p>" +
+        "</div>" +
+        V.tabbar("home") +
+        "</div>",
+        { onMount: function () {
+          backX();
+          var fileEl = $("#skinFile"), canvas = $("#skinCanvas"), hint = $("#skinHint");
+          fileEl.addEventListener("change", function () {
+            var f = fileEl.files && fileEl.files[0]; if (!f) return;
+            var img = new Image();
+            img.onload = function () {
+              var ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              hasPhoto = true; hint.style.display = "none";
+              try { var d = ctx.getImageData(60, 60, 100, 100).data; colorVar = V.skinColorVar(d); } catch (e) { colorVar = null; }
+            };
+            img.src = URL.createObjectURL(f);
+          });
+          each("[data-abcde]", function (b) {
+            b.addEventListener("click", function () {
+              var k = b.getAttribute("data-abcde");
+              answers[k] = !answers[k]; b.classList.toggle("on", answers[k]);
+            });
+          });
+          $("#skinGo").addEventListener("click", function () {
+            var yes = Object.keys(answers).filter(function (k) { return answers[k]; }).length;
+            var flag = V.skinFlag(yes, colorVar);
+            w.skinScan.push({ date: today(), band: flag.k }); if (w.skinScan.length > 40) w.skinScan = w.skinScan.slice(-40);
+            V.awardOnce && V.awardOnce("skin:" + today(), V.POINTS.task, "task");
+            V.save();
+            var box = $("#skinResult");
+            box.innerHTML = '<div class="card-soft skin-res fade-in"><div class="rd-ring rd-tone-' + flag.tone + '" style="width:96px;height:96px;border-width:7px;margin:0 auto 12px"><b style="font-size:30px">' + flag.score + '</b></div>' +
+              '<div class="mt-sev mt-tone-' + flag.tone + '" style="text-align:center">' + t(flag.k) + "</div>" +
+              '<p class="mt-rec" style="text-align:center">' + t(flag.k + "Rec") + "</p>" +
+              (flag.tone !== "green" ? '<button class="btn btn-primary" data-skin-derm style="width:100%">' + V.icon("calendar") + " " + t("skBook") + "</button>" : "") +
+              (colorVar != null ? '<p class="hr-multi-note">' + t("skColorHint") + ": " + Math.round(colorVar * 100) + "%</p>" : "") + "</div>";
+            box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            var d = box.querySelector("[data-skin-derm]");
+            if (d) d.addEventListener("click", function () { deepClinic("derm", { ka: "დერმატოლოგი", en: "Dermatologist" }); });
+          });
+        }}
+      );
+    }
+    render();
+  };
 
   V.screens.mindtests = function () {
     var session = null; // { kind, qs, idx, answers:[] }

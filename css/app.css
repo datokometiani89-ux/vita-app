@@ -784,7 +784,24 @@
 .scn-mod { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); background: var(--field); border: 1.5px solid var(--line); border-radius: 99px; padding: 6px 12px; }
 .scn-mod svg { width: 15px; height: 15px; }
 .scn-mod.on { color: var(--green-dark, #1c7a37); border-color: color-mix(in srgb, var(--green) 35%, var(--line)); background: var(--green-tint); }
+.scn-mod--btn { cursor: pointer; font: inherit; font-weight: 600; }
+.scn-mod--btn:hover { border-color: var(--green); }
 .scn-mod i { font-style: normal; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; opacity: .8; }
+
+/* ===== skin scan ===== */
+.skin-photo { position: relative; display: block; width: 220px; max-width: 100%; aspect-ratio: 1; margin: 0 auto 4px; border-radius: var(--r-md); overflow: hidden; cursor: pointer; background: var(--field); border: 1.5px dashed var(--line); }
+.skin-photo canvas { width: 100%; height: 100%; display: block; }
+.skin-photo__hint { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font-size: 14px; font-weight: 600; }
+.skin-photo__hint svg { width: 30px; height: 30px; }
+.skin-checks { display: grid; gap: 8px; }
+.skin-chk { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 11px 13px; cursor: pointer; font: inherit; transition: border-color .15s, background .15s; }
+.skin-chk__l { width: 26px; height: 26px; flex: none; border-radius: 7px; background: var(--field); display: grid; place-content: center; font-weight: 800; color: var(--muted); }
+.skin-chk__t { flex: 1; font-size: 13.5px; line-height: 1.35; }
+.skin-chk > svg { width: 20px; height: 20px; color: transparent; flex: none; }
+.skin-chk.on { border-color: var(--green); background: var(--green-tint); }
+.skin-chk.on .skin-chk__l { background: var(--green); color: #fff; }
+.skin-chk.on > svg { color: var(--green); }
+.skin-res { padding: 18px; }
 .scn-card { padding: 16px; }
 .scn-stage { text-align: center; }
 .scn-wave { width: 100%; height: 96px; background: var(--field); border-radius: var(--r-md); display: block; margin-bottom: 12px; }
