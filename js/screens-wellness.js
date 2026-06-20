@@ -593,24 +593,36 @@
     }
 
     function start() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { noCam(); return; }
+      if (typeof isSecureContext !== "undefined" && !isSecureContext && location.hostname !== "localhost") { camErr("hrInsecure"); return; }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { camErr("hrNoCam"); return; }
+      var b = $("#hrStart"); if (b) b.disabled = true;
+      $("#hrStatus").textContent = t("hrRequesting");
       navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false })
-        .then(function (s) {
-          stream = s;
-          var track = s.getVideoTracks()[0];
-          try { if (track.applyConstraints) track.applyConstraints({ advanced: [{ torch: true }] }).catch(function () {}); } catch (e) {}
-          video = $("#hrVideo"); video.srcObject = s; video.play();
-          canvas = $("#hrWave"); ctx = canvas.getContext("2d");
-          hidden = document.createElement("canvas"); hidden.width = 60; hidden.height = 60; hctx = hidden.getContext("2d");
-          samples = []; waveBuf = []; rawBuf = []; beatTimes = []; baseline = 0; lastBeat = 0; beats = 0; prevSig = 0; ampEMA = 0; measT = 0; startT = performance.now();
-          running = true;
-          var b = $("#hrStart"); b.innerHTML = V.icon("x") + " " + t("hrCancel");
-          $("#hrStatus").textContent = t("hrPlace");
-          loop();
-        })
-        .catch(noCam);
+        .catch(function () { return navigator.mediaDevices.getUserMedia({ video: true, audio: false }); }) // any camera if rear fails
+        .then(onStream)
+        .catch(camFail);
     }
-    function noCam() { var m = $("#hrMsg"); if (m) m.innerHTML = '<div class="note-warn">' + V.icon("info") + " " + t("hrNoCam") + "</div>"; var mi = $("#hrManual"); if (mi) mi.focus(); }
+    function onStream(s) {
+      stream = s;
+      var track = s.getVideoTracks()[0];
+      try { if (track.applyConstraints) track.applyConstraints({ advanced: [{ torch: true }] }).catch(function () {}); } catch (e) {}
+      video = $("#hrVideo"); video.srcObject = s;
+      var pp = video.play(); if (pp && pp.catch) pp.catch(function () {});
+      canvas = $("#hrWave"); ctx = canvas.getContext("2d");
+      hidden = document.createElement("canvas"); hidden.width = 60; hidden.height = 60; hctx = hidden.getContext("2d");
+      samples = []; waveBuf = []; rawBuf = []; beatTimes = []; baseline = 0; lastBeat = 0; beats = 0; prevSig = 0; ampEMA = 0; measT = 0; startT = performance.now();
+      running = true;
+      var b = $("#hrStart"); if (b) { b.disabled = false; b.innerHTML = V.icon("x") + " " + t("hrCancel"); }
+      $("#hrStatus").textContent = t("hrPlace");
+      loop();
+    }
+    function camFail(err) {
+      var b = $("#hrStart"); if (b) { b.disabled = false; b.innerHTML = V.icon("heart") + " " + t("hrStart"); }
+      var key = (err && err.name === "NotAllowedError") ? "hrDenied"
+        : (err && (err.name === "NotFoundError" || err.name === "OverconstrainedError")) ? "hrNoDevice" : "hrNoCam";
+      camErr(key);
+    }
+    function camErr(key) { var m = $("#hrMsg"); if (m) m.innerHTML = '<div class="note-warn">' + V.icon("info") + " " + t(key) + "</div>"; var mi = $("#hrManual"); if (mi) mi.focus(); var st = $("#hrStatus"); if (st) st.textContent = t("hrRestNote"); }
 
     function loop() {
       if (!running) return;
