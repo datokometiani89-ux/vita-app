@@ -1577,3 +1577,44 @@
 .we-stat svg { width: 20px; color: var(--green); }
 .we-stat b { font-size: 21px; font-weight: 800; }
 .we-stat small { color: var(--muted); font-size: 11.5px; }
+
+/* connected-source chips + combined view */
+.we-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.we-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--field); border: 1.5px solid var(--line); border-radius: 99px; padding: 5px 6px 5px 12px; font-size: 13px; font-weight: 600; }
+.we-chip svg { width: 14px; color: var(--green); }
+.we-chip__x { display: grid; place-content: center; width: 19px; height: 19px; border-radius: 50%; background: var(--card); color: var(--muted); }
+.we-chip__x svg { width: 11px; color: var(--muted); }
+.we-merged { display: flex; align-items: center; gap: 6px; color: var(--green-dark); font-size: 12.5px; font-weight: 600; margin-bottom: 14px; }
+.we-merged svg { width: 15px; }
+
+/* activity rings */
+.we-act { display: flex; align-items: center; gap: 18px; padding: 16px; }
+.we-rings { width: 116px; height: 116px; flex: none; }
+.we-act__legend { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.we-ringrow { display: flex; align-items: center; gap: 8px; }
+.we-ringdot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.we-ringrow b { font-size: 13.5px; flex: 1; }
+.we-ringrow small { color: var(--muted); font-size: 12.5px; }
+
+/* metric blocks */
+.we-block { padding: 14px 16px; }
+.we-block__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.we-block__head > div { display: flex; align-items: center; gap: 8px; }
+.we-block__head svg { width: 19px; color: var(--green); }
+.we-block__head b { font-size: 15px; }
+.we-big { font-size: 24px; font-weight: 800; }
+.we-big small { font-size: 13px; color: var(--muted); font-weight: 600; margin-left: 2px; }
+.we-trend { margin-top: 8px; }
+
+/* sleep stages */
+.we-sleepbar { display: flex; height: 16px; border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+.we-sleepbar span { height: 100%; }
+.we-sleglegend { display: flex; flex-wrap: wrap; gap: 12px; }
+.we-sl { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+.we-sl i { width: 9px; height: 9px; border-radius: 2px; }
+
+/* heart row */
+.we-hr { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
+.we-hr > div { padding: 8px 4px; background: var(--field); border-radius: var(--r-md); }
+.we-hr b { display: block; font-size: 19px; font-weight: 800; }
+.we-hr small { color: var(--muted); font-size: 10.5px; }

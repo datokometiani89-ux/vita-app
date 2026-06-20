@@ -119,19 +119,65 @@ window.VITA = window.VITA || {};
     { id: "garmin", name: { ka: "Garmin", en: "Garmin" } },
     { id: "fitbit", name: { ka: "Fitbit", en: "Fitbit" } },
   ];
+  function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function rnd1(a, b) { return Math.round((a + Math.random() * (b - a)) * 10) / 10; }
+  // rich demo snapshot for one source (real sync needs native HealthKit / Google Fit OAuth)
+  function genWearable() {
+    var steps = rnd(5200, 12500), deep = rnd1(0.8, 1.8), rem = rnd1(1.2, 2.2), light = rnd1(3.2, 4.6);
+    var sleepH = Math.round((deep + rem + light) * 10) / 10;
+    var exerciseMin = rnd(12, 62), moveGoal = 500, kcalActive = rnd(280, 760);
+    var series = { steps: [], sleepH: [], restHR: [] };
+    for (var i = 0; i < 7; i++) { series.steps.push(rnd(4200, 13000)); series.sleepH.push(rnd1(5.2, 8.4)); series.restHR.push(rnd(54, 70)); }
+    series.steps[6] = steps; series.sleepH[6] = sleepH;
+    return {
+      steps: steps, distanceKm: Math.round(steps * 0.00072 * 10) / 10, floors: rnd(3, 22),
+      exerciseMin: exerciseMin, standHr: rnd(8, 13), workouts: rnd(0, 3),
+      kcalActive: kcalActive, moveGoal: moveGoal, movePct: Math.min(140, Math.round(kcalActive / moveGoal * 100)),
+      exerciseGoal: 30, standGoal: 12,
+      restHR: rnd(52, 68), hrAvg: rnd(68, 86), hrv: rnd(28, 78), spo2: rnd(95, 99),
+      sleepH: sleepH, sleepDeep: deep, sleepRem: rem, sleepLight: light,
+      series: series,
+    };
+  }
   V.connectWearable = function (source) {
-    // demo snapshot — plausible daily values (real sync needs the native app / OAuth)
-    var snap = { steps: 6500 + Math.floor(Math.random() * 4000), sleepH: Math.round((6 + Math.random() * 2.5) * 10) / 10, restHR: 58 + Math.floor(Math.random() * 14), kcal: 1900 + Math.floor(Math.random() * 600) };
-    V.state.wearable = { connected: true, source: source, since: V.todayISO(), snap: snap };
-    // feed the resting-HR + sleep logs so readiness / bio-age can use them (once/day, no dup)
-    var w = (V.state.wellness = V.state.wellness || {}); var d = V.todayISO();
-    w.hr = w.hr || []; if (!w.hr.some(function (r) { return r.date === d; })) w.hr.push({ date: d, bpm: snap.restHR });
-    w.sleep = w.sleep || []; if (!w.sleep.some(function (r) { return r.date === d; })) w.sleep.push({ date: d, hours: snap.sleepH, quality: snap.sleepH >= 7 ? "great" : "ok" });
+    var wb = V.state.wearable = V.state.wearable || { sources: [] };
+    wb.sources = wb.sources || [];
+    if (wb.sources.some(function (s) { return s.id === source; })) return;
+    wb.sources.push({ id: source, since: V.todayISO(), snap: genWearable() });
+    // feed resting-HR + sleep logs once/day so readiness / bio-age use them
+    var c = V.wearableCombined(), w = (V.state.wellness = V.state.wellness || {}), d = V.todayISO();
+    w.hr = w.hr || []; if (!w.hr.some(function (r) { return r.date === d; })) w.hr.push({ date: d, bpm: c.restHR });
+    w.sleep = w.sleep || []; if (!w.sleep.some(function (r) { return r.date === d; })) w.sleep.push({ date: d, hours: c.sleepH, quality: c.sleepH >= 7 ? "great" : "ok" });
     V.save();
   };
-  V.disconnectWearable = function () {
-    V.state.wearable = { connected: false, source: null, since: null, snap: null };
+  V.disconnectWearable = function (source) {
+    var wb = V.state.wearable || { sources: [] };
+    if (source) wb.sources = (wb.sources || []).filter(function (s) { return s.id !== source; });
+    else wb.sources = [];
+    V.state.wearable = wb;
     V.save();
+  };
+  V.wearableSources = function () { return (V.state.wearable && V.state.wearable.sources) || []; };
+  V.wearableConnected = function () { return V.wearableSources().length > 0; };
+  // merge all connected sources into one combined snapshot (avg, so multi-device doesn't double-count)
+  V.wearableCombined = function () {
+    var src = V.wearableSources(); if (!src.length) return null;
+    var keys = ["steps", "distanceKm", "floors", "exerciseMin", "standHr", "workouts", "kcalActive", "movePct", "restHR", "hrAvg", "hrv", "spo2", "sleepH", "sleepDeep", "sleepRem", "sleepLight"];
+    var out = { moveGoal: 500, exerciseGoal: 30, standGoal: 12 };
+    keys.forEach(function (k) {
+      var sum = 0; src.forEach(function (s) { sum += s.snap[k] || 0; });
+      var v = sum / src.length;
+      out[k] = (k === "distanceKm" || k.indexOf("sleep") === 0) ? Math.round(v * 10) / 10 : Math.round(v);
+    });
+    var series = { steps: [], sleepH: [], restHR: [] };
+    for (var i = 0; i < 7; i++) {
+      ["steps", "sleepH", "restHR"].forEach(function (k) {
+        var sum = 0; src.forEach(function (s) { sum += (s.snap.series[k] || [])[i] || 0; });
+        series[k].push(k === "sleepH" ? Math.round(sum / src.length * 10) / 10 : Math.round(sum / src.length));
+      });
+    }
+    out.series = series; out.count = src.length; out.ids = src.map(function (s) { return s.id; });
+    return out;
   };
   V.clinicsFor = function (category, sort) {
     var grp = clinicData[category] || clinicData.medical;

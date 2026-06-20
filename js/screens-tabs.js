@@ -1761,29 +1761,107 @@
 
   /* ===================== Wearable / health-data integration (seam + demo) ===================== */
   V.screens.wearable = function () {
-    var wb = V.state.wearable || { connected: false };
     function srcName(id) { var s = (V.WEARABLES || []).filter(function (x) { return x.id === id; })[0]; return s ? L(s.name) : id; }
+    var sources = V.wearableSources(), connected = sources.length > 0, c = V.wearableCombined();
 
-    var body = wb.connected
-      ? '<div class="we-hero on">' + V.iconBox("bolt", "green") +
-          '<div><b>' + esc(srcName(wb.source)) + "</b><small>" + t("weSynced") + " " + esc(wb.since || "") + "</small></div></div>" +
-        '<div class="we-stats">' +
-          weStat("walk", (wb.snap && wb.snap.steps) || 0, t("weSteps")) +
-          weStat("moon", (wb.snap && wb.snap.sleepH) || 0, t("weSleep")) +
-          weStat("heart", (wb.snap && wb.snap.restHR) || 0, t("weRestHR")) +
-          weStat("flame", (wb.snap && wb.snap.kcal) || 0, t("weKcal")) +
-        "</div>" +
-        '<p class="cal-note" style="text-align:left;margin:2px 0 14px">' + t("weFeeds") + "</p>" +
-        '<button class="btn btn-ghost" id="weDisc" style="width:100%">' + t("weDisconnect") + "</button>"
-      : '<div class="we-hero">' + V.iconBox("bolt", "blue") +
+    // 3 concentric activity rings (Apple-style: move / exercise / stand)
+    function rings(d) {
+      function ring(r, pct, col) {
+        var C = 2 * Math.PI * r, len = Math.min(1, pct / 100) * C;
+        return '<circle cx="62" cy="62" r="' + r + '" fill="none" stroke="var(--field)" stroke-width="11"/>' +
+          '<circle cx="62" cy="62" r="' + r + '" fill="none" stroke="' + col + '" stroke-width="11" stroke-linecap="round" stroke-dasharray="' + len + " " + (C - len) + '" transform="rotate(-90 62 62)"/>';
+      }
+      return '<svg viewBox="0 0 124 124" class="we-rings">' +
+        ring(52, d.movePct, "#e8536b") +
+        ring(39, Math.round(d.exerciseMin / d.exerciseGoal * 100), "#2BA94C") +
+        ring(26, Math.round(d.standHr / d.standGoal * 100), "#4a90d9") + "</svg>";
+    }
+    function ringRow(col, label, val, goal, unit) {
+      return '<div class="we-ringrow"><span class="we-ringdot" style="background:' + col + '"></span>' +
+        "<b>" + label + "</b><small>" + val + "/" + goal + " " + unit + "</small></div>";
+    }
+    // weekly bars (generic)
+    function weBars(series, color, goal) {
+      var w = 320, h = 110, padX = 14, padTop = 16, padBot = 16, n = series.length;
+      var max = Math.max.apply(null, series.concat([goal || 0])) * 1.12 || 1, bw = (w - 2 * padX) / n * 0.56;
+      var gy = goal ? padTop + (1 - goal / max) * (h - padTop - padBot) : 0;
+      return '<svg viewBox="0 0 ' + w + " " + h + '" class="bar-chart">' +
+        (goal ? '<line x1="' + padX + '" y1="' + gy + '" x2="' + (w - padX) + '" y2="' + gy + '" stroke="var(--muted)" stroke-dasharray="4 4" stroke-width="1.1" opacity=".55"/>' : "") +
+        series.map(function (v, i) {
+          var x = padX + (i + 0.5) * ((w - 2 * padX) / n) - bw / 2, bh = (v / max) * (h - padTop - padBot), y = h - padBot - bh;
+          var lbl = (i === n - 1) ? '<text x="' + (x + bw / 2) + '" y="' + (y - 5) + '" text-anchor="middle" class="ch-val" fill="' + color + '">' + v + "</text>" : "";
+          return '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '" rx="4" fill="' + color + '" opacity="' + (i === n - 1 ? 1 : 0.4) + '"/>' + lbl;
+        }).join("") + "</svg>";
+    }
+    function sleepStages(d) {
+      var tot = (d.sleepDeep + d.sleepRem + d.sleepLight) || 1;
+      function seg(v, col) { return '<span style="width:' + (v / tot * 100) + "%;background:" + col + '"></span>'; }
+      function leg(v, col, lbl) { return '<span class="we-sl"><i style="background:' + col + '"></i>' + lbl + " " + v + "h</span>"; }
+      return '<div class="we-sleepbar">' + seg(d.sleepDeep, "#3a52a0") + seg(d.sleepRem, "#7a5bd0") + seg(d.sleepLight, "#9fb6e8") + "</div>" +
+        '<div class="we-sleglegend">' + leg(d.sleepDeep, "#3a52a0", t("weDeep")) + leg(d.sleepRem, "#7a5bd0", t("weRem")) + leg(d.sleepLight, "#9fb6e8", t("weLight")) + "</div>";
+    }
+    function statBox(icon, val, label) { return '<div class="we-stat">' + V.icon(icon) + "<b>" + val + "</b><small>" + label + "</small></div>"; }
+    function sourceChip(s) {
+      return '<span class="we-chip">' + V.icon("bolt") + esc(srcName(s.id)) + '<button class="we-chip__x" data-disc="' + s.id + '" aria-label="x">' + V.icon("x") + "</button></span>";
+    }
+
+    var body;
+    if (!connected) {
+      body = '<div class="we-hero">' + V.iconBox("bolt", "blue") +
           '<div><b>' + t("weTitle") + "</b><small>" + t("weSub") + "</small></div></div>" +
         '<div class="we-srcs">' + (V.WEARABLES || []).map(function (s) {
           return '<button class="we-src" data-src="' + s.id + '">' + V.iconBox("bolt", "gray") + "<span>" + L(s.name) + "</span>" + V.icon("next") + "</button>";
         }).join("") + "</div>" +
         '<p class="cal-note" style="text-align:left;margin:14px 0 0">' + t("weSeamNote") + "</p>";
+    } else {
+      var unconnected = (V.WEARABLES || []).filter(function (s) { return !sources.some(function (x) { return x.id === s.id; }); });
+      body =
+        // connected source chips + combined note
+        '<div class="we-chips">' + sources.map(sourceChip).join("") + "</div>" +
+        (c.count > 1 ? '<p class="we-merged">' + V.icon("check") + " " + t("weMerged", { n: c.count }) + "</p>" : "") +
 
-    function weStat(icon, val, label) {
-      return '<div class="we-stat">' + V.icon(icon) + "<b>" + val + "</b><small>" + label + "</small></div>";
+        // activity rings
+        '<div class="card-soft we-act">' +
+          '<div class="we-act__rings">' + rings(c) + "</div>" +
+          '<div class="we-act__legend">' +
+            ringRow("#e8536b", t("weMove"), c.kcalActive, c.moveGoal, t("weKcal")) +
+            ringRow("#2BA94C", t("weExercise"), c.exerciseMin, c.exerciseGoal, t("weMin")) +
+            ringRow("#4a90d9", t("weStand"), c.standHr, c.standGoal, t("weHr")) +
+          "</div></div>" +
+
+        // steps
+        '<div class="card-soft we-block"><div class="we-block__head"><div>' + V.icon("walk") + " <b>" + t("weSteps") + '</b></div><span class="we-big">' + c.steps.toLocaleString() + "</span></div>" +
+          weBars(c.series.steps, "#2BA94C", 10000) + "</div>" +
+
+        // sleep
+        '<div class="card-soft we-block"><div class="we-block__head"><div>' + V.icon("moon") + " <b>" + t("weSleepT") + '</b></div><span class="we-big">' + c.sleepH + "<small>" + t("weH") + "</small></span></div>" +
+          sleepStages(c) + '<div class="we-trend">' + weBars(c.series.sleepH, "#7a5bd0", 8) + "</div></div>" +
+
+        // heart
+        '<div class="card-soft we-block"><div class="we-block__head"><div>' + V.icon("heart") + " <b>" + t("weHeart") + "</b></div></div>" +
+          '<div class="we-hr">' +
+            '<div><b>' + c.restHR + '</b><small>' + t("weRestHR") + "</small></div>" +
+            '<div><b>' + c.hrAvg + '</b><small>' + t("weHRAvg") + "</small></div>" +
+            '<div><b>' + c.hrv + '</b><small>HRV ms</small></div>' +
+            '<div><b>' + c.spo2 + '%</b><small>SpO₂</small></div>' +
+          "</div></div>" +
+
+        // more stats
+        '<div class="we-stats">' +
+          statBox("location", c.distanceKm + " " + t("weKm"), t("weDistance")) +
+          statBox("trend", c.floors, t("weFloors")) +
+          statBox("bolt", c.exerciseMin + " " + t("weMin"), t("weActiveMin")) +
+          statBox("flame", c.workouts, t("weWorkouts")) +
+        "</div>" +
+
+        '<p class="cal-note" style="text-align:left;margin:2px 0 14px">' + t("weFeeds") + "</p>" +
+
+        // manage: add more / disconnect all
+        (unconnected.length ? '<div class="section-head"><h3>' + t("weAddMore") + "</h3></div>" +
+          '<div class="we-srcs">' + unconnected.map(function (s) {
+            return '<button class="we-src" data-src="' + s.id + '">' + V.iconBox("bolt", "gray") + "<span>" + L(s.name) + "</span>" + V.icon("next") + "</button>";
+          }).join("") + "</div>" : "") +
+        '<button class="btn btn-ghost" id="weDiscAll" style="width:100%;margin-top:12px">' + t("weDisconnectAll") + "</button>";
     }
 
     V.mount(
@@ -1801,8 +1879,11 @@
         each("[data-src]", function (b) {
           b.addEventListener("click", function () { V.connectWearable(b.getAttribute("data-src")); V.toast && V.toast(t("weConnected")); V.render(); });
         });
-        var d = $("#weDisc");
-        if (d) d.addEventListener("click", function () { V.disconnectWearable(); V.render(); });
+        each("[data-disc]", function (b) {
+          b.addEventListener("click", function () { V.disconnectWearable(b.getAttribute("data-disc")); V.render(); });
+        });
+        var da = $("#weDiscAll");
+        if (da) da.addEventListener("click", function () { V.disconnectWearable(); V.render(); });
       } }
     );
   };
