@@ -53,6 +53,7 @@
             '<div class="metric__lbl">' + t("bmi") + '</div>' +
             '<div class="metric__sub">' + (bmiSt === "good" ? t("normal") : t("caution")) + "</div></div>" +
         "</div>" +
+        (V.scanHomeCard ? '<div class="kicker" style="margin:22px 0 10px">' + t("scnTitle") + "</div>" + V.scanHomeCard() : "") +
         (V.todayMini ? '<div class="kicker" style="margin:22px 0 10px">' + t("todayK") + "</div>" + V.todayMini() : "") +
         (V.moodHomeCard ? V.moodHomeCard() : "") +
         nextScreeningCard() +
@@ -76,6 +77,7 @@
         if (rw) rw.addEventListener("click", function () { V.go("rewards"); });
         var ns = $("[data-next-screening]");
         if (ns) ns.addEventListener("click", function () { V.go("annual"); });
+        if (V.wireScanHome) V.wireScanHome();
         if (V.wireTodayMini) V.wireTodayMini();
         if (V.wireMoodHome) V.wireMoodHome();
       }}

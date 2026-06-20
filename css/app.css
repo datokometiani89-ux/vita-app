@@ -799,6 +799,22 @@
 .scn-metric__t { min-width: 0; }
 .scn-metric__t b { display: block; font-size: 17px; font-weight: 800; line-height: 1.1; }
 .scn-metric__t small { display: block; color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.scn-insight { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; padding: 7px 13px; border-radius: 99px; margin-bottom: 10px; }
+.scn-insight svg { width: 15px; height: 15px; }
+.scn-ins-green { background: var(--green-tint); color: var(--green-dark, #1c7a37); }
+.scn-ins-crimson { background: #fdf0e8; color: #9a3412; }
+.scn-ins-blue { background: var(--field); color: var(--ink-2); }
+/* home flagship scan card */
+.scan-home { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 14px 16px; margin-bottom: 18px; cursor: pointer; background-image: linear-gradient(160deg, color-mix(in srgb, var(--pink) 9%, var(--card)), var(--card)); transition: border-color .15s, transform .1s; }
+.scan-home:hover { border-color: var(--green); } .scan-home:active { transform: scale(.99); }
+.scan-home__ring { width: 50px; height: 50px; flex: none; border-radius: 50%; display: grid; place-content: center; border: 5px solid var(--rdc, var(--green)); }
+.scan-home__ring b { font-size: 18px; font-weight: 800; }
+.scan-home__ring--empty { border-color: var(--pink); color: var(--pink); }
+.scan-home__ring--empty svg { width: 22px; height: 22px; }
+.scan-home__t { flex: 1; min-width: 0; }
+.scan-home__t b { display: block; font-size: 15.5px; }
+.scan-home__t small { color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.scan-home > svg:last-child { color: var(--muted); width: 18px; transform: rotate(180deg); flex: none; }
 
 /* ===== mental tests ===== */
 .mt-pick { display: flex; align-items: center; gap: 13px; width: 100%; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 16px; cursor: pointer; text-align: left; margin-bottom: 12px; transition: border-color .15s, transform .1s; }

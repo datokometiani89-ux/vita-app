@@ -927,7 +927,7 @@
             '<button class="btn btn-ghost" id="hrManualSave">' + t("hrManual") + "</button>" +
           "</div>" +
           '<div id="scnMsg"></div>' +
-          (last ? '<div class="hr-last">' + t("scnLast") + ": <b>" + last.score + "</b> " + t("scnScore") + " · " + last.bpm + " " + t("hrBpm") + (last.hrv ? " · HRV " + last.hrv : "") + " · " + esc(last.date) + "</div>" : "") +
+          scanHistory() +
           '<p class="hr-multi-note">' + t("scnDisc") + "</p>" +
           '<video id="hrVideo" playsinline muted style="display:none"></video>' +
         "</div>" +
@@ -942,8 +942,52 @@
             if (!v || v < 30 || v > 220) { $("#scnMsg").innerHTML = warn(t("hrManualPh")); return; }
             saveScan({ bpm: v });
           });
+          var disc = $("[data-scn-discuss]");
+          if (disc) disc.addEventListener("click", function () {
+            var ins = scanInsightText();
+            V.state.chat = V.state.chat || [];
+            V.state.chat.push({ role: "user", text: (V.lang() === "ka" ? "ჩემი ჯანმრთელობის სკანი: " : "My health scan: ") + ins });
+            V.save(); V.go("vita");
+          });
         }}
       );
+    }
+
+    // longitudinal trend + rule-based insight (the "agent" layer over scans)
+    function scanInsight() {
+      var arr = w.scan || [];
+      if (arr.length < 2) return null;
+      var recent = arr.slice(-3), prev = arr.slice(-6, -3);
+      function av(a) { return a.length ? a.reduce(function (x, s) { return x + s.score; }, 0) / a.length : 0; }
+      var d = Math.round(av(recent) - (prev.length ? av(prev) : av(recent)));
+      var dir = d >= 4 ? "up" : d <= -4 ? "down" : "flat";
+      return { delta: d, dir: dir, tone: dir === "up" ? "green" : dir === "down" ? "crimson" : "blue" };
+    }
+    function scanInsightText() {
+      var arr = w.scan || [], last = arr[arr.length - 1] || {};
+      var ins = scanInsight();
+      var ka = V.lang() === "ka";
+      var s = (ka ? "სკან-ქულა " : "scan score ") + (last.score || "?") + (last.hrv ? (ka ? ", HRV " : ", HRV ") + last.hrv + "ms" : "") + (last.rr ? (ka ? ", სუნთქვა " : ", resp ") + last.rr : "");
+      if (ins) s += ". " + (ins.dir === "up" ? (ka ? "ბოლო სკანებში გაუმჯობესდა (+" + ins.delta + ")" : "improving recently (+" + ins.delta + ")")
+        : ins.dir === "down" ? (ka ? "ბოლო სკანებში დაეცა (" + ins.delta + ")" : "declining recently (" + ins.delta + ")")
+        : (ka ? "სტაბილურია" : "stable"));
+      return s;
+    }
+    function scanHistory() {
+      var arr = w.scan || [];
+      if (!arr.length) return "";
+      var recent = arr.slice(-10);
+      var bars = recent.map(function (s) {
+        var tone = scanScoreTone(s.score);
+        return '<div class="mo-bar" title="' + s.date + " · " + s.score + '"><span class="mo-bar__fill tone-' + tone + '" style="height:' + s.score + '%"></span><i>' + s.date.slice(8) + "</i></div>";
+      }).join("");
+      var ins = scanInsight();
+      var insLine = ins ? '<div class="scn-insight scn-ins-' + ins.tone + '">' + V.icon("trend") + " " +
+        (V.lang() === "ka" ? (ins.dir === "up" ? "ტენდენცია ზევით (+" + ins.delta + ")" : ins.dir === "down" ? "ტენდენცია ქვევით (" + ins.delta + ")" : "სტაბილური ტენდენცია")
+          : (ins.dir === "up" ? "Trending up (+" + ins.delta + ")" : ins.dir === "down" ? "Trending down (" + ins.delta + ")" : "Stable trend")) + "</div>" : "";
+      return '<div class="section-head"><h3>' + t("scnHistory") + "</h3>" +
+        (arr.length >= 2 ? '<button class="link-btn" data-scn-discuss>' + t("scnDiscuss") + "</button>" : "") + "</div>" +
+        insLine + '<div class="mo-chart">' + bars + "</div>";
     }
 
     function scnMetric(icon, val, label, sub) {
@@ -984,6 +1028,18 @@
 
     render(null);
   };
+
+  // home flagship card for the AI Health Scan
+  V.scanHomeCard = function () {
+    var arr = (W().scan || []), last = arr.length ? arr[arr.length - 1] : null;
+    return '<button class="card-soft scan-home" id="scanHome">' +
+      '<span class="scan-home__ring' + (last ? " rd-tone-" + scanScoreTone(last.score) : " scan-home__ring--empty") + '">' +
+        (last ? "<b>" + last.score + "</b>" : V.icon("heart")) + "</span>" +
+      '<span class="scan-home__t"><b>' + t("scnTitle") + "</b><small>" +
+        (last ? t("scnScore") + " · " + last.bpm + " " + t("hrBpm") + (last.hrv ? " · HRV " + last.hrv : "") : t("scnCta")) + "</small></span>" +
+      V.icon("next") + "</button>";
+  };
+  V.wireScanHome = function () { var c = document.getElementById("scanHome"); if (c) c.addEventListener("click", function () { V.go("scan"); }); };
 
   V.screens.mindtests = function () {
     var session = null; // { kind, qs, idx, answers:[] }
