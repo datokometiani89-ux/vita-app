@@ -50,6 +50,9 @@
 
 /* queue cards */
 .doc-qcard { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 12px; box-shadow: var(--shadow-card); }
+.doc-qcard--live { border-color: color-mix(in srgb, var(--green) 45%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 12%, transparent); animation: docpulse 1.6s ease-in-out infinite; }
+@keyframes docpulse { 0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 12%, transparent); } 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--green) 6%, transparent); } }
+.doc-livereq { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; color: var(--green-dark); }
 .doc-qcard__t { flex: 1; min-width: 0; }
 .doc-qcard__top { display: flex; align-items: center; gap: 9px; }
 .doc-qcard__top b { font-size: 15.5px; }

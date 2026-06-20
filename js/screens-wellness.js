@@ -2864,6 +2864,14 @@
 
   /* ===================== TELEMEDICINE (video consult + e-prescription) ===================== */
   var TD_HEX = { green: "#2BA94C", crimson: "#e8536b", pink: "#e0689f", blue: "#4a90d9" };
+  var tdReqId = null;
+  // cross-tab: a doctor accepted our live request → announce it in the call
+  if (V.bridge) V.bridge.on("consult-accepted", function (p) {
+    if (!p || p.patientId !== tdReqId) return;
+    var box = document.getElementById("tdChat");
+    if (box) { box.insertAdjacentHTML("beforeend", '<div class="td-sys">' + esc((p.doctor || "Doctor") + (V.lang() === "ka" ? " შემოვიდა ზარში ✓" : " joined the call ✓")) + "</div>"); box.scrollTop = box.scrollHeight; }
+    if (V.toast) V.toast(V.lang() === "ka" ? "ექიმი დაუკავშირდა" : "Doctor connected");
+  });
   var TD_RX = {
     d1: [{ ka: "ომეგა-3, 1000მგ", en: "Omega-3, 1000mg" }, { ka: "დღეში 1× ჭამის შემდეგ", en: "Once daily after meals" }],
     d2: [{ ka: "ვიტამინი D3, 2000 IU", en: "Vitamin D3, 2000 IU" }, { ka: "დღეში 1×, 8 კვირა", en: "Once daily, 8 weeks" }],
@@ -2961,7 +2969,22 @@
       );
     }
 
-    function startCall(d) { doc = d; chat = []; sIdx = 0; paid = false; saved = false; startT = Date.now(); stage = "call"; paint(); beginCallTimers(); }
+    function startCall(d) {
+      doc = d; chat = []; sIdx = 0; paid = false; saved = false; startT = Date.now(); stage = "call"; paint(); beginCallTimers();
+      broadcastRequest();
+    }
+    // notify any open doctor app (cross-tab) that a patient is requesting a consult
+    function broadcastRequest() {
+      if (!V.bridge) return;
+      var p = V.state.profile || {}, sc = (W().scan || []).slice(-1)[0] || {}, h = V.healthAge && V.healthAge();
+      tdReqId = "live-" + Date.now();
+      V.bridge.send("consult-request", {
+        id: tdReqId, name: p.name || (V.lang() === "ka" ? "პაციენტი" : "Patient"),
+        age: p.age || null, sex: p.sex === "woman" ? "F" : "M",
+        reason: { ka: "ვიდეო-კონსულტაცია", en: "Video consultation" },
+        vitals: { hr: sc.bpm, hrv: sc.hrv, spo2: sc.spo2, bioAge: h ? h.bio : null, score: sc.score },
+      });
+    }
     function beginCallTimers() {
       ticker = setInterval(function () { var el = $("#tdTimer"); if (!el) { clearInterval(ticker); return; } el.textContent = fmtDur(Math.round((Date.now() - startT) / 1000)); }, 1000);
       var lines = script();

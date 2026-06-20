@@ -1648,6 +1648,7 @@
 .td-msg { max-width: 80%; padding: 8px 12px; border-radius: 14px; font-size: 13.5px; line-height: 1.4; }
 .td-msg--doc { align-self: flex-start; background: var(--field); border-bottom-left-radius: 4px; }
 .td-msg--me { align-self: flex-end; background: var(--green); color: #fff; border-bottom-right-radius: 4px; }
+.td-sys { align-self: center; font-size: 12px; font-weight: 600; color: var(--green-dark); background: var(--green-tint); padding: 5px 12px; border-radius: 99px; }
 .td-input { display: flex; gap: 8px; }
 .td-input .field { flex: 1; }
 .td-input .icon-box { width: 44px; flex: none; }
