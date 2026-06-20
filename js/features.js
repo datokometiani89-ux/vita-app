@@ -124,6 +124,22 @@ window.VITA = window.VITA || {};
   };
   F.exportICS = function () { download("vita-checkups.ics", F.icsText(), "text/calendar"); };
 
+  // daily recurring "do your AI scan" reminder (real calendar event + alarm)
+  F.scanReminderICS = function (hour) {
+    hour = hour || 9;
+    var start = new Date(); start.setDate(start.getDate() + 1); start.setHours(hour, 0, 0, 0);
+    var end = new Date(start.getTime() + 10 * 60000);
+    var sum = ka() ? "VITA: AI ჯანმრთელობის სკანი" : "VITA: AI health scan";
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//VITA Health AI//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+      "BEGIN:VEVENT", "UID:vita-scan-daily@vita", "DTSTAMP:" + icsDate(new Date()),
+      "DTSTART:" + icsDate(start), "DTEND:" + icsDate(end), "RRULE:FREQ=DAILY",
+      "SUMMARY:" + icsEsc(sum), "DESCRIPTION:" + icsEsc(ka() ? "30 წამიანი სკანი VITA-ში" : "Your 30-second scan in VITA"),
+      "BEGIN:VALARM\r\nTRIGGER:-PT0M\r\nACTION:DISPLAY\r\nDESCRIPTION:VITA scan\r\nEND:VALARM",
+      "END:VEVENT", "END:VCALENDAR"];
+    return lines.join("\r\n");
+  };
+  F.exportScanReminder = function (hour) { download("vita-scan-reminder.ics", F.scanReminderICS(hour), "text/calendar"); };
+
   /* ---------------- data export (JSON) ---------------- */
   F.exportJSON = function () {
     var data = { exported: new Date().toISOString(), app: "VITA Health AI", state: V.state };

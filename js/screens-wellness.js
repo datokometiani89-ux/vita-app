@@ -633,6 +633,7 @@
   // returns a stop() function. Caller provides a hidden <video> el id and a wave <canvas> el id.
   function ppgCapture(videoEl, canvasEl, opts) {
     opts = opts || {};
+    var face = opts.facing === "user"; // contactless face mode vs fingertip
     var stream = null, raf = 0, running = false, video = videoEl, canvas = canvasEl, ctx, hidden, hctx;
     var waveBuf = [], rawBuf = [], blueBuf = [], beatTimes = [], baseline = 0, lastBeat = 0, beats = 0, startT = 0, measT = 0, prevSig = 0, ampEMA = 0, _firstBeat = 0;
     function status(k) { if (opts.onStatus) opts.onStatus(k); }
@@ -642,14 +643,14 @@
       if (typeof isSecureContext !== "undefined" && !isSecureContext && location.hostname !== "localhost") { err("hrInsecure"); return; }
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { err("hrNoCam"); return; }
       status("hrRequesting");
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false })
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: face ? "user" : { ideal: "environment" } }, audio: false })
         .catch(function () { return navigator.mediaDevices.getUserMedia({ video: true, audio: false }); })
         .then(onStream).catch(camFail);
     }
     function onStream(s) {
       stream = s;
       var track = s.getVideoTracks()[0];
-      try { if (track.applyConstraints) track.applyConstraints({ advanced: [{ torch: true }] }).catch(function () {}); } catch (e) {}
+      if (!face) { try { if (track.applyConstraints) track.applyConstraints({ advanced: [{ torch: true }] }).catch(function () {}); } catch (e) {} }
       video.srcObject = s; var pp = video.play(); if (pp && pp.catch) pp.catch(function () {});
       ctx = canvas.getContext("2d");
       hidden = document.createElement("canvas"); hidden.width = 60; hidden.height = 60; hctx = hidden.getContext("2d");
@@ -674,8 +675,8 @@
       var sig = v - baseline; ampEMA = ampEMA * 0.95 + Math.abs(sig) * 0.05;
       waveBuf.push(sig); if (waveBuf.length > 200) waveBuf.shift();
       drawWave();
-      var fingerOn = v < 150 && ampEMA > 0.25;
-      if (!fingerOn) { status(ampEMA <= 0.25 && v < 150 ? "hrWeak" : "hrPlace"); }
+      var fingerOn = face ? (ampEMA > 0.12) : (v < 150 && ampEMA > 0.25);
+      if (!fingerOn) { status(face ? "scnFaceHold" : (ampEMA <= 0.25 && v < 150 ? "hrWeak" : "hrPlace")); }
       else {
         status("hrMeasuring");
         if (!measT) measT = now;
@@ -1051,9 +1052,64 @@
     }).catch(offline);
   }
 
+  // consecutive-day scan streak (cardio scans), tolerant of a missing today
+  function isoOf(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  V.scanStreak = function () {
+    var arr = (W().scan || []); if (!arr.length) return 0;
+    var days = {}; arr.forEach(function (s) { days[s.date] = 1; });
+    var d = new Date(today()), streak = 0;
+    if (!days[isoOf(d)]) d.setDate(d.getDate() - 1); // today not done yet → count up to yesterday
+    while (days[isoOf(d)]) { streak++; d.setDate(d.getDate() - 1); }
+    return streak;
+  };
+
+  // printable, doctor-ready scan report (reuses the AI narrative if on screen)
+  function printScanReport() {
+    var ka = V.lang() === "ka";
+    var cardio = lastOf("scan"), cog = lastOf("reaction"), voice = lastOf("voiceScan"), skin = lastOf("skinScan");
+    var h = V.healthAge(), comp = V.scanComposite();
+    var rows = [];
+    function row(name, val, band) { rows.push("<tr><td>" + name + "</td><td><b>" + val + "</b></td><td>" + (band || "") + "</td></tr>"); }
+    if (cardio) row(ka ? "გული & მიმოქცევა" : "Heart & circulation", t("scnScore") + " " + cardio.score + " · " + cardio.bpm + " " + t("hrBpm") +
+      (cardio.hrv ? " · HRV " + cardio.hrv : "") + (cardio.spo2 ? " · SpO₂ " + cardio.spo2 + "%" : ""), cardio.stress != null ? (ka ? "სტრესი " : "stress ") + cardio.stress : "");
+    if (cog) row(ka ? "კოგნიცია" : "Cognition", cog.ms + " " + t("rxMs"), t(cog.band));
+    if (voice) row(ka ? "სუნთქვა & ხმა" : "Respiration & voice", voice.steadiness + "%", t(voice.band));
+    if (skin) row(ka ? "კანი" : "Skin", t(skin.band), "");
+    var domBody = document.querySelector("#fsReportOut .scn-report__body, #scnReportOut .scn-report__body");
+    var narrative = domBody ? domBody.innerHTML : reportOffline();
+    var T = ka
+      ? { title: "VITA — AI ჯანმრთელობის სკანი", sub: "გენერირებულია " + today(), comp: "საერთო ქულა", bio: "ბიოლოგიური ასაკი", chrono: "ქრონოლოგიური", marker: "სისტემა", val: "მაჩვენებელი", band: "შეფასება", rep: "AI ანგარიში", note: "მომზადებულია VITA Health AI-ით. wellness შეფასებაა, არა სამედიცინო დიაგნოზი." }
+      : { title: "VITA — AI Health Scan", sub: "Generated " + today(), comp: "Composite", bio: "Biological age", chrono: "Chronological", marker: "System", val: "Reading", band: "Assessment", rep: "AI report", note: "Prepared by VITA Health AI. A wellness estimate, not a medical diagnosis." };
+    var html = '<!doctype html><html><head><meta charset="utf-8"><title>' + T.title + "</title>" +
+      "<style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;color:#14181f;max-width:720px;margin:32px auto;padding:0 20px}" +
+      "h1{font-size:24px;margin:0 0 2px} .sub{color:#8A94A6;margin-bottom:20px}" +
+      "h2{font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:#2BA94C;margin:22px 0 8px;border-bottom:2px solid #E4F4EA;padding-bottom:4px}" +
+      ".row{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:6px} .row b{display:block;font-size:26px}" +
+      "table{width:100%;border-collapse:collapse;font-size:14px} td,th{text-align:left;padding:7px 6px;border-bottom:1px solid #eee}" +
+      ".rep p{margin:0 0 8px} .rep ul{padding-left:18px} .note{margin-top:26px;color:#8A94A6;font-size:12px}</style></head><body>" +
+      "<h1>" + T.title + "</h1><div class='sub'>" + T.sub + "</div>" +
+      "<div class='row'>" + (comp != null ? "<div><b>" + comp + "</b>" + T.comp + "</div>" : "") +
+        (h ? "<div><b>" + h.bio + "</b>" + T.bio + " (" + T.chrono + " " + h.chrono + ", " + (h.delta > 0 ? "+" + h.delta : h.delta) + ")</div>" : "") + "</div>" +
+      (rows.length ? "<h2>" + (ka ? "მაჩვენებლები" : "Readings") + "</h2><table><tr><th>" + T.marker + "</th><th>" + T.val + "</th><th>" + T.band + "</th></tr>" + rows.join("") + "</table>" : "") +
+      "<h2>" + T.rep + "</h2><div class='rep'>" + narrative + "</div>" +
+      "<div class='note'>" + T.note + "</div></body></html>";
+    var win = window.open("", "_blank"); if (!win) { V.toast && V.toast(ka ? "ფანჯრის გახსნა დაიბლოკა" : "Popup blocked"); return; }
+    win.document.open(); win.document.write(html); win.document.close();
+    setTimeout(function () { try { win.focus(); win.print(); } catch (e) {} }, 350);
+  }
+
+  // share the scan summary (native share sheet, else clipboard)
+  function shareScanReport() {
+    var ka = V.lang() === "ka";
+    var txt = (ka ? "ჩემი VITA AI ჯანმრთელობის სკანი:\n" : "My VITA AI health scan:\n") + V.scanSummaryText();
+    if (navigator.share) { navigator.share({ title: "VITA", text: txt }).catch(function () {}); return; }
+    if (navigator.clipboard) { navigator.clipboard.writeText(txt).then(function () { V.toast && V.toast(ka ? "დაკოპირდა" : "Copied"); }); return; }
+    V.toast && V.toast(txt);
+  }
+
   V.screens.scan = function () {
     var w = W(); w.scan = w.scan || [];
-    var stopCap = null;
+    var stopCap = null, mode = "finger"; // finger (rear+torch) | face (front camera, contactless)
 
     function modalityStrip() {
       return '<div class="scn-mods">' +
@@ -1083,8 +1139,12 @@
             "</div>";
           })()
         : '<div class="scn-stage" id="scnStage">' +
+            '<div class="scn-mode" id="scnMode">' +
+              '<button class="scn-mode__b' + (mode === "finger" ? " on" : "") + '" data-mode="finger">' + V.icon("heart") + " " + t("scnModeFinger") + "</button>" +
+              '<button class="scn-mode__b' + (mode === "face" ? " on" : "") + '" data-mode="face">' + V.icon("user") + " " + t("scnModeFace") + "</button>" +
+            "</div>" +
             '<canvas id="hrWave" class="scn-wave" width="600" height="120"></canvas>' +
-            '<div class="scn-status" id="scnStatus">' + t("scnReady") + "</div>" +
+            '<div class="scn-status" id="scnStatus">' + t(mode === "face" ? "scnFaceHint" : "scnReady") + "</div>" +
             '<button class="btn btn-primary" id="scnStart" style="width:100%">' + V.icon("heart") + " " + t("scnStart") + "</button>" +
           "</div>";
 
@@ -1093,6 +1153,7 @@
         '<div class="screen"><div class="pad-lg fade-in">' +
           head("heart", "crimson", "scnTitle") +
           '<p class="s-sub">' + t("scnSub") + "</p>" +
+          (V.scanStreak() > 0 ? '<div class="scn-streak">' + V.icon("flame") + " " + V.scanStreak() + " " + t("scnStreakDays") + "</div>" : "") +
           modalityStrip() +
           '<button class="scn-fullcta" data-go="fullscan">' + V.iconBox("shield", "green") +
             '<div class="scn-fullcta__t"><b>' + t("fbTitle") + "</b><small>" + t("fbCardSub") + "</small></div>" + V.icon("next") + "</button>" +
@@ -1104,6 +1165,11 @@
           '<div id="scnMsg"></div>' +
           bioAgeCard() +
           '<div class="scn-report-wrap"><button class="btn btn-ghost scn-report-btn" id="scnReport">' + V.icon("sparkle") + " " + t("haReportCta") + '</button><div id="scnReportOut"></div></div>' +
+          (last ? '<div class="scn-actions">' +
+            '<button class="scn-act" id="scnPrint">' + V.icon("file") + "<span>" + t("scnPrint") + "</span></button>" +
+            '<button class="scn-act" id="scnShare">' + V.icon("send") + "<span>" + t("scnShare") + "</span></button>" +
+            '<button class="scn-act" id="scnRemind">' + V.icon("bell") + "<span>" + t("scnRemind") + "</span></button>" +
+          "</div>" : "") +
           scanHistory() +
           '<p class="hr-multi-note">' + t("scnDisc") + "</p>" +
           '<video id="hrVideo" playsinline muted style="display:none"></video>' +
@@ -1115,8 +1181,21 @@
           $("[data-x]").addEventListener("click", function () { if (stopCap) stopCap(); });
           each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
           $("#scnStart").addEventListener("click", startScan);
+          each("[data-mode]", function (b) {
+            b.addEventListener("click", function () {
+              mode = b.getAttribute("data-mode");
+              each("[data-mode]", function (x) { x.classList.toggle("on", x === b); });
+              var s = $("#scnStatus"); if (s) s.textContent = t(mode === "face" ? "scnFaceHint" : "scnReady");
+            });
+          });
           var rep = $("#scnReport");
           if (rep) rep.addEventListener("click", function () { runScanReport(rep, $("#scnReportOut")); });
+          var pr = $("#scnPrint"); if (pr) pr.addEventListener("click", printScanReport);
+          var sh = $("#scnShare"); if (sh) sh.addEventListener("click", shareScanReport);
+          var rm = $("#scnRemind"); if (rm) rm.addEventListener("click", function () {
+            V.features && V.features.exportScanReminder(9);
+            V.toast && V.toast(t("scnRemindDone"));
+          });
           $("#hrManualSave").addEventListener("click", function () {
             var v = parseInt($("#hrManual").value, 10);
             if (!v || v < 30 || v > 220) { $("#scnMsg").innerHTML = warn(t("hrManualPh")); return; }
@@ -1178,6 +1257,7 @@
     function startScan() {
       var btn = $("#scnStart"); if (btn) btn.disabled = true;
       stopCap = V.ppgCapture($("#hrVideo"), $("#hrWave"), {
+        facing: mode === "face" ? "user" : "environment",
         onStatus: function (k) { var s = $("#scnStatus"); if (s) s.textContent = t(k); },
         onTick: function (bpm) { var s = $("#scnStatus"); if (s) s.textContent = bpm + " " + t("hrBpm"); },
         onError: function (k) {
@@ -1291,6 +1371,12 @@
 
         '<div class="scn-report-wrap"><button class="btn btn-primary scn-report-btn" id="fsReport" style="width:100%">' + V.icon("sparkle") + " " + t("haReportCta") + '</button><div id="fsReportOut"></div></div>' +
 
+        (comp != null ? '<div class="scn-actions">' +
+          '<button class="scn-act" id="fsPrint">' + V.icon("file") + "<span>" + t("scnPrint") + "</span></button>" +
+          '<button class="scn-act" id="fsShare">' + V.icon("send") + "<span>" + t("scnShare") + "</span></button>" +
+          '<button class="scn-act" id="fsRemind">' + V.icon("bell") + "<span>" + t("scnRemind") + "</span></button>" +
+        "</div>" : "") +
+
         '<p class="hr-multi-note">' + t("scnDisc") + "</p>" +
       "</div>" +
       V.tabbar("home") +
@@ -1300,6 +1386,12 @@
         each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
         var rep = $("#fsReport");
         if (rep) rep.addEventListener("click", function () { runScanReport(rep, $("#fsReportOut")); });
+        var pr = $("#fsPrint"); if (pr) pr.addEventListener("click", printScanReport);
+        var sh = $("#fsShare"); if (sh) sh.addEventListener("click", shareScanReport);
+        var rm = $("#fsRemind"); if (rm) rm.addEventListener("click", function () {
+          V.features && V.features.exportScanReminder(9);
+          V.toast && V.toast(t("scnRemindDone"));
+        });
       } }
     );
   };
