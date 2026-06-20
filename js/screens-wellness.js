@@ -1135,6 +1135,140 @@
     render();
   };
 
+  /* ===================== VOICE SCAN (vocal-steadiness biomarker) ===================== */
+  // vocal steadiness 0-100 from per-frame pitch + amplitude series (lower variation = steadier)
+  V.voiceSteadiness = function (pitches, rmss) {
+    function cv(arr) {
+      arr = (arr || []).filter(function (x) { return x > 0; });
+      if (arr.length < 5) return null;
+      var m = arr.reduce(function (a, b) { return a + b; }, 0) / arr.length;
+      if (!m) return null;
+      var v = arr.reduce(function (a, b) { return a + (b - m) * (b - m); }, 0) / arr.length;
+      return Math.sqrt(v) / m;
+    }
+    var pj = cv(pitches), sh = cv(rmss);
+    if (pj == null || sh == null) return null;
+    var jitterScore = Math.max(0, Math.min(100, 100 - pj * 1500));
+    var shimmerScore = Math.max(0, Math.min(100, 100 - sh * 250));
+    return Math.max(0, Math.min(100, Math.round(jitterScore * 0.6 + shimmerScore * 0.4)));
+  };
+  V.voiceBand = function (s) { return s >= 70 ? { k: "vcGood", tone: "green" } : s >= 45 ? { k: "vcMid", tone: "yellow" } : { k: "vcLow", tone: "crimson" }; };
+  // autocorrelation pitch (Hz) of a time-domain buffer; 0 if unvoiced
+  function acPitch(buf, sr) {
+    var SIZE = buf.length, rms = 0;
+    for (var i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+    rms = Math.sqrt(rms / SIZE);
+    if (rms < 0.01) return 0;
+    var minLag = Math.floor(sr / 400), maxLag = Math.floor(sr / 80), best = -1, bestLag = -1;
+    for (var lag = minLag; lag <= maxLag; lag++) {
+      var s = 0; for (var j = 0; j < SIZE - lag; j++) s += buf[j] * buf[j + lag];
+      if (s > best) { best = s; bestLag = lag; }
+    }
+    return bestLag > 0 ? sr / bestLag : 0;
+  }
+
+  function voiceCapture(opts) {
+    opts = opts || {};
+    var ctx, analyser, src, stream, raf = 0, running = false, startT = 0, pitches = [], rmss = [];
+    function status(k) { if (opts.onStatus) opts.onStatus(k); }
+    function start() {
+      if (typeof isSecureContext !== "undefined" && !isSecureContext && location.hostname !== "localhost") { stop(); if (opts.onError) opts.onError("hrInsecure"); return; }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { if (opts.onError) opts.onError("vcNoMic"); return; }
+      status("vcRequesting");
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function (s) {
+        stream = s;
+        var AC = window.AudioContext || window.webkitAudioContext;
+        ctx = new AC(); src = ctx.createMediaStreamSource(s);
+        analyser = ctx.createAnalyser(); analyser.fftSize = 2048; src.connect(analyser);
+        pitches = []; rmss = []; startT = performance.now(); running = true; status("vcSpeak"); loop();
+      }).catch(function (e) {
+        var k = (e && e.name === "NotAllowedError") ? "vcDenied" : "vcNoMic";
+        if (opts.onError) opts.onError(k);
+      });
+    }
+    function loop() {
+      if (!running) return;
+      raf = requestAnimationFrame(loop);
+      var buf = new Float32Array(analyser.fftSize); analyser.getFloatTimeDomainData(buf);
+      var rms = 0; for (var i = 0; i < buf.length; i++) rms += buf[i] * buf[i]; rms = Math.sqrt(rms / buf.length);
+      var p = acPitch(buf, ctx.sampleRate);
+      if (rms > 0.012 && p > 0) { pitches.push(p); rmss.push(rms); }
+      var elapsed = (performance.now() - startT) / 1000;
+      if (opts.onLevel) opts.onLevel(Math.min(1, rms * 6), elapsed);
+      if (elapsed >= 5) finish();
+    }
+    function finish() {
+      var steadiness = V.voiceSteadiness(pitches, rmss);
+      stop();
+      if (steadiness == null) { if (opts.onError) opts.onError("vcWeak"); return; }
+      if (opts.onDone) opts.onDone(steadiness);
+    }
+    function stop() {
+      running = false; if (raf) cancelAnimationFrame(raf);
+      if (stream) { stream.getTracks().forEach(function (tr) { try { tr.stop(); } catch (e) {} }); stream = null; }
+      if (ctx && ctx.close) { try { ctx.close(); } catch (e) {} }
+    }
+    start();
+    return stop;
+  }
+
+  V.screens.voicescan = function () {
+    var w = W(); w.voiceScan = w.voiceScan || [];
+    var stopCap = null;
+
+    function render(steadiness) {
+      var band = steadiness != null ? V.voiceBand(steadiness) : null;
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          head("mic", "pink", "vcTitle") +
+          '<p class="s-sub">' + t("vcSub") + "</p>" +
+          '<div class="card-soft scn-card">' +
+            (steadiness != null
+              ? '<div class="scn-result fade-in"><div class="rd-ring rd-tone-' + band.tone + '"><b>' + steadiness + '</b><small>' + t("vcSteady") + "</small></div>" +
+                  '<div class="mt-sev mt-tone-' + band.tone + '" style="text-align:center;margin-top:4px">' + t(band.k) + "</div>" +
+                  '<p class="mt-rec" style="text-align:center">' + t(band.k + "Rec") + "</p>" +
+                  (band.tone !== "green" ? '<button class="btn btn-ghost" data-vc-breathe style="width:100%">' + V.icon("lungs") + " " + t("vcBreathe") + "</button>" : "") +
+                  '<button class="btn btn-primary" id="vcStart" style="width:100%;margin-top:8px">' + V.icon("mic") + " " + t("vcAgain") + "</button></div>"
+              : '<div class="vc-stage"><div class="vc-orb" id="vcOrb">' + V.icon("mic") + '</div>' +
+                  '<div class="vc-timer" id="vcTimer"></div>' +
+                  '<div class="scn-status" id="vcStatus">' + t("vcReady") + "</div>" +
+                  '<button class="btn btn-primary" id="vcStart" style="width:100%">' + V.icon("mic") + " " + t("vcStart") + "</button></div>") +
+          "</div>" +
+          '<div id="vcMsg"></div>' +
+          '<p class="hr-multi-note">' + t("vcDisc") + "</p>" +
+        "</div>" +
+        V.tabbar("home") +
+        "</div>",
+        { onMount: function () {
+          var b = $("[data-x]"); if (b) b.addEventListener("click", function () { if (stopCap) stopCap(); V.go("scan"); });
+          $("#vcStart").addEventListener("click", startVoice);
+          var br = $("[data-vc-breathe]"); if (br) br.addEventListener("click", function () { V.go("breathe"); });
+        }}
+      );
+    }
+
+    function startVoice() {
+      var btn = $("#vcStart"); if (btn) btn.disabled = true;
+      stopCap = voiceCapture({
+        onStatus: function (k) { var s = $("#vcStatus"); if (s) s.textContent = t(k); },
+        onLevel: function (lvl, el) {
+          var orb = $("#vcOrb"); if (orb) orb.style.transform = "scale(" + (1 + lvl * 0.4) + ")";
+          var tm = $("#vcTimer"); if (tm) tm.textContent = Math.max(0, Math.ceil(5 - el)) + "s";
+        },
+        onError: function (k) { var b = $("#vcStart"); if (b) b.disabled = false; $("#vcMsg").innerHTML = warn(t(k)); var s = $("#vcStatus"); if (s) s.textContent = t("vcReady"); },
+        onDone: function (steadiness) {
+          w.voiceScan.push({ date: today(), steadiness: steadiness, band: V.voiceBand(steadiness).k });
+          if (w.voiceScan.length > 40) w.voiceScan = w.voiceScan.slice(-40);
+          V.awardOnce && V.awardOnce("voice:" + today(), V.POINTS.task, "task"); V.save();
+          if (navigator.vibrate) navigator.vibrate(40);
+          render(steadiness);
+        },
+      });
+    }
+    render(null);
+  };
+
   V.screens.mindtests = function () {
     var session = null; // { kind, qs, idx, answers:[] }
 
