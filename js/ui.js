@@ -2,20 +2,23 @@
 window.VITA = window.VITA || {};
 
 (function (V) {
-  /* VITA tree mark (official brand logo) — symmetric canopy fan of three
-     branch-pairs rising from a central junction, with a stem that forks into
-     two roots. Bold round strokes; recolourable. 100×100 viewBox. */
+  /* VITA tree mark — recreation of the official logo (from the designer's
+     "VITA LOGO VERSIONS v2-3" PDF): a sunburst FAN of branches above a bold,
+     solid "V" trunk (V for VITA). Recolourable; 100×100 viewBox.
+     NB: a hand recreation — the exact vector still ideally comes from the
+     designer's source .svg/.ai (this machine has no PDF→SVG tooling). */
   V.treeMark = function (color) {
     return (
-      '<g fill="none" stroke="' + color + '" stroke-width="11.5" stroke-linecap="round" stroke-linejoin="round">' +
-      // canopy — three symmetric pairs fanning up from the junction (50,54)
-      '<path d="M50 54 L44 19"/><path d="M50 54 L56 19"/>' +
-      '<path d="M50 54 L30 26"/><path d="M50 54 L70 26"/>' +
-      '<path d="M50 54 L23 38"/><path d="M50 54 L77 38"/>' +
-      // stem + forked roots
-      '<path d="M50 54 L50 72"/>' +
-      '<path d="M50 72 L38 88"/><path d="M50 72 L62 88"/>' +
-      "</g>"
+      // canopy — sunburst fan radiating from the junction (50,52)
+      '<g fill="none" stroke="' + color + '" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M50 52 L50 20"/>' +
+        '<path d="M50 52 L37 23"/><path d="M50 52 L63 23"/>' +
+        '<path d="M50 52 L26 30"/><path d="M50 52 L74 30"/>' +
+        '<path d="M50 52 L19 42"/><path d="M50 52 L81 42"/>' +
+        '<path d="M50 52 L18 54"/><path d="M50 52 L82 54"/>' +
+      "</g>" +
+      // bold "V" trunk (filled chevron)
+      '<path fill="' + color + '" d="M37 52 L50 79 L63 52 L55 52 L50 66 L45 52 Z"/>'
     );
   };
 
