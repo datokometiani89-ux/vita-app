@@ -134,3 +134,37 @@
   .ld-open__short { display: inline; }
   .ld-stats { gap: 18px; flex-wrap: wrap; }
 }
+
+/* ---- AI-scan wedge band ---- */
+.ld-scan { margin: 8px 0 12px; padding: 0 5vw; }
+.ld-scan__inner { max-width: 880px; margin: 0 auto; text-align: center; background:
+  radial-gradient(120% 140% at 50% 0%, color-mix(in srgb, var(--green) 14%, var(--card)), var(--card));
+  border: 1.5px solid color-mix(in srgb, var(--green) 22%, var(--line)); border-radius: 28px; padding: 38px 28px; }
+.ld-scan__inner h2 { font-size: clamp(22px, 3.4vw, 32px); margin: 8px 0 10px; }
+.ld-scan__inner p { color: var(--ink-2); max-width: 620px; margin: 0 auto 20px; line-height: 1.6; }
+.ld-scan__mods { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.ld-scan__mod { display: inline-flex; align-items: center; gap: 8px; background: var(--card); border: 1.5px solid var(--line); border-radius: 99px; padding: 9px 16px; font-weight: 600; font-size: 14px; }
+.ld-scan__mod svg { width: 17px; color: var(--green); }
+
+/* ---- platform: three apps ---- */
+.ld-section__sub { color: var(--muted); margin-top: 8px; font-size: 15px; }
+.ld-apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.ld-app { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 22px; border: 1.5px solid var(--line); border-radius: 22px; background: var(--card); text-decoration: none; color: inherit; transition: transform .14s, border-color .14s, box-shadow .14s; }
+.ld-app:hover { transform: translateY(-4px); border-color: var(--green); box-shadow: 0 16px 36px rgba(20,24,31,.10); }
+.ld-app .icon-box { width: 48px; height: 48px; margin-bottom: 6px; }
+.ld-app h3 { font-size: 18px; }
+.ld-app p { color: var(--ink-2); font-size: 14px; line-height: 1.55; flex: 1; }
+.ld-app__go { display: inline-flex; align-items: center; gap: 6px; color: var(--green-dark); font-weight: 700; font-size: 14px; margin-top: 8px; }
+.ld-app__go svg { width: 15px; }
+@media (max-width: 760px) { .ld-apps { grid-template-columns: 1fr; } }
+
+/* icon-box base + tones (these live in app.css, which the landing doesn't load) */
+.icon-box { width: 44px; height: 44px; border-radius: 13px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.icon-box svg { width: 22px; height: 22px; }
+.icon-box.gray   { background: var(--field);       color: var(--ink-2); }
+.icon-box.green  { background: var(--green-tint);  color: var(--green-dark); }
+.icon-box.pink   { background: var(--pink-tint);   color: var(--pink); }
+.icon-box.blue   { background: var(--blue-tint);   color: var(--blue); }
+.icon-box.yellow { background: var(--yellow-tint); color: #B98A1B; }
+.icon-box.crimson { background: color-mix(in srgb, #e8536b 16%, var(--card)); color: #e8536b; }
+[data-theme="dark"] .icon-box.green { color: #5ED694; }

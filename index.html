@@ -12,13 +12,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Noto+Sans+Georgian:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/landing.css">
+  <link rel="stylesheet" href="css/landing.css?v=69">
 </head>
 <body>
   <div class="ld" id="ld"></div>
 
-  <script src="js/i18n.js"></script>
-  <script src="js/ui.js"></script>
+  <script src="js/i18n.js?v=67"></script>
+  <script src="js/ui.js?v=67"></script>
   <script>
   (function () {
     var V = window.VITA, t = V.t, esc = V.esc;
@@ -58,6 +58,18 @@
           ["flask","Lab-result reading","Upload your labs — VITA explains them against normal ranges."],
           ["sparkle","Beauty & longevity","Personal routines for skin, hair and oral care."],
           ["trend","Progress tracking","Charts for weight, score and streak dynamics."]] },
+      apps: {
+        ka: [
+          ["heart","green","VITA","პაციენტის აპი — AI სკანი, ჯანმრთელობის გეგმა, ჩატი და ჯავშანი.","app.html","აპის გახსნა"],
+          ["stethoscope","crimson","VITA for Doctors","ექიმის კონსოლი — შემოსული ვიზიტები, პაციენტის vitals, ვიდეო და რეცეპტი.","doctor.html","ექიმის აპი"],
+          ["shield","blue","VITA for Business","დამსაქმებლის/მზღვეველის dashboard — აგრეგირებული ჯანმრთელობა, რისკი, ROI.","org.html","ბიზნეს დაშბორდი"]],
+        en: [
+          ["heart","green","VITA","The patient app — AI scan, health plan, chat and booking.","app.html","Open the app"],
+          ["stethoscope","crimson","VITA for Doctors","The clinician console — incoming visits, patient vitals, video and prescriptions.","doctor.html","Doctor app"],
+          ["shield","blue","VITA for Business","Employer / insurer dashboard — aggregate health, risk and ROI.","org.html","Business dashboard"]] },
+      scanMods: {
+        ka: [["heart","გული"],["camera","კანი"],["mic","ხმა"],["brain","კოგნიცია"]],
+        en: [["heart","Heart"],["camera","Skin"],["mic","Voice"],["brain","Cognition"]] },
     };
     function C(k){ return copy[k][V.lang()] || copy[k].en; }
 
@@ -93,13 +105,20 @@
               '<a class="btn btn-ghost" href="#how">'+t("ldSteps")+'</a>' +
             "</div>" +
             '<div class="ld-stats">' +
-              stat("7", V.lang()==="ka"?"ნაბიჯიანი ჯანმრთელობის გზა":"step health journey") +
-              stat("4", V.lang()==="ka"?"მიმართულება ერთ აპში":"tracks in one app") +
+              stat(V.lang()==="ka"?"30წმ":"30s", V.lang()==="ka"?"AI ჯანმრთელობის სკანი":"AI health scan") +
+              stat("3", V.lang()==="ka"?"აპი ერთ პლატფორმაზე":"apps, one platform") +
               stat("AI", V.lang()==="ka"?"პერსონალური ასისტენტი":"personal assistant") +
             "</div>" +
           "</div>" +
           '<div class="ld-phone-wrap"><div class="ld-phone"><div class="ld-phone__notch"></div>'+phoneDemo()+'</div></div>' +
         "</header>" +
+
+        '<section class="ld-scan"><div class="ld-scan__inner">' +
+          '<span class="kicker">'+(V.lang()==="ka"?"AI ჯანმრთელობის სკანი":"AI Health Scan")+'</span>' +
+          '<h2>'+(V.lang()==="ka"?"შენი ტელეფონი ახლა ჯანმრთელობის სკანერია":"Your phone is now a health scanner")+'</h2>' +
+          '<p>'+(V.lang()==="ka"?"კამერა და მიკროფონი → გული, კანი, ხმა, კოგნიცია → ბიოლოგიური ასაკი. ~30 წამში, ექიმთან წასაღები ანგარიშით.":"Camera and mic → heart, skin, voice, cognition → your biological age. In ~30 seconds, with a doctor-ready report.")+'</p>' +
+          '<div class="ld-scan__mods">'+C("scanMods").map(function(m){ return '<span class="ld-scan__mod">'+V.icon(m[0])+esc(m[1])+'</span>'; }).join("")+'</div>' +
+        "</div></section>" +
 
         '<section class="ld-section" id="how"><div class="ld-section__head">' +
           '<span class="kicker">'+t("ldSteps")+'</span><h2>'+(V.lang()==="ka"?"VITA-ს მუშაობის 7 ნაბიჯი":"The 7-step VITA journey")+'</h2></div>' +
@@ -112,6 +131,13 @@
           '<div class="ld-features">'+C("feats").map(function(f,i){
             var tone=["green","blue","pink","yellow","green","blue"][i%6];
             return '<div class="ld-feat">'+V.iconBox(f[0],tone)+'<h3>'+esc(f[1])+'</h3><p>'+esc(f[2])+'</p></div>';
+          }).join("")+'</div></section>' +
+
+        '<section class="ld-section" id="platform"><div class="ld-section__head">' +
+          '<span class="kicker">'+(V.lang()==="ka"?"პლატფორმა":"Platform")+'</span><h2>'+(V.lang()==="ka"?"ერთი პლატფორმა, სამი აპი":"One platform, three apps")+'</h2>' +
+          '<p class="ld-section__sub">'+(V.lang()==="ka"?"პაციენტი, ექიმი და ბიზნესი — ერთ ეკოსისტემაში დაკავშირებული.":"Patient, clinician and employer — connected in one ecosystem.")+'</p></div>' +
+          '<div class="ld-apps">'+C("apps").map(function(a){
+            return '<a class="ld-app" href="'+a[4]+'">'+V.iconBox(a[0],a[1])+'<h3>'+esc(a[2])+'</h3><p>'+esc(a[3])+'</p><span class="ld-app__go">'+esc(a[5])+' '+V.icon("next")+'</span></a>';
           }).join("")+'</div></section>' +
 
         '<section class="ld-cta">' +
