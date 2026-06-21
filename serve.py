@@ -28,11 +28,14 @@ Endpoints:
 
 import json
 import os
+import queue
 import http.server
 import socketserver
 import urllib.request
 import urllib.error
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
+
+import backend  # real server side: auth, SSE bus, consult routing, EHR, payment/video seams
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PORT = int(os.environ.get("PORT", "4170"))
@@ -190,17 +193,58 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return {}
 
     def do_GET(self):
-        if urlparse(self.path).path == "/api/health":
-            return self._json(200, {"ok": True, "ai": ai_on(), "provider": _provider, "model": _model})
+        u = urlparse(self.path)
+        path, qs = u.path, parse_qs(u.query)
+        if path == "/api/health":
+            return self._json(200, {"ok": True, "ai": ai_on(), "provider": _provider,
+                                    "model": _model, "backend": True, "online": backend.online_counts()})
+        if path == "/api/events":
+            return self.handle_events(qs)
+        r = backend.handle("GET", path, qs, {})
+        if r is not None:
+            return self._json(r[0], r[1])
         return super().do_GET()
 
     def do_POST(self):
-        path = urlparse(self.path).path
+        u = urlparse(self.path)
+        path, qs = u.path, parse_qs(u.query)
         if path == "/api/chat":
             return self.handle_chat()
         if path == "/api/interpret":
             return self.handle_interpret()
+        r = backend.handle("POST", path, qs, self._body())
+        if r is not None:
+            return self._json(r[0], r[1])
         self._json(404, {"error": "not found"})
+
+    def handle_events(self, qs):
+        """Server-Sent-Events stream — the realtime channel between patient and
+        doctor apps (replaces the client-only BroadcastChannel bridge)."""
+        token = (qs.get("token") or [""])[0]
+        user = backend.user_for(token) if token else {}
+        role = user.get("role") or (qs.get("role") or ["patient"])[0]
+        uid = user.get("uid") or (qs.get("uid") or ["*"])[0]
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Connection", "keep-alive")
+        self.end_headers()
+        q = backend.subscribe(role, uid)
+        try:
+            self.wfile.write(b": connected\n\n")
+            self.wfile.flush()
+            while True:
+                try:
+                    ev = q.get(timeout=15)
+                    self.wfile.write(("event: " + ev["event"] + "\ndata: " +
+                                      json.dumps(ev["data"], ensure_ascii=False) + "\n\n").encode("utf-8"))
+                except queue.Empty:
+                    self.wfile.write(b": ping\n\n")  # keepalive
+                self.wfile.flush()
+        except Exception:
+            pass
+        finally:
+            backend.unsubscribe(role, uid, q)
 
     def handle_chat(self):
         body = self._body()

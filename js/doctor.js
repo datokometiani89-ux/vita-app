@@ -163,7 +163,7 @@
 
   function wire() {
     each("[data-view]", function (b) { b.addEventListener("click", function () { view = b.getAttribute("data-view"); render(); }); });
-    each("[data-accept]", function (b) { b.addEventListener("click", function () { current = QUEUE.filter(function (p) { return p.id === b.getAttribute("data-accept"); })[0]; if (current) { if (current.live && V.bridge) V.bridge.send("consult-accepted", { patientId: current.id, doctor: L(ME.name) }); view = "consult"; render(); } }); });
+    each("[data-accept]", function (b) { b.addEventListener("click", function () { current = QUEUE.filter(function (p) { return p.id === b.getAttribute("data-accept"); })[0]; if (current) { if (current.live && V.bridge) V.bridge.send("consult-accepted", { patientId: current.id, patientUid: current.uid, doctor: L(ME.name) }); view = "consult"; render(); } }); });
     var back = $("[data-back]"); if (back) back.addEventListener("click", function () { clearTimers(); view = "dashboard"; current = null; render(); });
     var on = $("#docOnline"); if (on) on.addEventListener("click", function () { online = !online; render(); });
     var lg = $("#docLang"); if (lg) lg.addEventListener("click", function () { if (V.setLang) V.setLang(lang() === "ka" ? "en" : "ka"); render(); });
@@ -177,7 +177,7 @@
   function completeConsult() {
     clearTimers();
     var rx = ($("#docRx") && $("#docRx").value) || "";
-    if (current && current.live && V.bridge) V.bridge.send("consult-ended", { patientId: current.id, rx: rx, doctor: L(ME.name) });
+    if (current && current.live && V.bridge) V.bridge.send("consult-ended", { patientId: current.id, patientUid: current.uid, rx: rx, doctor: L(ME.name) });
     // remove from queue + update analytics (demo)
     QUEUE = QUEUE.filter(function (p) { return p.id !== current.id; });
     ANALYTICS.today += 1; ANALYTICS.revenue += 30;
@@ -206,12 +206,19 @@
 
   /* ---------- realtime: receive consult requests from the patient app ---------- */
   if (V.bridge) {
+    if (V.bridge.init) V.bridge.init("doctor");
+    V.bridge.on("consult-claimed", function (p) {
+      if (!p || !p.id) return;
+      var before = QUEUE.length;
+      QUEUE = QUEUE.filter(function (q) { return q.id !== p.id; });
+      if (QUEUE.length !== before && view === "dashboard") render();
+    });
     V.bridge.on("consult-request", function (p) {
       if (!p || !p.id) return;
       if (QUEUE.some(function (q) { return q.id === p.id; })) return;
       var v = p.vitals || {};
       QUEUE.unshift({
-        id: p.id, name: p.name || "Patient", nameKa: p.name || "პაციენტი", age: p.age || "—", sex: p.sex || "M",
+        id: p.id, uid: p.uid, name: p.name || "Patient", nameKa: p.name || "პაციენტი", age: p.age || "—", sex: p.sex || "M",
         reason: p.reason || { ka: "ახალი მოთხოვნა", en: "New request" }, wait: 0, live: true,
         urgency: (v.score != null && v.score < 60) ? "high" : (v.score != null && v.score < 75) ? "medium" : "low",
         tone: (v.score != null && v.score < 60) ? "crimson" : "blue",

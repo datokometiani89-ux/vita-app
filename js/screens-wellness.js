@@ -2865,7 +2865,8 @@
   /* ===================== TELEMEDICINE (video consult + e-prescription) ===================== */
   var TD_HEX = { green: "#2BA94C", crimson: "#e8536b", pink: "#e0689f", blue: "#4a90d9" };
   var tdReqId = null;
-  // cross-tab: a doctor accepted our live request → announce it in the call
+  if (V.bridge && V.bridge.init) V.bridge.init("patient");
+  // realtime: a doctor accepted our live request → announce it in the call
   if (V.bridge) V.bridge.on("consult-accepted", function (p) {
     if (!p || p.patientId !== tdReqId) return;
     var box = document.getElementById("tdChat");
@@ -2979,7 +2980,8 @@
       var p = V.state.profile || {}, sc = (W().scan || []).slice(-1)[0] || {}, h = V.healthAge && V.healthAge();
       tdReqId = "live-" + Date.now();
       V.bridge.send("consult-request", {
-        id: tdReqId, name: p.name || (V.lang() === "ka" ? "პაციენტი" : "Patient"),
+        id: tdReqId, uid: (V.bridge.uid && V.bridge.uid()) || null,
+        name: p.name || (V.lang() === "ka" ? "პაციენტი" : "Patient"),
         age: p.age || null, sex: p.sex === "woman" ? "F" : "M",
         reason: { ka: "ვიდეო-კონსულტაცია", en: "Video consultation" },
         vitals: { hr: sc.bpm, hrv: sc.hrv, spo2: sc.spo2, bioAge: h ? h.bio : null, score: sc.score },
