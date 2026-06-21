@@ -1670,5 +1670,31 @@
 .td-rx__item { padding: 11px 13px; border: 1.5px dashed var(--line); border-radius: var(--r-md); background: var(--field); }
 .td-rx__item b { display: block; font-size: 14.5px; }
 .td-rx__item small { color: var(--muted); font-size: 12.5px; }
+
+/* ---- scan transparency / accuracy screen ---- */
+.scn-infolink { display: flex; align-items: center; gap: 8px; width: 100%; justify-content: center; padding: 12px; margin-bottom: 8px; border: 1.5px solid var(--line); border-radius: var(--r-md); color: var(--ink-2); font-size: 13.5px; font-weight: 600; background: var(--card); }
+.scn-infolink svg { width: 16px; color: var(--green); } .scn-infolink svg:last-child { width: 13px; transform: rotate(180deg); opacity: .5; color: var(--muted); }
+.si-card { padding: 16px; }
+.si-head { display: flex; align-items: center; gap: 11px; margin-bottom: 10px; }
+.si-head .icon-box { width: 40px; height: 40px; }
+.si-head h3 { font-size: 15.5px; }
+.si-row { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.si-row b { flex: none; width: 96px; color: var(--muted); font-weight: 600; }
+.si-row span { flex: 1; color: var(--ink-2); line-height: 1.5; }
+.si-fair { display: flex; gap: 9px; align-items: flex-start; background: color-mix(in srgb, #4a90d9 9%, var(--card)); border: 1.5px solid color-mix(in srgb, #4a90d9 22%, var(--line)); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 14px; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
+.si-fair svg { width: 16px; color: #4a90d9; flex: none; margin-top: 1px; }
+.si-calib { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; padding: 13px 15px; margin-bottom: 14px; border: 1.5px solid color-mix(in srgb, var(--green) 28%, var(--line)); border-radius: var(--r-lg); background-image: linear-gradient(160deg, color-mix(in srgb, var(--green) 9%, var(--card)), var(--card)); cursor: pointer; }
+.si-calib .icon-box { width: 42px; height: 42px; flex: none; }
+.si-calib__t { flex: 1; min-width: 0; }
+.si-calib__t b { display: block; font-size: 14.5px; }
+.si-calib__t small { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.si-calib > svg:last-child { color: var(--muted); width: 16px; transform: rotate(180deg); flex: none; }
+.scn-calib { text-align: center; margin: 4px 0 2px; }
+.scn-calib .link-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.scn-calib .link-btn svg { width: 14px; }
+.scn-calib__on { font-size: 12.5px; color: var(--muted); }
+.scn-calib__on svg { width: 13px; color: var(--green); vertical-align: -2px; }
+.scn-calib__form { display: flex; gap: 8px; }
+.scn-calib__form .field { flex: 1; }
 .td-docapp { display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 8px; padding: 12px; border: 1.5px dashed var(--line); border-radius: var(--r-md); color: var(--green-dark); font-size: 13.5px; font-weight: 600; }
 .td-docapp svg { width: 16px; } .td-docapp svg:last-child { width: 14px; transform: rotate(180deg); opacity: .6; }

@@ -1130,15 +1130,17 @@
         ? (function () {
             var tone = scanScoreTone(result.score);
             var st = result.hrv ? V.scanStress(result.hrv) : null;
+            var off = calibOffset("hr"), hrShown = result.bpm + off;
             return '<div class="scn-result fade-in">' +
               '<div class="scn-ring rd-tone-' + tone + '"><b>' + result.score + '</b><small>' + t("scnScore") + "</small></div>" +
               '<div class="scn-metrics">' +
-                scnMetric("heart", result.bpm, t("scnHR"), t(hrBandKey(result.bpm))) +
+                scnMetric("heart", hrShown, t("scnHR"), off ? (L({ ka: "კალიბრ.", en: "calibrated" }) + " " + (off > 0 ? "+" : "") + off) : t(hrBandKey(hrShown))) +
                 (result.hrv ? scnMetric("trend", result.hrv + " ms", t("scnHRV"), null) : "") +
                 (result.rr ? scnMetric("lungs", result.rr + " " + t("hrRRUnit"), t("scnResp"), null) : "") +
                 (result.spo2 ? scnMetric("drop", result.spo2 + "%", t("scnSpO2"), null) : "") +
                 (st ? scnMetric("brain", st.recovery + "%", t("scnRecovery"), t(st.band.k)) : "") +
               "</div>" +
+              '<div class="scn-calib" id="scnCalib">' + calibControl(off) + "</div>" +
               '<button class="btn btn-primary" id="scnStart" style="width:100%;margin-top:6px">' + V.icon("heart") + " " + t("scnAgain") + "</button>" +
             "</div>";
           })()
@@ -1175,6 +1177,7 @@
             '<button class="scn-act" id="scnRemind">' + V.icon("bell") + "<span>" + t("scnRemind") + "</span></button>" +
           "</div>" : "") +
           scanHistory() +
+          '<button class="scn-infolink" data-go="scaninfo">' + V.icon("info") + " " + L({ ka: "როგორ მუშაობს & რამდენად ზუსტია", en: "How it works & how accurate it is" }) + " " + V.icon("next") + "</button>" +
           '<p class="hr-multi-note">' + t("scnDisc") + "</p>" +
           '<video id="hrVideo" playsinline muted style="display:none"></video>' +
         "</div>" +
@@ -1212,6 +1215,17 @@
             V.state.chat.push({ role: "user", text: (V.lang() === "ka" ? "ჩემი ჯანმრთელობის სკანი: " : "My health scan: ") + ins });
             V.save(); V.go("vita");
           });
+          // personal calibration: enter a real-device reading → store a single-point offset
+          function openCalib() { var c = $("#scnCalib"); if (!c) return; c.innerHTML = calibForm(); var i = $("#scnRef"); if (i) i.focus();
+            var s = $("#scnRefSave"); if (s) s.addEventListener("click", function () {
+              var ref = parseInt($("#scnRef").value, 10);
+              if (!ref || ref < 30 || ref > 220) { $("#scnRef").focus(); return; }
+              w.calib = w.calib || {}; w.calib.hr = ref - result.bpm; V.save();
+              V.toast && V.toast(L({ ka: "კალიბრირებულია ✓", en: "Calibrated ✓" }));
+              render(result);
+            }); }
+          var cb = $("[data-calib]"); if (cb) cb.addEventListener("click", openCalib);
+          var rcb = $("[data-recalib]"); if (rcb) rcb.addEventListener("click", openCalib);
         }}
       );
     }
@@ -1256,6 +1270,17 @@
     function scnMetric(icon, val, label, sub) {
       return '<div class="scn-metric">' + V.iconBox(icon, "gray") +
         '<div class="scn-metric__t"><b>' + val + "</b><small>" + label + (sub ? " · " + sub : "") + "</small></div></div>";
+    }
+
+    // single-point personal calibration vs a real device (honest accuracy improvement)
+    function calibOffset(metric) { var c = w.calib || {}; return c[metric] || 0; }
+    function calibControl(off) {
+      return off
+        ? '<div class="scn-calib__on">' + V.icon("check") + " " + L({ ka: "კალიბრირებულია შენს მოწყობილობასთან", en: "Calibrated to your device" }) + ' · <button class="link-btn" data-recalib>' + L({ ka: "შეცვლა", en: "change" }) + "</button></div>"
+        : '<button class="link-btn" data-calib>' + V.icon("scale") + " " + L({ ka: "შეადარე რეალურ მოწყობილობას", en: "Compare to a real device" }) + "</button>";
+    }
+    function calibForm() {
+      return '<div class="scn-calib__form"><input id="scnRef" class="field" type="number" inputmode="numeric" min="30" max="220" placeholder="' + esc(L({ ka: "ნამდვილი პულსი (მოწყობ.)", en: "Actual HR (device)" })) + '"><button class="btn btn-ghost" id="scnRefSave">' + L({ ka: "შენახვა", en: "Save" }) + "</button></div>";
     }
 
     function startScan() {
@@ -1411,6 +1436,55 @@
       V.icon("next") + "</button>";
   };
   V.wireScanHome = function () { var c = document.getElementById("scanHome"); if (c) c.addEventListener("click", function () { V.go("scan"); }); };
+
+  /* ===================== SCAN: HOW IT WORKS & ACCURACY (transparency) ===================== */
+  V.screens.scaninfo = function () {
+    function row(label, text) { return '<div class="si-row"><b>' + L(label) + "</b><span>" + L(text) + "</span></div>"; }
+    function card(icon, tone, title, rows) {
+      return '<div class="card-soft si-card"><div class="si-head">' + V.iconBox(icon, tone) + "<h3>" + L(title) + "</h3></div>" + rows.join("") + "</div>";
+    }
+    var L1 = { ka: "რას ზომავს", en: "Measures" }, L2 = { ka: "მეთოდი", en: "Method" }, L3 = { ka: "სიზუსტე & ლიმიტები", en: "Accuracy & limits" };
+    var body =
+      card("heart", "crimson", { ka: "გულ-სისხლძარღვი (კამერა)", en: "Cardiovascular (camera)" }, [
+        row(L1, { ka: "გულისცემა, HRV, სუნთქვა, SpO₂ (შეფასება).", en: "Heart rate, HRV, respiration, SpO₂ (estimate)." }),
+        row(L2, { ka: "ფოტოპლეტიზმოგრაფია — თითის ფერის მიკრო-ცვლილება კადრებში.", en: "Photoplethysmography — micro color changes in your fingertip across frames." }),
+        row(L3, { ka: "wellness-შეფასებაა, არა სამედიცინო. SpO₂ არაკალიბრირებულია. მოძრაობა და სუსტი განათება აფუჭებს სიგნალს. სიზუსტე მუქ კანზე შეიძლება დაეცეს.", en: "A wellness estimate, not medical. SpO₂ is uncalibrated. Motion and poor light degrade the signal. Accuracy can be lower on darker skin." }),
+      ]) +
+      card("camera", "pink", { ka: "კანი (ფოტო + ABCDE)", en: "Skin (photo + ABCDE)" }, [
+        row(L1, { ka: "ხალის ABCDE ნიშნები + ფერის ვარიაცია.", en: "ABCDE mole features + color variation." }),
+        row(L2, { ka: "გიდირებული თვითშემოწმება + on-device პიქსელ-ანალიზი.", en: "Guided self-check + on-device pixel analysis." }),
+        row(L3, { ka: "არ ცვლის დერმატოლოგს და არ ადგენს კიბოს — მხოლოდ გაფრთხილების ნიშნებს უსვამს ხაზს.", en: "Does not replace a dermatologist or detect cancer — it only highlights warning signs." }),
+      ]) +
+      card("mic", "blue", { ka: "ხმა (მიკროფონი)", en: "Voice (microphone)" }, [
+        row(L1, { ka: "ხმის სტაბილურობა (jitter/shimmer).", en: "Vocal steadiness (jitter/shimmer)." }),
+        row(L2, { ka: "5წმ ხმოვანი → per-frame სიმაღლე + ამპლიტუდა.", en: "5s sustained vowel → per-frame pitch + amplitude." }),
+        row(L3, { ka: "wellness-სიგნალია; გარემოს ხმაური და მიკროფონი გავლენას ახდენს.", en: "A wellness signal; ambient noise and the mic affect it." }),
+      ]) +
+      card("brain", "yellow", { ka: "კოგნიცია (რეაქცია)", en: "Cognition (reaction)" }, [
+        row(L1, { ka: "ვიზუალური რეაქციის დრო (პროცესინგის სიჩქარე).", en: "Visual reaction time (processing speed)." }),
+        row(L2, { ka: "5 ცდის მედიანა.", en: "Median of 5 trials." }),
+        row(L3, { ka: "არა სამედიცინო ტესტი; დაღლა, ეკრანი და მოწყობილობა ცვლის შედეგს.", en: "Not a medical test; fatigue, screen and device shift the result." }),
+      ]) +
+      '<div class="si-fair">' + V.icon("info") + " <span>" + L({ ka: "კეთილსინდისიერად: კამერა-სკანის სიზუსტე მუქ კანის ტონებზე უფრო დაბალია — ეს ცნობილი ფიზიკური შეზღუდვაა და მასზე ვმუშაობთ.", en: "In good faith: camera-scan accuracy is lower on darker skin tones — a known physical limitation we're actively working on." }) + "</span></div>" +
+      '<button class="si-calib" data-go="scan">' + V.iconBox("scale", "green") + '<div class="si-calib__t"><b>' + L({ ka: "გააუმჯობესე სიზუსტე კალიბრაციით", en: "Improve accuracy with calibration" }) + "</b><small>" + L({ ka: "სკანის შემდეგ შეადარე რეალურ მოწყობილობას — VITA შენს პერსონალურ შესწორებას დაიმახსოვრებს.", en: "After a scan, compare to a real device — VITA learns your personal correction." }) + "</small></div>" + V.icon("next") + "</button>" +
+      '<p class="hr-multi-note">' + t("scnDisc") + " " + L({ ka: "გადაუდებელ შემთხვევაში დარეკეთ 112.", en: "In an emergency call your local emergency number." }) + "</p>";
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("info", "blue") + "<h1>" + L({ ka: "როგორ მუშაობს & სიზუსტე", en: "How it works & accuracy" }) + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + L({ ka: "VITA-ს სკანი შენი ტელეფონის სენსორებით wellness-შეფასებებს აკეთებს — არა სამედიცინო დიაგნოზს. აი, გულახდილად, რას ნიშნავს თითოეული.", en: "VITA's scan uses your phone's sensors for wellness estimates — not a medical diagnosis. Here's honestly what each one means." }) + "</p>" +
+        body +
+      "</div>" +
+      V.tabbar("home") +
+      "</div>",
+      { onMount: function () {
+        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.go("scan"); });
+        each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
+      } }
+    );
+  };
 
   /* ===================== SKIN SCAN (guided ABCDE self-check + on-device hint) ===================== */
   // on-device colour-variation of a lesion photo (real, wellness-grade — not a diagnosis)
