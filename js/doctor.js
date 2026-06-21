@@ -172,10 +172,11 @@
 
   function startCall() {
     callT = Date.now();
-    ticker = setInterval(function () { var el = $("#docTimer"); if (!el) { clearTimers(); return; } var s = Math.round((Date.now() - callT) / 1000); el.textContent = Math.floor(s / 60) + ":" + (s % 60 < 10 ? "0" : "") + (s % 60); }, 1000);
+    ticker = setInterval(function () { var el = $("#docTimer"); if (!el) { clearTimers(); return; } var s = Math.floor((Date.now() - callT) / 1000); el.textContent = Math.floor(s / 60) + ":" + (s % 60 < 10 ? "0" : "") + (s % 60); }, 1000);
   }
   function completeConsult() {
     clearTimers();
+    if (!current) { view = "dashboard"; render(); return; }
     var rx = ($("#docRx") && $("#docRx").value) || "";
     if (current && current.live && V.bridge) V.bridge.send("consult-ended", { patientId: current.id, patientUid: current.uid, rx: rx, doctor: L(ME.name) });
     // remove from queue + update analytics (demo)
@@ -221,7 +222,7 @@
         id: p.id, uid: p.uid, name: p.name || "Patient", nameKa: p.name || "პაციენტი", age: p.age || "—", sex: p.sex || "M",
         reason: p.reason || { ka: "ახალი მოთხოვნა", en: "New request" }, wait: 0, live: true,
         urgency: (v.score != null && v.score < 60) ? "high" : (v.score != null && v.score < 75) ? "medium" : "low",
-        tone: (v.score != null && v.score < 60) ? "crimson" : "blue",
+        tone: (v.score != null && v.score < 60) ? "crimson" : (v.score != null && v.score < 75) ? "yellow" : "blue",
         vitals: { hr: v.hr || "—", hrv: v.hrv || "—", spo2: v.spo2 || "—", bioAge: v.bioAge || "—", score: v.score || "—" },
       });
       if (online) toast(T("newRequest"));

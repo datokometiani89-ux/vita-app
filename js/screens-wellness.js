@@ -2873,6 +2873,12 @@
     if (box) { box.insertAdjacentHTML("beforeend", '<div class="td-sys">' + esc((p.doctor || "Doctor") + (V.lang() === "ka" ? " შემოვიდა ზარში ✓" : " joined the call ✓")) + "</div>"); box.scrollTop = box.scrollHeight; }
     if (V.toast) V.toast(V.lang() === "ka" ? "ექიმი დაუკავშირდა" : "Doctor connected");
   });
+  // realtime: the live doctor finished + prescribed → surface their actual Rx
+  if (V.bridge) V.bridge.on("consult-ended", function (p) {
+    if (!p || p.patientId !== tdReqId) return;
+    var box = document.getElementById("tdChat");
+    if (box && p.rx) { box.insertAdjacentHTML("beforeend", '<div class="td-sys">' + esc((V.lang() === "ka" ? "რეცეპტი: " : "Rx: ") + p.rx) + "</div>"); box.scrollTop = box.scrollHeight; }
+  });
   var TD_RX = {
     d1: [{ ka: "ომეგა-3, 1000მგ", en: "Omega-3, 1000mg" }, { ka: "დღეში 1× ჭამის შემდეგ", en: "Once daily after meals" }],
     d2: [{ ka: "ვიტამინი D3, 2000 IU", en: "Vitamin D3, 2000 IU" }, { ka: "დღეში 1×, 8 კვირა", en: "Once daily, 8 weeks" }],
@@ -2882,7 +2888,7 @@
   V.screens.telemed = function () {
     var stage = "list", doc = null, startT = 0, ticker = null, chat = [], sIdx = 0, sTimer = null, paid = false, saved = false;
 
-    function clearTimers() { if (ticker) clearInterval(ticker); if (sTimer) clearTimeout(sTimer); ticker = sTimer = null; }
+    function clearTimers() { if (ticker) clearInterval(ticker); if (sTimer) clearTimeout(sTimer); ticker = sTimer = null; tdReqId = null; }
     function docAv(d, size) { size = size || 46; return '<span class="td-av" style="width:' + size + "px;height:" + size + "px;font-size:" + Math.round(size * 0.36) + "px;background:" + TD_HEX[d.tone] + '">' + V.initials(L(d.name)) + "</span>"; }
     function fmtDur(s) { var m = Math.floor(s / 60), ss = s % 60; return m + ":" + (ss < 10 ? "0" : "") + ss; }
 
@@ -2990,7 +2996,9 @@
     function beginCallTimers() {
       ticker = setInterval(function () { var el = $("#tdTimer"); if (!el) { clearInterval(ticker); return; } el.textContent = fmtDur(Math.round((Date.now() - startT) / 1000)); }, 1000);
       var lines = script();
-      function next() { if (stage !== "call" || sIdx >= lines.length) return; pushChat("doc", lines[sIdx]); sIdx++; sTimer = setTimeout(next, 3800); }
+      // alive() guard: stop the scripted-doctor chain if the call screen was left
+      // via the router (V.mount replaces innerHTML with no teardown hook)
+      function next() { if (stage !== "call" || sIdx >= lines.length || !document.getElementById("tdChat")) return; pushChat("doc", lines[sIdx]); sIdx++; sTimer = setTimeout(next, 3800); }
       sTimer = setTimeout(next, 1400);
     }
     function saveConsult(dur) {

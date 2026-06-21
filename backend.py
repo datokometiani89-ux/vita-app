@@ -48,9 +48,12 @@ def _load():
 
 
 def _save():
+    # atomic write (temp + replace) so a crash mid-write can't truncate the DB
     try:
-        with open(DB_PATH, "w", encoding="utf-8") as f:
+        tmp = DB_PATH + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
             json.dump(_db, f, ensure_ascii=False, indent=2)
+        os.replace(tmp, DB_PATH)
     except Exception:
         pass
 
@@ -64,7 +67,7 @@ def _now():
 
 # --- realtime pub/sub (backs the SSE stream) -------------------------------
 def subscribe(role, uid):
-    q = queue.Queue()
+    q = queue.Queue(maxsize=200)  # bounded: an orphaned (disconnected) subscriber can't grow without limit
     with _lock:
         _subs.setdefault(role, {}).setdefault(uid, set()).add(q)
     return q
@@ -102,7 +105,8 @@ def online_counts():
 # --- demo auth (no passwords; clearly a prototype) -------------------------
 def login(email, role, name):
     role = role if role in ("patient", "doctor", "org") else "patient"
-    uid = "u_" + ((email or role).split("@")[0]) + "_" + role
+    # random suffix so two users sharing an email local-part don't collide onto one event bucket
+    uid = "u_" + ((email or role).split("@")[0]) + "_" + role + "_" + uuid.uuid4().hex[:4]
     token = uuid.uuid4().hex
     with _lock:
         _db["users"][token] = {"uid": uid, "email": email, "role": role, "name": name, "since": _now()}
@@ -124,7 +128,7 @@ def _find(cid):
 
 
 def request_consult(patient):
-    patient = patient or {}
+    patient = patient if isinstance(patient, dict) else {}  # guard: a non-dict body must not crash **patient
     cid = patient.get("id") or ("c_" + uuid.uuid4().hex[:10])
     c = {"id": cid, "status": "waiting", "patient": patient, "created": _now(), "doctor": None}
     with _lock:

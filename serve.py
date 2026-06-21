@@ -185,7 +185,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(data)
 
     def _body(self):
-        n = int(self.headers.get("Content-Length", "0") or "0")
+        try:
+            n = int(self.headers.get("Content-Length", "0") or "0")
+        except (ValueError, TypeError):
+            n = 0
         raw = self.rfile.read(n) if n else b""
         try:
             return json.loads(raw.decode("utf-8")) if raw else {}

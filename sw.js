@@ -1,5 +1,5 @@
 /* VITA service worker — caches the app shell for offline use. */
-var CACHE = "vita-v66";
+var CACHE = "vita-v67";
 var ASSETS = [
   "index.html",
   "app.html",

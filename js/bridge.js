@@ -21,8 +21,10 @@
 
   // --- local transport (BroadcastChannel + storage) ---
   if (bc) bc.onmessage = function (e) { var m = e.data; if (m && m.type) emit(m.type, m.payload); };
+  // storage is only a FALLBACK — if BroadcastChannel exists it already delivers
+  // cross-tab, so listening to both would emit every event twice.
   window.addEventListener("storage", function (e) {
-    if (e.key !== CH || !e.newValue) return;
+    if (bc || e.key !== CH || !e.newValue) return;
     try { var m = JSON.parse(e.newValue); if (m && m.type) emit(m.type, m.payload); } catch (_) {}
   });
   function localSend(type, payload) {
