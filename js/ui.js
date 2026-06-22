@@ -2,42 +2,37 @@
 window.VITA = window.VITA || {};
 
 (function (V) {
-  /* VITA tree mark — recreation of the official logo (from the designer's
-     "VITA LOGO VERSIONS v2-3" PDF): a sunburst FAN of branches above a bold,
-     solid "V" trunk (V for VITA). Recolourable; 100×100 viewBox.
-     NB: a hand recreation — the exact vector still ideally comes from the
-     designer's source .svg/.ai (this machine has no PDF→SVG tooling). */
+  /* VITA logo — the OFFICIAL vector, dropped in verbatim from the designer's
+     vita.svg (Adobe Illustrator export): an organic green blob + a white tree
+     (sunburst fan of branches above a "V" trunk). Brand green #1fac60, off-white
+     #f2f2f2. Paths are the exact source paths; viewBoxes are the measured
+     bounding boxes (icon: 0 0 335.14 315.06 · tree: 49.04 63.8 241.37 243.28). */
+  var L_GREEN = "#1fac60", L_WHITE = "#f2f2f2";
+  var L_BLOB = "M27.89,251.69C-29.29,165.81,9.16,129.03,73.77,42.71c69.03-92.19,236.97-22.38,259.51,88.34,14.68,72.18-60.42,230.42-127.58,170.9-49.5-43.86-129.22,22.7-177.8-50.26";
+  var L_TREE1 = "M290.4,157.95l-11.64-27.78-66.4,33.74c-11.48,5.86-20.04,16.19-23.65,28.57l-19,74.61-18.98-74.61c-3.61-12.38-12.17-22.72-23.65-28.57l-66.4-33.74-11.64,27.78,49.02,19.87-48.37,9.66,5.4,26.84,60.88-19.34,40.92,112.1h25.67l40.92-112.1,60.88,19.34,5.4-26.84-48.37-9.66,49.02-19.87Z";
+  var L_TREE2 = "M190.26,148.43l75.93-46.41-18.19-19.09-50.71,38.62,18.19-53.13-27.03-4.62-18.74,56.56-18.74-56.56-27.03,4.62,21.55,53.13-54.08-38.62-18.17,19.09,75.92,46.41c12.61,7.71,28.48,7.71,41.1,0";
+
+  /* the tree only (transparent bg), recolourable — used as a coloured mark */
   V.treeMark = function (color) {
-    return (
-      // canopy — sunburst fan radiating from the junction (50,52)
-      '<g fill="none" stroke="' + color + '" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M50 52 L50 20"/>' +
-        '<path d="M50 52 L37 23"/><path d="M50 52 L63 23"/>' +
-        '<path d="M50 52 L26 30"/><path d="M50 52 L74 30"/>' +
-        '<path d="M50 52 L19 42"/><path d="M50 52 L81 42"/>' +
-        '<path d="M50 52 L18 54"/><path d="M50 52 L82 54"/>' +
-      "</g>" +
-      // bold "V" trunk (filled chevron)
-      '<path fill="' + color + '" d="M37 52 L50 79 L63 52 L55 52 L50 66 L45 52 Z"/>'
-    );
+    color = color || L_GREEN;
+    return '<path d="' + L_TREE1 + '" fill="' + color + '"/><path d="' + L_TREE2 + '" fill="' + color + '"/>';
   };
-
-  /* tree only (transparent bg) — used inside badges and as a coloured mark */
   V.logo = function (size, color) {
-    size = size || 56; color = color || "#2BA94C";
+    size = size || 56;
     return (
-      '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="VITA">' +
-      V.treeMark(color) + "</svg>"
+      '<svg width="' + size + '" height="' + size + '" viewBox="49.04 63.8 241.37 243.28" xmlns="http://www.w3.org/2000/svg" aria-label="VITA">' +
+      V.treeMark(color || L_GREEN) + "</svg>"
     );
   };
 
-  /* full brandmark — green organic blob with the white tree (primary lockup) */
+  /* full brand icon — official green blob + white tree (primary lockup). A
+     little viewBox padding keeps the blob off the badge edge. */
   V.mark = function (size) {
     size = size || 96;
     return (
-      '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="VITA">' +
-      '<path d="M50 5 C75 5 93 19 95 43 C97 67 87 95 50 95 C15 95 3 67 5 43 C7 19 25 5 50 5 Z" fill="var(--green)"/>' +
-      '<g transform="translate(15,15) scale(0.70)">' + V.treeMark("#ffffff") + "</g>" +
+      '<svg width="' + size + '" height="' + size + '" viewBox="-13 -13 361.14 341.06" xmlns="http://www.w3.org/2000/svg" aria-label="VITA">' +
+      '<path d="' + L_BLOB + '" fill="' + L_GREEN + '"/>' +
+      '<path d="' + L_TREE1 + '" fill="' + L_WHITE + '"/><path d="' + L_TREE2 + '" fill="' + L_WHITE + '"/>' +
       "</svg>"
     );
   };
