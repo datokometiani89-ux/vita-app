@@ -119,9 +119,10 @@
             }).join("") +
           "</div></div>" +
       "</div>" +
-      '<div class="actionbar center"><button class="btn btn-primary" data-next>' + t("next") + " " + V.icon("next") + "</button></div>" +
+      '<div class="actionbar center"><button class="btn btn-primary" data-next>' +
+        (V.state.onboarded ? V.icon("home") + " " + t("goHome") : t("next") + " " + V.icon("next")) + "</button></div>" +
       "</div>",
-      { onMount: function () { $("[data-next]").addEventListener("click", function () { V.go("bodymap"); }); } }
+      { onMount: function () { $("[data-next]").addEventListener("click", function () { V.go(V.state.onboarded ? "home" : "bodymap"); }); } }
     );
 
     function stat(c, num, unit, lbl) {
@@ -176,11 +177,12 @@
           markers.map(function (m) { return '<span class="concern ' + m.sev + '">' + t(m.key) + "</span>"; }).join("") +
         "</div>" +
       "</div>" +
-      '<div class="actionbar center"><button class="btn btn-primary" data-next>' + t("next") + " " + V.icon("next") + "</button></div>" +
+      '<div class="actionbar center"><button class="btn btn-primary" data-next>' +
+        (V.state.onboarded ? V.icon("home") + " " + t("goHome") : t("next") + " " + V.icon("next")) + "</button></div>" +
       "</div>",
       { onMount: function () {
-        $("[data-next]").addEventListener("click", function () { V.go("checkup"); });
-        $("[data-x]").addEventListener("click", function () { V.go("profile"); });
+        $("[data-next]").addEventListener("click", function () { V.go(V.state.onboarded ? "home" : "checkup"); });
+        $("[data-x]").addEventListener("click", function () { V.go(V.state.onboarded ? "home" : "profile"); });
       }}
     );
   };
@@ -263,7 +265,8 @@
         (priority.length ? '<div class="kicker" style="margin-bottom:14px">' + t("cpPriority") + "</div>" + priority.map(card).join("") : "") +
         (rest.length ? '<div class="kicker" style="margin:8px 0 14px">' + t("cpLater") + "</div>" + rest.map(card).join("") : "") +
       "</div>" +
-      '<div class="actionbar center"><button class="btn btn-primary" data-next>' + t("goHome") + " " + V.icon("next") + "</button></div>" +
+      '<div class="actionbar center"><button class="btn btn-primary" data-next>' +
+        (V.state.onboarded ? V.icon("home") + " " + t("goHome") : t("next") + " " + V.icon("next")) + "</button></div>" +
       "</div>",
       { onMount: function () {
         each("[data-cal]", function (b) {
@@ -273,7 +276,7 @@
             V.openClinics(id, item ? item.title : { ka: "ვიზიტი", en: "Visit" });
           });
         });
-        $("[data-next]").addEventListener("click", function () { V.go("goals"); });
+        $("[data-next]").addEventListener("click", function () { V.go(V.state.onboarded ? "home" : "goals"); });
       }}
     );
 
