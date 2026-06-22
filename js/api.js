@@ -48,7 +48,7 @@ window.VITA = window.VITA || {};
               if (!data) return;
               var obj; try { obj = JSON.parse(data); } catch (e) { return; }
               if (ev === "token" && obj.t) { full += obj.t; if (onToken) onToken(obj.t, full); }
-              else if (ev === "error") { if (onError) onError(obj.message); }
+              else if (ev === "error") { if (onError) onError(obj.message); throw new Error(obj.message || "ai error"); }
             });
             return pump();
           });

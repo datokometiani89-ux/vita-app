@@ -414,13 +414,16 @@
             bubble.textContent = full;
             scroll();
           }, function (full) {
+            var reply = (full || acc || "").trim();
+            if (!reply) { if (bubble) bubble.remove(); var ty = $("#typing"); if (ty) ty.remove(); mockReply(text); return; }
             if (bubble) bubble.removeAttribute("id");
-            V.state.chat.push({ role: "vita", text: full || acc });
+            V.state.chat.push({ role: "vita", text: reply });
             V.save();
-          }, function () { /* error event — handled by catch below */ })
+          }, function () { /* error event — rejects the promise → catch below */ })
           .catch(function () {
-            // backend failed mid-stream or unavailable → offline reply
+            // backend failed / AI errored mid-stream → offline reply
             if (bubble) { bubble.remove(); }
+            var ty = $("#typing"); if (ty) ty.remove();
             mockReply(text);
           });
         }
