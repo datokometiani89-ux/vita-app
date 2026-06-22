@@ -164,6 +164,30 @@ def gemini_once(prompt):
     return "".join(p.get("text", "") for p in parts).strip()
 
 
+def gemini_vision(image_b64, mime, prompt):
+    key = os.environ["GEMINI_API_KEY"]
+    url = ("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s"
+           % (GEMINI_MODEL, key))
+    payload = {"contents": [{"role": "user", "parts": [
+        {"text": prompt},
+        {"inline_data": {"mime_type": mime or "image/jpeg", "data": image_b64}},
+    ]}], "generationConfig": {"maxOutputTokens": 500, "temperature": 0.3}}
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
+                                 headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        obj = json.loads(resp.read().decode("utf-8"))
+    parts = obj.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+    return "".join(p.get("text", "") for p in parts).strip()
+
+
+def claude_vision(image_b64, mime, prompt):
+    resp = _claude.messages.create(model=CLAUDE_MODEL, max_tokens=500, messages=[{"role": "user", "content": [
+        {"type": "image", "source": {"type": "base64", "media_type": mime or "image/jpeg", "data": image_b64}},
+        {"type": "text", "text": prompt},
+    ]}])
+    return "".join(b.text for b in resp.content if b.type == "text").strip()
+
+
 # --- HTTP ------------------------------------------------------------------
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **k):
@@ -215,6 +239,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self.handle_chat()
         if path == "/api/interpret":
             return self.handle_interpret()
+        if path == "/api/vision":
+            return self.handle_vision()
         r = backend.handle("POST", path, qs, self._body())
         if r is not None:
             return self._json(r[0], r[1])
@@ -298,6 +324,52 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._json(200, {"summary": text})
         except Exception as e:
             return self._json(502, {"error": str(e)})
+
+    def handle_vision(self):
+        """Food-photo → calorie estimate (multimodal). Returns {name, kcal, items, note}."""
+        body = self._body()
+        if not ai_on():
+            return self._json(503, {"error": _err or "AI unavailable"})
+        img = body.get("image") or ""
+        mime = body.get("mime") or "image/jpeg"
+        if "," in img and img.strip().startswith("data:"):
+            head, img = img.split(",", 1)
+            if "image/" in head:
+                mime = head.split(":", 1)[1].split(";", 1)[0]
+        if not img:
+            return self._json(400, {"error": "no image"})
+        lang = body.get("lang", "ka")
+        lang_line = "Use Georgian for the name." if lang == "ka" else "Use English for the name."
+        prompt = ("You are a nutrition assistant. Estimate the food in this photo and its calories. "
+                  "Return ONLY compact JSON, no markdown: "
+                  '{"name":"short dish name","kcal":<integer total>,'
+                  '"items":[{"name":"item","kcal":<int>}],"note":"one short caveat"}. '
+                  "Estimate a typical single serving. If it is not food, set kcal to 0 and name to 'not food'. " + lang_line)
+        try:
+            text = claude_vision(img, mime, prompt) if _provider == "claude" else gemini_vision(img, mime, prompt)
+            obj = _extract_json(text)
+            if obj is None:
+                return self._json(200, {"name": "", "kcal": 0, "items": [], "note": text[:160], "raw": True})
+            return self._json(200, obj)
+        except Exception as e:
+            return self._json(502, {"error": str(e)})
+
+
+def _extract_json(text):
+    if not text:
+        return None
+    s = text.strip()
+    if s.startswith("```"):
+        s = s.strip("`")
+        if s.lower().startswith("json"):
+            s = s[4:]
+    a, b = s.find("{"), s.rfind("}")
+    if a < 0 or b < a:
+        return None
+    try:
+        return json.loads(s[a:b + 1])
+    except Exception:
+        return None
 
 
 class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):

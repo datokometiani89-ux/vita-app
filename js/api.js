@@ -68,5 +68,16 @@ window.VITA = window.VITA || {};
         return r.json();
       }).then(function (j) { return j.summary; });
     },
+    // food photo → calorie estimate (multimodal). imageDataUrl = "data:image/..;base64,.."
+    vision: function (imageDataUrl, mime) {
+      return fetch("/api/vision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: imageDataUrl, mime: mime, lang: V.lang() }),
+      }).then(function (r) {
+        if (!r.ok) throw new Error("vision unavailable");
+        return r.json();
+      });
+    },
   };
 })(window.VITA);

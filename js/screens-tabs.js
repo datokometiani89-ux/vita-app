@@ -57,6 +57,7 @@
         (V.todayMini ? '<div class="kicker" style="margin:22px 0 10px">' + t("todayK") + "</div>" + V.todayMini() : "") +
         (V.moodHomeCard ? V.moodHomeCard() : "") +
         (V.stepsHomeCard ? V.stepsHomeCard() : "") +
+        (V.foodHomeCard ? V.foodHomeCard() : "") +
         nextScreeningCard() +
         '<div class="kicker" style="margin:22px 0 10px">' + t("areas") + "</div>" +
         '<div class="list-card">' +
@@ -82,6 +83,7 @@
         if (V.wireTodayMini) V.wireTodayMini();
         if (V.wireMoodHome) V.wireMoodHome();
         if (V.wireStepsHome) V.wireStepsHome();
+        if (V.wireFoodHome) V.wireFoodHome();
       }}
     );
 
@@ -1164,6 +1166,7 @@
           tile("heart", "green", "mCare", 'data-go="careplans"'),
           tile("bolt", "blue", "mWorkouts", 'data-go="workouts"'),
           tile("walk", "green", "mSteps", 'data-go="steps"'),
+          tile("food", "yellow", "mFood", 'data-go="food"'),
           tile("drop", "blue", "mWater", 'data-go="water"'),
           tile("calendar", "green", "mCalendar", 'data-go="calendar"'),
           tile("flask", "pink", "mCheckup", 'data-go="checkup"'),
