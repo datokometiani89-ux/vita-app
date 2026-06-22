@@ -3101,6 +3101,96 @@
     paint();
   };
 
+  /* ===================== STEPS TRACKER (pedometer + wearable) ===================== */
+  var STEP_GOAL = 8000;
+  // on-device pedometer: peak-detect the dynamic component of total acceleration
+  function makePedometer(onStep) {
+    var ema = 9.8, hi = false, lastStep = 0;
+    function h(e) {
+      var a = e.accelerationIncludingGravity || e.acceleration; if (!a) return;
+      var m = Math.sqrt((a.x || 0) * (a.x || 0) + (a.y || 0) * (a.y || 0) + (a.z || 0) * (a.z || 0));
+      ema = ema * 0.9 + m * 0.1; var dev = m - ema, now = Date.now();
+      if (!hi && dev > 1.3 && now - lastStep > 280) { hi = true; lastStep = now; onStep(); }
+      else if (hi && dev < 0.4) { hi = false; }
+    }
+    return {
+      start: function () {
+        if (typeof DeviceMotionEvent === "undefined") return Promise.resolve(false);
+        if (typeof DeviceMotionEvent.requestPermission === "function") {
+          return DeviceMotionEvent.requestPermission().then(function (s) { if (s === "granted") { window.addEventListener("devicemotion", h); return true; } return false; }).catch(function () { return false; });
+        }
+        window.addEventListener("devicemotion", h); return Promise.resolve(true);
+      },
+      stop: function () { window.removeEventListener("devicemotion", h); },
+    };
+  }
+  V.stepsToday = function () {
+    var w = W(), st = (w.steps && w.steps[today()]) || 0;
+    var wear = (V.wearableConnected && V.wearableConnected()) ? (V.wearableCombined().steps || 0) : 0;
+    return Math.max(st, wear);
+  };
+  V.screens.steps = function () {
+    var w = W(); w.steps = w.steps || {};
+    var live = 0, ped = null, running = false;
+    function base() { return Math.max((w.steps[today()] || 0), (V.wearableConnected && V.wearableConnected()) ? (V.wearableCombined().steps || 0) : 0); }
+    function count() { return base() + live; }
+    function saveCount() { w.steps[today()] = count(); if (count() >= STEP_GOAL) V.awardOnce && V.awardOnce("steps:" + today(), V.POINTS.task, "task"); V.save(); }
+
+    function ring(pct) {
+      var r = 54, C = 2 * Math.PI * r, len = Math.min(1, pct / 100) * C;
+      return '<svg viewBox="0 0 132 132" class="stp-ring"><circle cx="66" cy="66" r="' + r + '" fill="none" stroke="var(--field)" stroke-width="12"/>' +
+        '<circle cx="66" cy="66" r="' + r + '" fill="none" stroke="var(--green)" stroke-width="12" stroke-linecap="round" stroke-dasharray="' + len + " " + (C - len) + '" transform="rotate(-90 66 66)"/></svg>';
+    }
+    function bars7() {
+      var days = []; for (var i = 6; i >= 0; i--) { var d = new Date(today()); d.setDate(d.getDate() - i); days.push(isoOf(d)); }
+      var vals = days.map(function (dd) { return w.steps[dd] || 0; }); vals[6] = count();
+      var max = Math.max.apply(null, vals.concat([STEP_GOAL])) * 1.1 || 1, ww = 320, h = 110, padX = 14, n = 7, bw = (ww - 2 * padX) / n * 0.56;
+      var gy = 14 + (1 - STEP_GOAL / max) * (h - 30);
+      return '<svg viewBox="0 0 ' + ww + " " + h + '" class="bar-chart"><line x1="' + padX + '" y1="' + gy + '" x2="' + (ww - padX) + '" y2="' + gy + '" stroke="var(--muted)" stroke-dasharray="4 4" stroke-width="1.1" opacity=".5"/>' +
+        vals.map(function (v, i) { var x = padX + (i + 0.5) * ((ww - 2 * padX) / n) - bw / 2, bh = (v / max) * (h - 30), y = h - 16 - bh;
+          return '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '" rx="4" fill="var(--green)" opacity="' + (i === 6 ? 1 : 0.4) + '"/>' +
+            (i === 6 ? '<text x="' + (x + bw / 2) + '" y="' + (y - 5) + '" text-anchor="middle" class="ch-val" fill="var(--green)">' + v + "</text>" : "");
+        }).join("") + "</svg>";
+    }
+    function render() {
+      var c = count(), pct = Math.round(c / STEP_GOAL * 100);
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          head("walk", "green", "stpTitle") +
+          '<p class="s-sub">' + t("stpSub") + "</p>" +
+          '<div class="card-soft stp-card"><div class="stp-ringwrap">' + ring(pct) + '<div class="stp-c"><b id="stpCount">' + c.toLocaleString() + "</b><small>/ " + STEP_GOAL.toLocaleString() + " " + t("stpSteps") + "</small></div></div>" +
+            ((V.wearableConnected && V.wearableConnected()) ? '<div class="stp-wear">' + V.icon("bolt") + " " + t("stpFromWear") + "</div>" : "") +
+            '<button class="btn btn-primary" id="stpToggle" style="width:100%;margin-top:6px">' + V.icon("walk") + " " + t("stpStart") + "</button>" +
+            '<div id="stpMsg"></div>' +
+          "</div>" +
+          '<div class="section-head"><h3>' + t("stpWeek") + "</h3></div><div class='card-soft' style='padding:14px'>" + bars7() + "</div>" +
+          '<p class="hr-multi-note">' + t("stpNote") + "</p>" +
+        "</div>" +
+        V.tabbar("home") + "</div>",
+        { onMount: function () {
+          backX(); $("[data-x]").addEventListener("click", function () { if (ped) ped.stop(); });
+          $("#stpToggle").addEventListener("click", function () {
+            var btn = this;
+            if (running) { running = false; if (ped) ped.stop(); saveCount(); btn.innerHTML = V.icon("walk") + " " + t("stpStart"); return; }
+            ped = makePedometer(function () { live++; var el = $("#stpCount"); if (el) el.textContent = count().toLocaleString(); });
+            ped.start().then(function (ok) {
+              if (!ok) { $("#stpMsg").innerHTML = warn(t("stpNoSensor")); return; }
+              running = true; btn.innerHTML = V.icon("check") + " " + t("stpStop"); $("#stpMsg").innerHTML = "";
+            });
+          });
+        } }
+      );
+    }
+    render();
+  };
+  V.stepsHomeCard = function () {
+    var c = V.stepsToday(), pct = Math.min(100, Math.round(c / STEP_GOAL * 100));
+    return '<button class="card-soft stp-home" id="stepsHome"><span class="stp-home__ring" style="background:conic-gradient(var(--green) ' + (pct * 3.6) + 'deg, var(--field) 0)"><i>' + V.icon("walk") + "</i></span>" +
+      '<span class="stp-home__t"><b>' + c.toLocaleString() + " " + t("stpSteps") + "</b><small>" + pct + "% / " + STEP_GOAL.toLocaleString() + "</small></span>" + V.icon("next") + "</button>";
+  };
+  V.wireStepsHome = function () { var c = document.getElementById("stepsHome"); if (c) c.addEventListener("click", function () { V.go("steps"); }); };
+
   /* ---------- small shared helpers for the new screens ---------- */
   function head(icon, tone, titleKey) {
     return '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' +

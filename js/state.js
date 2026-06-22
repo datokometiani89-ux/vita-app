@@ -82,6 +82,8 @@ window.VITA = window.VITA || {};
       quit: null,         // { date, perDay, pricePack, cigsPerPack }  smoking-cessation start
       risk: null,         // { findrisc:{date,score,band} }  last risk-calculator results
       posture: {},        // { "2026-06-19": n } posture-break sessions per day
+      steps: {},          // { "2026-06-22": n } steps per day (pedometer + wearable)
+      food: [],           // [{date, name, kcal, photo?}] meal/calorie log
     },
   };
 

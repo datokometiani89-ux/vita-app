@@ -699,6 +699,18 @@ window.VITA = window.VITA || {};
     mPlus: { ka: "VITA+", en: "VITA+" },
     mWearable: { ka: "მოწყობილობა", en: "Wearable" },
     mTelemed: { ka: "ონლაინ ექიმი", en: "Online doctor" },
+    mSteps: { ka: "ნაბიჯები", en: "Steps" },
+    mFood: { ka: "კალორიები", en: "Calories" },
+    /* steps tracker */
+    stpTitle: { ka: "ნაბიჯები", en: "Steps" },
+    stpSub: { ka: "დღიური ნაბიჯები — ტელეფონის სენსორით ან მობმული მოწყობილობიდან.", en: "Daily steps — from your phone's motion sensor or a connected wearable." },
+    stpSteps: { ka: "ნაბიჯი", en: "steps" },
+    stpStart: { ka: "დათვლის დაწყება", en: "Start counting" },
+    stpStop: { ka: "გაჩერება & შენახვა", en: "Stop & save" },
+    stpWeek: { ka: "ბოლო 7 დღე", en: "Last 7 days" },
+    stpFromWear: { ka: "სინქდება მობმული მოწყობილობიდან", en: "Synced from your wearable" },
+    stpNoSensor: { ka: "მოძრაობის სენსორი მიუწვდომელია — სცადე ტელეფონზე, ნებართვით.", en: "Motion sensor unavailable — try on a phone, with permission." },
+    stpNote: { ka: "ტელეფონის pedometer აფასებს ნაბიჯებს აქსელერომეტრით — სავარჯიშო, არა ზუსტი მოწყობილობა.", en: "The phone pedometer estimates steps from the accelerometer — wellness, not a precise device." },
     /* telemedicine */
     tdTitle: { ka: "ონლაინ ექიმი", en: "Online doctor" },
     tdSub: { ka: "ისაუბრე ექიმთან ვიდეო-ზარით — რეცეპტი და რჩევა აპიდან.", en: "Talk to a doctor over video — prescription and advice in-app." },
