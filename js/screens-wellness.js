@@ -2854,13 +2854,14 @@
     var w = W(), d = today(), score = 70, factors = [];
     function add(key, icon, adj, val) { score += adj; factors.push({ key: key, icon: icon, adj: Math.round(adj), val: val }); }
     var sl = (w.sleep || []).slice(-1)[0];
-    if (sl && daysSince(sl.date) <= 1) { var h = sl.hours, a = h >= 7 && h <= 9 ? 12 : h >= 6 ? 4 : h >= 5 ? -6 : -14; a += (sl.quality - 3) * 2.5; add("rdSleep", "moon", a, h + t("slHours")); }
+    if (sl && daysSince(sl.date) <= 1) { var h = sl.hours, a = h >= 7 && h <= 9 ? 12 : h >= 6 ? 4 : h >= 5 ? -6 : -14; var sq = (typeof sl.quality === "number" && isFinite(sl.quality)) ? sl.quality : 3; a += (sq - 3) * 2.5; add("rdSleep", "moon", a, h + t("slHours")); }
     var mo = (w.mood || {})[d];
     if (mo) add("rdMood", "smile", (mo.score - 3) * 5, null);
     var q = V.dailyQuests ? V.dailyQuests().filter(function (x) { return x.done; }).length : 0;
     add("rdActivity", "walk", (q - 2) * 3, q + "/5");
     var hrArr = (w.hr || []), hrRec = hrArr.length ? hrArr[hrArr.length - 1] : null, hrBase = V.hrBaseline();
     if (hrRec && daysSince(hrRec.date) <= 7 && hrBase) { var dev = hrRec.bpm - hrBase, a2 = dev <= 3 ? 4 : dev <= 8 ? -3 : -9; add("rdHR", "heart", a2, (dev >= 0 ? "+" : "") + dev + " bpm"); }
+    if (!isFinite(score)) score = 70;
     score = Math.max(25, Math.min(99, Math.round(score)));
     var band = score >= 75 ? { k: "rdReady", tone: "green" } : score >= 50 ? { k: "rdModerate", tone: "yellow" } : { k: "rdRecover", tone: "crimson" };
     return { score: score, band: band, factors: factors };

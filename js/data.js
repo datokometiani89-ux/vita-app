@@ -156,7 +156,7 @@ window.VITA = window.VITA || {};
     // feed resting-HR + sleep logs once/day so readiness / bio-age use them
     var c = V.wearableCombined(), w = (V.state.wellness = V.state.wellness || {}), d = V.todayISO();
     w.hr = w.hr || []; if (!w.hr.some(function (r) { return r.date === d; })) w.hr.push({ date: d, bpm: c.restHR });
-    w.sleep = w.sleep || []; if (!w.sleep.some(function (r) { return r.date === d; })) w.sleep.push({ date: d, hours: c.sleepH, quality: c.sleepH >= 7 ? "great" : "ok" });
+    w.sleep = w.sleep || []; if (!w.sleep.some(function (r) { return r.date === d; })) w.sleep.push({ date: d, hours: c.sleepH, quality: c.sleepH >= 7 ? 4 : 3 });
     V.save();
   };
   V.disconnectWearable = function (source) {
