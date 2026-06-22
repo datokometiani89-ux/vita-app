@@ -126,6 +126,9 @@ All wellness-grade + disclaimers; pure analysis fns unit-tested; camera/mic path
 
 **Hard rules from research:** never label camera-vitals or AI triage as clinical/diagnostic — wellness/informational + disclaimer; do NOT cite any symptom-checker accuracy %; camera-PPG degrades on dark skin (fairness caveat). Open: Georgian medical-device regulation + whether the local market supports B2B2C subsidized telehealth.
 
+## ▶ Standalone pages (v70)
+`test.html` (+ `js/selftest.js`) — self-test: 18 assertions over the pure analysis fns (ppgRR/ppgHRV/ppgSpO2, scanScore, reactionBand, healthAge, wearableCombined…) + a real-device validation guide. `pitch.html` — bilingual investor one-pager (problem/solution/wedge/3-app platform/business model/market/roadmap/ask; figures marked `[fill]`, print/PDF button). Both reuse `V.logo/icon/t`, load `base.css`.
+
 ## ▶ Marketing landing (pitch narrative, v69)
 `index.html` (+ `css/landing.css`) — self-contained inline-JS page (own `copy`/`render`, reuses `V.icon/iconBox/logo/t`). Tells the platform story: hero → **AI-scan wedge band** ("Your phone is now a health scanner" · heart/skin/voice/cognition) → 7-step journey → features → **"One platform, three apps"** section linking `app.html` (patient) · `doctor.html` (clinician) · `org.html` (business) → CTA. NB: the landing does NOT load `css/app.css`, so the `.icon-box` base+tone styles are duplicated into `landing.css`. Landing assets carry their own `?v=NN` (was unversioned).
 
