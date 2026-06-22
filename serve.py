@@ -28,6 +28,7 @@ Endpoints:
 
 import json
 import os
+import time
 import queue
 import http.server
 import socketserver
@@ -44,6 +45,10 @@ HOST = os.environ.get("HOST", "127.0.0.1")
 
 CLAUDE_MODEL = os.environ.get("VITA_CLAUDE_MODEL", "claude-opus-4-8")
 GEMINI_MODEL = os.environ.get("VITA_GEMINI_MODEL", "gemini-2.0-flash")
+# free-tier quota is per-model, so on a 429 we fall back to sibling models that
+# have their own buckets — this keeps the chat alive under rate limits.
+GEMINI_FALLBACKS = [m.strip() for m in os.environ.get(
+    "VITA_GEMINI_FALLBACKS", "gemini-2.0-flash-lite,gemini-1.5-flash,gemini-1.5-flash-8b").split(",") if m.strip()]
 
 # --- provider resolution ---------------------------------------------------
 _claude = None
@@ -121,63 +126,92 @@ def claude_stream(system, messages, emit):
             emit(text)
 
 
-def gemini_stream(system, messages, emit):
+def _gemini_models():
+    seen, out = set(), []
+    for m in [GEMINI_MODEL] + GEMINI_FALLBACKS:
+        if m and m not in seen:
+            seen.add(m); out.append(m)
+    return out
+
+
+def _gemini_open(model, payload, stream):
     key = os.environ["GEMINI_API_KEY"]
-    url = ("https://generativelanguage.googleapis.com/v1beta/models/%s:streamGenerateContent?alt=sse&key=%s"
-           % (GEMINI_MODEL, key))
+    verb = "streamGenerateContent?alt=sse&" if stream else "generateContent?"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/%s:%skey=%s" % (model, verb, key)
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
+                                 headers={"Content-Type": "application/json"})
+    return urllib.request.urlopen(req, timeout=60)
+
+
+def gemini_stream(system, messages, emit):
     payload = {
         "system_instruction": {"parts": [{"text": system}]},
         "contents": to_gemini(messages),
         "generationConfig": {"maxOutputTokens": 1024, "temperature": 0.7},
     }
-    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
-                                 headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        for raw in resp:
-            line = raw.decode("utf-8", "ignore").strip()
-            if not line.startswith("data:"):
-                continue
-            chunk = line[5:].strip()
-            if not chunk or chunk == "[DONE]":
-                continue
+    last = None
+    for model in _gemini_models():
+        for attempt in range(1):
             try:
-                obj = json.loads(chunk)
-                for cand in obj.get("candidates", []):
-                    for part in cand.get("content", {}).get("parts", []):
-                        if part.get("text"):
-                            emit(part["text"])
-            except Exception:
-                continue
+                with _gemini_open(model, payload, True) as resp:  # 429 raises here, before any emit
+                    for raw in resp:
+                        line = raw.decode("utf-8", "ignore").strip()
+                        if not line.startswith("data:"):
+                            continue
+                        chunk = line[5:].strip()
+                        if not chunk or chunk == "[DONE]":
+                            continue
+                        try:
+                            obj = json.loads(chunk)
+                            for cand in obj.get("candidates", []):
+                                for part in cand.get("content", {}).get("parts", []):
+                                    if part.get("text"):
+                                        emit(part["text"])
+                        except Exception:
+                            continue
+                return  # this model succeeded
+            except urllib.error.HTTPError as e:
+                last = e
+                if e.code == 429:
+                    time.sleep(0.3); continue   # retry, then fall to next model
+                if e.code in (400, 404):
+                    break                                       # model unavailable → next model
+                raise
+    if last:
+        raise last
+
+
+def _gemini_nonstream(payload):
+    last = None
+    for model in _gemini_models():
+        for attempt in range(1):
+            try:
+                with _gemini_open(model, payload, False) as resp:
+                    obj = json.loads(resp.read().decode("utf-8"))
+                parts = obj.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+                return "".join(p.get("text", "") for p in parts).strip()
+            except urllib.error.HTTPError as e:
+                last = e
+                if e.code == 429:
+                    time.sleep(0.3); continue
+                if e.code in (400, 404):
+                    break
+                raise
+    if last:
+        raise last
+    return ""
 
 
 def gemini_once(prompt):
-    key = os.environ["GEMINI_API_KEY"]
-    url = ("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s"
-           % (GEMINI_MODEL, key))
-    payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}],
-               "generationConfig": {"maxOutputTokens": 600}}
-    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
-                                 headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        obj = json.loads(resp.read().decode("utf-8"))
-    parts = obj.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-    return "".join(p.get("text", "") for p in parts).strip()
+    return _gemini_nonstream({"contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                              "generationConfig": {"maxOutputTokens": 600}})
 
 
 def gemini_vision(image_b64, mime, prompt):
-    key = os.environ["GEMINI_API_KEY"]
-    url = ("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s"
-           % (GEMINI_MODEL, key))
-    payload = {"contents": [{"role": "user", "parts": [
+    return _gemini_nonstream({"contents": [{"role": "user", "parts": [
         {"text": prompt},
         {"inline_data": {"mime_type": mime or "image/jpeg", "data": image_b64}},
-    ]}], "generationConfig": {"maxOutputTokens": 500, "temperature": 0.3}}
-    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
-                                 headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        obj = json.loads(resp.read().decode("utf-8"))
-    parts = obj.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-    return "".join(p.get("text", "") for p in parts).strip()
+    ]}], "generationConfig": {"maxOutputTokens": 500, "temperature": 0.3}})
 
 
 def claude_vision(image_b64, mime, prompt):
