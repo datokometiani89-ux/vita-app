@@ -51,6 +51,9 @@ GEMINI_MODEL = os.environ.get("VITA_GEMINI_MODEL", "gemini-2.0-flash")
 # Each has its own free-tier quota bucket, so falling across them survives a 429.
 GEMINI_FALLBACKS = [m.strip() for m in os.environ.get(
     "VITA_GEMINI_FALLBACKS", "gemini-2.5-flash,gemini-2.0-flash-lite,gemini-2.5-flash-lite").split(",") if m.strip()]
+# When a model returns 429 we park it here (model -> epoch when it's usable again)
+# so we don't waste an attempt re-hitting a throttled model on every request.
+_MODEL_COOLDOWN = {}
 
 # --- provider resolution ---------------------------------------------------
 _claude = None
@@ -133,7 +136,44 @@ def _gemini_models():
     for m in [GEMINI_MODEL] + GEMINI_FALLBACKS:
         if m and m not in seen:
             seen.add(m); out.append(m)
-    return out
+    now = time.time()
+    ready = [m for m in out if _MODEL_COOLDOWN.get(m, 0) <= now]
+    return ready or out   # if every model is cooling down, still try them all
+
+
+def _note_429(model, e):
+    """Read Google's 429 body for the retry delay + which quota was hit, and park
+    the model on a cooldown. Returns (delay_seconds, quota_metric)."""
+    delay, metric = 30, ""
+    try:
+        body = json.loads(e.read().decode("utf-8", "ignore"))
+        for d in body.get("error", {}).get("details", []):
+            ty = d.get("@type", "")
+            if "RetryInfo" in ty and d.get("retryDelay"):
+                try:
+                    delay = int(float(str(d["retryDelay"]).rstrip("s")))
+                except Exception:
+                    pass
+            if "QuotaFailure" in ty:
+                for v in d.get("violations", []):
+                    # quotaId carries the window (…PerDay… / …PerMinute…); prefer it.
+                    metric = v.get("quotaId") or v.get("quotaMetric") or metric
+    except Exception:
+        pass
+    delay = min(max(delay, 5), 300)
+    _MODEL_COOLDOWN[model] = time.time() + delay
+    return delay, metric
+
+
+def _raise_gemini(last, q429):
+    """Raise the most useful error after the whole fallback chain failed."""
+    if last is None:
+        return
+    if getattr(last, "code", None) == 429 and q429:
+        delay, metric = q429
+        per = "per-day" if "Day" in (metric or "") else ("per-minute" if "Minute" in (metric or "") else "rate")
+        raise RuntimeError("Gemini free-tier quota reached (%s limit) — try again in ~%ss." % (per, delay))
+    raise last
 
 
 def _better_err(prev, e):
@@ -163,7 +203,7 @@ def gemini_stream(system, messages, emit):
         "contents": to_gemini(messages),
         "generationConfig": {"maxOutputTokens": 1024, "temperature": 0.7},
     }
-    last = None
+    last = None; q429 = None
     for model in _gemini_models():
         try:
             with _gemini_open(model, payload, True) as resp:  # 429/404 raises here, before any emit
@@ -186,16 +226,15 @@ def gemini_stream(system, messages, emit):
         except urllib.error.HTTPError as e:
             last = _better_err(last, e)
             if e.code == 429:
-                time.sleep(0.3)
-            if e.code in (400, 404, 429):
-                continue                                        # model unavailable/rate-limited → next model
+                q429 = _note_429(model, e); continue           # park it, try next model
+            if e.code in (400, 404):
+                continue                                        # model unavailable → next model
             raise
-    if last:
-        raise last
+    _raise_gemini(last, q429)
 
 
 def _gemini_nonstream(payload):
-    last = None
+    last = None; q429 = None
     for model in _gemini_models():
         try:
             with _gemini_open(model, payload, False) as resp:
@@ -205,12 +244,11 @@ def _gemini_nonstream(payload):
         except urllib.error.HTTPError as e:
             last = _better_err(last, e)
             if e.code == 429:
-                time.sleep(0.3)
-            if e.code in (400, 404, 429):
+                q429 = _note_429(model, e); continue
+            if e.code in (400, 404):
                 continue
             raise
-    if last:
-        raise last
+    _raise_gemini(last, q429)
     return ""
 
 
