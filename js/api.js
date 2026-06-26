@@ -75,8 +75,15 @@ window.VITA = window.VITA || {};
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: imageDataUrl, mime: mime, lang: V.lang() }),
       }).then(function (r) {
-        if (!r.ok) throw new Error("vision unavailable");
-        return r.json();
+        if (r.ok) return r.json();
+        // surface WHY it failed so the UI can say "busy, try again" vs "unavailable".
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          var msg = (j && j.error) || ("vision unavailable (" + r.status + ")");
+          var e = new Error(msg);
+          e.status = r.status;
+          e.busy = r.status === 429 || r.status === 502 || r.status === 503 || /429|quota|rate|too many|overload|busy/i.test(msg);
+          throw e;
+        });
       });
     },
   };

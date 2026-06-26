@@ -1731,12 +1731,35 @@
 .fd-items { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
 .fd-items span { font-size: 12px; color: var(--muted); background: var(--field); border-radius: 99px; padding: 3px 9px; }
 .fd-note { font-size: 12.5px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
-.fd-manual { margin-top: 10px; }
-.fd-mrow { display: flex; gap: 8px; }
-.fd-mrow .field { flex: 1; }
-.fd-quick { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
-.fd-chip { font-size: 12.5px; border: 1.5px solid var(--line); border-radius: 99px; padding: 6px 12px; background: var(--card); color: var(--ink-2); cursor: pointer; }
-.fd-chip:hover { border-color: var(--green); } .fd-chip b { color: var(--ink); margin-left: 3px; }
+.fd-failbox { margin-top: 10px; border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: 12px 14px; background: var(--field); }
+.fd-failbox .fd-note { margin: 0 0 10px; }
+.fd-failbox .btn { width: 100%; }
+.fd-failbox .btn:last-child { margin-bottom: 0; }
+
+/* always-visible manual "add food" card */
+.fd-add { padding: 14px 16px; margin-top: 12px; }
+.fd-addhead { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 11px; }
+.fd-addhead svg { width: 17px; color: #d99416; }
+.fd-search { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 0 12px; background: var(--field); }
+.fd-search svg { width: 17px; color: var(--muted); flex: none; }
+.fd-search input { flex: 1; border: 0; background: none; outline: none; padding: 11px 0; font-size: 14.5px; color: var(--ink); font-family: inherit; }
+.fd-portion { display: flex; align-items: center; gap: 6px; margin: 11px 0 4px; }
+.fd-portion__l { font-size: 12px; color: var(--muted); margin-right: 2px; }
+.fd-pbtn { flex: 1; padding: 7px 0; border: 1.5px solid var(--line); border-radius: 99px; background: var(--card); color: var(--ink-2); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.fd-pbtn.on { border-color: #e0a92e; background: rgba(224,169,46,.12); color: #b6790f; }
+.fd-results { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; max-height: 268px; overflow-y: auto; }
+.fd-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: var(--r-md); background: var(--card); cursor: pointer; }
+.fd-row:hover, .fd-row:active { border-color: #e0a92e; background: rgba(224,169,46,.07); }
+.fd-row__n { flex: 1; font-size: 14px; color: var(--ink); }
+.fd-row__k { font-size: 13px; font-weight: 700; color: #d99416; white-space: nowrap; }
+.fd-row__p { display: flex; flex: none; }
+.fd-row__p svg { width: 17px; color: var(--muted); }
+.fd-empty { font-size: 12.5px; color: var(--muted); text-align: center; padding: 14px 4px; line-height: 1.5; }
+.fd-custom { display: flex; gap: 8px; margin-top: 4px; }
+.fd-custom .field { flex: 1; min-width: 0; }
+.fd-custom #fdKcal { max-width: 92px; flex: none; }
+.fd-custom .btn { flex: none; padding: 0 16px; }
+.fd-custom .btn svg { width: 18px; }
 .fd-del { color: var(--muted); flex: none; } .fd-del svg { width: 16px; }
 
 .td-docapp { display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 8px; padding: 12px; border: 1.5px dashed var(--line); border-radius: var(--r-md); color: var(--green-dark); font-size: 13.5px; font-weight: 600; }

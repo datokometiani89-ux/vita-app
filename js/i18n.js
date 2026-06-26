@@ -729,6 +729,12 @@ window.VITA = window.VITA || {};
     fdMeals: { ka: "დღევანდელი კვება", en: "Today's meals" },
     fdNote: { ka: "AI შეფასებაა, არა ზუსტი გაზომვა — ულუფა და მომზადება ცვლის კალორიას.", en: "An AI estimate, not an exact measure — portion and preparation change the calories." },
     fdAdded: { ka: "დაემატა ✓", en: "Added ✓" },
+    fdAddFood: { ka: "დაამატე საჭმელი", en: "Add food" },
+    fdSearch: { ka: "მოძებნე საჭმელი…", en: "Search food…" },
+    fdPortion: { ka: "ულუფა", en: "Portion" },
+    fdNoMatch: { ka: "ვერ მოიძებნა — ჩაწერე სახელი და კალორია ქვემოთ.", en: "No match — type a name & calories below." },
+    fdBusy: { ka: "AI ამჟამად დატვირთულია — სცადე ისევ ან დაამატე ხელით ქვემოთ.", en: "AI is busy right now — try again, or add it manually below." },
+    fdRetry: { ka: "თავიდან ცადე AI", en: "Try AI again" },
     /* telemedicine */
     tdTitle: { ka: "ონლაინ ექიმი", en: "Online doctor" },
     tdSub: { ka: "ისაუბრე ექიმთან ვიდეო-ზარით — რეცეპტი და რჩევა აპიდან.", en: "Talk to a doctor over video — prescription and advice in-app." },

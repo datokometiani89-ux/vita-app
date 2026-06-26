@@ -60,6 +60,7 @@ window.VITA = window.VITA || {};
     chat: P('<path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12Z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/>'),
     progress: P('<path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/>'),
     plus: P('<path d="M12 5v14M5 12h14"/>'),
+    search: P('<circle cx="11" cy="11" r="7"/><path d="M20.5 20.5 16 16"/>'),
     back: P('<path d="M15 5l-7 7 7 7"/>'),
     next: P('<path d="M5 12h13M13 6l6 6-6 6"/>'),
     check: P('<path d="M4.5 12.5 10 18 19.5 7"/>'),

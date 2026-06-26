@@ -3194,18 +3194,61 @@
 
   /* ===================== FOOD / CALORIES (photo → AI estimate) ===================== */
   var FOOD_GOAL = 2000;
-  var QUICK_FOODS = [
-    { name: { ka: "ვაშლი", en: "Apple" }, kcal: 95 }, { name: { ka: "ბანანი", en: "Banana" }, kcal: 105 },
-    { name: { ka: "ყავა რძით", en: "Latte" }, kcal: 120 }, { name: { ka: "სალათი", en: "Salad" }, kcal: 180 },
-    { name: { ka: "სენდვიჩი", en: "Sandwich" }, kcal: 350 }, { name: { ka: "ბრინჯი ქათამით", en: "Rice & chicken" }, kcal: 480 },
+  // Built-in food database (Georgian staples + common items) so manual logging
+  // works well even when the AI-vision quota is exhausted. pop = show in the
+  // shortlist before the user has typed anything. kcal = typical single serving.
+  var FOOD_DB = [
+    { ka: "ვაშლი", en: "Apple", kcal: 95, pop: 1 },
+    { ka: "ბანანი", en: "Banana", kcal: 105, pop: 1 },
+    { ka: "ფორთოხალი", en: "Orange", kcal: 62 },
+    { ka: "მსხალი", en: "Pear", kcal: 100 },
+    { ka: "ყურძენი (მტევანი)", en: "Grapes (bunch)", kcal: 110 },
+    { ka: "კვერცხი მოხარშული", en: "Egg (boiled)", kcal: 78 },
+    { ka: "ომლეტი", en: "Omelette", kcal: 220 },
+    { ka: "შვრიის ფაფა", en: "Oatmeal", kcal: 150 },
+    { ka: "იოგურტი", en: "Yogurt", kcal: 150 },
+    { ka: "ხაჭო", en: "Cottage cheese", kcal: 120 },
+    { ka: "ყველი (30გ)", en: "Cheese (30g)", kcal: 110 },
+    { ka: "პური (ნაჭერი)", en: "Bread (slice)", kcal: 80 },
+    { ka: "ბრინჯი (ჭიქა)", en: "Rice (cup)", kcal: 200 },
+    { ka: "მაკარონი", en: "Pasta", kcal: 220 },
+    { ka: "კარტოფილი", en: "Potato", kcal: 160 },
+    { ka: "სალათი", en: "Salad", kcal: 180, pop: 1 },
+    { ka: "ბერძნული სალათი", en: "Greek salad", kcal: 230 },
+    { ka: "ქათამი გრილზე (100გ)", en: "Grilled chicken (100g)", kcal: 165, pop: 1 },
+    { ka: "საქონლის ხორცი (100გ)", en: "Beef (100g)", kcal: 250 },
+    { ka: "თევზი (100გ)", en: "Fish (100g)", kcal: 200 },
+    { ka: "სუპი", en: "Soup", kcal: 150 },
+    { ka: "ხაჭაპური (ნაჭერი)", en: "Khachapuri (slice)", kcal: 380, pop: 1 },
+    { ka: "ხინკალი (1 ც)", en: "Khinkali (1 pc)", kcal: 80, pop: 1 },
+    { ka: "ლობიო", en: "Lobio (beans)", kcal: 250 },
+    { ka: "მწვადი (შამფური)", en: "Mtsvadi (skewer)", kcal: 300 },
+    { ka: "ბადრიჯანი ნიგვზით", en: "Eggplant with walnut", kcal: 250 },
+    { ka: "ფხალი", en: "Pkhali", kcal: 150 },
+    { ka: "სენდვიჩი", en: "Sandwich", kcal: 350, pop: 1 },
+    { ka: "ჰამბურგერი", en: "Hamburger", kcal: 550 },
+    { ka: "პიცა (ნაჭერი)", en: "Pizza (slice)", kcal: 285 },
+    { ka: "ჩიფსი", en: "Chips", kcal: 150 },
+    { ka: "თხილეული (მუჭა)", en: "Nuts (handful)", kcal: 170 },
+    { ka: "შოკოლადი (ბატონი)", en: "Chocolate bar", kcal: 230 },
+    { ka: "ნაყინი", en: "Ice cream", kcal: 200 },
+    { ka: "ნამცხვარი (ნაჭერი)", en: "Cake (slice)", kcal: 350 },
+    { ka: "ყავა რძით", en: "Latte", kcal: 120, pop: 1 },
+    { ka: "ყავა შავი", en: "Black coffee", kcal: 5 },
+    { ka: "ჩაი", en: "Tea", kcal: 2 },
+    { ka: "ფორთოხლის წვენი", en: "Orange juice", kcal: 110 },
+    { ka: "რძე (ჭიქა)", en: "Milk (cup)", kcal: 120 },
+    { ka: "წყალი", en: "Water", kcal: 0 },
   ];
+  function foodName(f) { return V.lang() === "ka" ? f.ka : f.en; }
+  function multLabel(m) { return m === 0.5 ? "½" : m === 1.5 ? "1½" : String(m); }
   V.foodToday = function () {
     var f = (W().food || []).filter(function (x) { return x.date === today(); });
     return f.reduce(function (a, x) { return a + (x.kcal || 0); }, 0);
   };
   V.screens.food = function () {
     var w = W(); w.food = w.food || [];
-    var dataUrl = null, est = null;
+    var dataUrl = null, est = null, query = "", mult = 1;   // query/mult drive the manual add UI
 
     function todayList() { return w.food.filter(function (x) { return x.date === today(); }); }
     function total() { return V.foodToday(); }
@@ -3228,42 +3271,81 @@
       img.src = url;
     }
     function estimate() {
-      var out = $("#fdOut"); if (!dataUrl) return;
+      var out = $("#fdOut"); if (!dataUrl || !out) return;
       out.innerHTML = '<div class="scn-rep-load">' + V.icon("sparkle") + " " + t("fdEstimating") + "</div>";
       var done = false;
-      function manual() { if (done) return; done = true; out.innerHTML = manualBox(t("fdManualHint")); wireManual(); }
-      if (!V.api || !V.api.vision) { manual(); return; }
+      function fail(hint, retry) {
+        if (done) return; done = true;
+        out.innerHTML = '<div class="fd-failbox fade-in"><p class="fd-note">' + esc(hint) + "</p>" +
+          (retry ? '<button class="btn btn-ghost" id="fdRetry">' + V.icon("sparkle") + " " + t("fdRetry") + "</button>" : "") + "</div>";
+        var r = $("#fdRetry"); if (r) r.addEventListener("click", function () { done = false; estimate(); });
+      }
+      if (!V.api || !V.api.vision) { fail(t("fdManualHint")); return; }
       V.api.ready().then(function (on) {
         if (done) return;
-        if (!on) { manual(); return; }
+        if (!on) { fail(t("fdManualHint")); return; }
         V.api.vision(dataUrl).then(function (j) {
           if (done) return; done = true;
           var kcal = Math.round(j && j.kcal) || 0, name = (j && j.name) || "";
-          if (!kcal && (!name || /not food/i.test(name))) { out.innerHTML = manualBox(t("fdNoFood")); wireManual(); return; }
+          if (!kcal && (!name || /not food/i.test(name))) { done = false; fail(t("fdNoFood")); return; }
           est = { name: name || t("fdMeal"), kcal: kcal };
           out.innerHTML = '<div class="fd-res fade-in"><div class="fd-res__h">' + V.icon("sparkle") + " <b>" + esc(est.name) + '</b><span class="fd-res__k">' + est.kcal + " " + t("fdKcal") + "</span></div>" +
             ((j.items && j.items.length) ? '<div class="fd-items">' + j.items.slice(0, 5).map(function (it) { return "<span>" + esc(it.name) + " · " + (Math.round(it.kcal) || 0) + "</span>"; }).join("") + "</div>" : "") +
             (j.note ? '<p class="fd-note">' + esc(j.note) + "</p>" : "") +
-            '<button class="btn btn-primary" id="fdAdd" style="width:100%;margin-top:8px">' + V.icon("check") + " " + t("fdAdd") + " (" + est.kcal + ")</button>" +
-            '<button class="link-btn" id="fdToManual" style="margin-top:6px">' + t("fdManual") + "</button></div>";
+            '<button class="btn btn-primary" id="fdAdd" style="width:100%;margin-top:8px">' + V.icon("check") + " " + t("fdAdd") + " (" + est.kcal + ")</button></div>";
           $("#fdAdd").addEventListener("click", function () { add(est.name, est.kcal); });
-          $("#fdToManual").addEventListener("click", function () { out.innerHTML = manualBox(""); wireManual(); });
-        }).catch(function () { manual(); });
-      }).catch(manual);
+        }).catch(function (e) { fail(e && e.busy ? t("fdBusy") : t("fdManualHint"), !!(e && e.busy)); });
+      }).catch(function () { fail(t("fdManualHint")); });
     }
-    function manualBox(hint) {
-      return '<div class="fd-manual fade-in">' + (hint ? '<p class="fd-note">' + esc(hint) + "</p>" : "") +
-        '<div class="fd-mrow"><input id="fdName" class="field" placeholder="' + esc(t("fdName")) + '"><input id="fdKcal" class="field" type="number" inputmode="numeric" placeholder="' + t("fdKcal") + '" style="max-width:110px"></div>' +
-        '<button class="btn btn-ghost" id="fdAddM" style="width:100%;margin-top:8px">' + V.icon("check") + " " + t("fdAddManual") + "</button>" +
-        '<div class="fd-quick">' + QUICK_FOODS.map(function (q, i) { return '<button class="fd-chip" data-q="' + i + '">' + L(q.name) + ' <b>' + q.kcal + "</b></button>"; }).join("") + "</div></div>";
+
+    // ---- manual "add food" card (search + portion + custom) — always available ----
+    function results() {
+      var q = (query || "").trim().toLowerCase();
+      var items = q
+        ? FOOD_DB.filter(function (f) { return f.ka.toLowerCase().indexOf(q) >= 0 || f.en.toLowerCase().indexOf(q) >= 0; })
+        : FOOD_DB.filter(function (f) { return f.pop; });
+      if (!items.length) return '<p class="fd-empty">' + t("fdNoMatch") + "</p>";
+      return items.slice(0, 12).map(function (f) {
+        var k = Math.round(f.kcal * mult);
+        return '<button class="fd-row" data-base="' + f.kcal + '" data-name="' + esc(foodName(f)) + '">' +
+          '<span class="fd-row__n">' + esc(foodName(f)) + "</span>" +
+          '<span class="fd-row__k">' + k + " " + t("fdKcal") + "</span>" +
+          '<i class="fd-row__p">' + V.icon("plus") + "</i></button>";
+      }).join("");
     }
-    function wireManual() {
-      var a = $("#fdAddM"); if (a) a.addEventListener("click", function () { var n = ($("#fdName").value || "").trim(), k = parseInt($("#fdKcal").value, 10); if (!k) { $("#fdKcal").focus(); return; } add(n, k); });
-      each("[data-q]", function (b) { b.addEventListener("click", function () { var q = QUICK_FOODS[+b.getAttribute("data-q")]; add(L(q.name), q.kcal); }); });
+    function renderResults() { var box = $("#fdResults"); if (box) { box.innerHTML = results(); wireRows(); } }
+    function wireRows() {
+      each("[data-base]", function (b) {
+        b.addEventListener("click", function () {
+          var base = +b.getAttribute("data-base"), nm = b.getAttribute("data-name");
+          add(nm + (mult !== 1 ? " ×" + multLabel(mult) : ""), Math.round(base * mult));
+        });
+      });
+    }
+    function wireAdd() {
+      var s = $("#fdSearch");
+      if (s) s.addEventListener("input", function () { query = s.value; renderResults(); });
+      each("[data-m]", function (b) {
+        b.addEventListener("click", function () {
+          mult = +b.getAttribute("data-m");
+          each("[data-m]", function (x) { x.classList.toggle("on", x === b); });
+          renderResults();
+        });
+      });
+      var am = $("#fdAddM");
+      if (am) am.addEventListener("click", function () {
+        var n = ($("#fdName").value || "").trim(), k = parseInt($("#fdKcal").value, 10);
+        if (!k) { $("#fdKcal").focus(); return; }
+        add(n, k);
+      });
+      wireRows();
     }
 
     function render() {
       var c = total(), pct = Math.min(100, Math.round(c / FOOD_GOAL * 100)), list = todayList();
+      var portions = [0.5, 1, 1.5, 2].map(function (m) {
+        return '<button class="fd-pbtn' + (m === mult ? " on" : "") + '" data-m="' + m + '">' + multLabel(m) + "</button>";
+      }).join("");
       V.mount(
         V.statusbar() +
         '<div class="screen"><div class="pad-lg fade-in">' +
@@ -3274,8 +3356,15 @@
           '<div class="card-soft fd-cap">' +
             '<label class="fd-photo" for="fdFile">' + (dataUrl ? '<img src="' + dataUrl + '" alt="">' : V.icon("camera") + "<span>" + t("fdPhoto") + "</span>") + "</label>" +
             '<input id="fdFile" type="file" accept="image/*" capture="environment" style="display:none">' +
-            (dataUrl ? '<button class="btn btn-primary" id="fdEst" style="width:100%;margin-top:10px">' + V.icon("sparkle") + " " + t("fdEstimate") + "</button>" : '<button class="link-btn" id="fdManualOpen" style="margin-top:8px">' + t("fdManual") + "</button>") +
+            (dataUrl ? '<button class="btn btn-primary" id="fdEst" style="width:100%;margin-top:10px">' + V.icon("sparkle") + " " + t("fdEstimate") + "</button>" : "") +
             '<div id="fdOut"></div>' +
+          "</div>" +
+          '<div class="card-soft fd-add">' +
+            '<div class="fd-addhead">' + V.icon("plus") + " " + t("fdAddFood") + "</div>" +
+            '<div class="fd-search">' + V.icon("search") + '<input id="fdSearch" placeholder="' + esc(t("fdSearch")) + '" autocomplete="off" value="' + esc(query) + '"></div>' +
+            '<div class="fd-portion"><span class="fd-portion__l">' + t("fdPortion") + "</span>" + portions + "</div>" +
+            '<div class="fd-results" id="fdResults">' + results() + "</div>" +
+            '<div class="fd-custom"><input id="fdName" class="field" placeholder="' + esc(t("fdName")) + '"><input id="fdKcal" class="field" type="number" inputmode="numeric" placeholder="' + t("fdKcal") + '"><button class="btn btn-primary" id="fdAddM">' + V.icon("check") + "</button></div>" +
           "</div>" +
           (list.length ? '<div class="section-head"><h3>' + t("fdMeals") + "</h3></div><div class='list-card'>" +
             list.map(function (x, i) { return '<div class="list-row"><div class="list-row__t"><b>' + esc(x.name) + "</b><small>" + x.kcal + " " + t("fdKcal") + '</small></div><button class="fd-del" data-del="' + i + '">' + V.icon("x") + "</button></div>"; }).join("") + "</div>" : "") +
@@ -3285,7 +3374,7 @@
           backX();
           $("#fdFile").addEventListener("change", function (e) { var f = e.target.files[0]; if (!f) return; fileToData(f, function (d) { if (d) { dataUrl = d; est = null; render(); } }); });
           var est2 = $("#fdEst"); if (est2) est2.addEventListener("click", estimate);
-          var mo = $("#fdManualOpen"); if (mo) mo.addEventListener("click", function () { $("#fdOut").innerHTML = manualBox(""); wireManual(); });
+          wireAdd();
           each("[data-del]", function (b) { b.addEventListener("click", function () { var idx = w.food.indexOf(todayList()[+b.getAttribute("data-del")]); if (idx >= 0) { w.food.splice(idx, 1); V.save(); render(); } }); });
         } }
       );
