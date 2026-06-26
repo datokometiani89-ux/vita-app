@@ -47,8 +47,10 @@ CLAUDE_MODEL = os.environ.get("VITA_CLAUDE_MODEL", "claude-opus-4-8")
 GEMINI_MODEL = os.environ.get("VITA_GEMINI_MODEL", "gemini-2.0-flash")
 # free-tier quota is per-model, so on a 429 we fall back to sibling models that
 # have their own buckets — this keeps the chat alive under rate limits.
+# Fallbacks must be CURRENT models (Gemini 1.5 was retired by Google → 404).
+# Each has its own free-tier quota bucket, so falling across them survives a 429.
 GEMINI_FALLBACKS = [m.strip() for m in os.environ.get(
-    "VITA_GEMINI_FALLBACKS", "gemini-2.0-flash-lite,gemini-1.5-flash,gemini-1.5-flash-8b").split(",") if m.strip()]
+    "VITA_GEMINI_FALLBACKS", "gemini-2.5-flash,gemini-2.0-flash-lite,gemini-2.5-flash-lite").split(",") if m.strip()]
 
 # --- provider resolution ---------------------------------------------------
 _claude = None
@@ -134,6 +136,18 @@ def _gemini_models():
     return out
 
 
+def _better_err(prev, e):
+    # Keep the most diagnostic error across the fallback chain: a 429/5xx is far
+    # more informative than a 404/400 (a 404 just means that fallback model is
+    # retired/unknown). Without this, a rate-limit (429) gets masked by a later
+    # retired-model 404 and the client sees the wrong cause.
+    if prev is None:
+        return e
+    if prev.code in (400, 404) and e.code not in (400, 404):
+        return e
+    return prev
+
+
 def _gemini_open(model, payload, stream):
     key = os.environ["GEMINI_API_KEY"]
     verb = "streamGenerateContent?alt=sse&" if stream else "generateContent?"
@@ -151,32 +165,31 @@ def gemini_stream(system, messages, emit):
     }
     last = None
     for model in _gemini_models():
-        for attempt in range(1):
-            try:
-                with _gemini_open(model, payload, True) as resp:  # 429 raises here, before any emit
-                    for raw in resp:
-                        line = raw.decode("utf-8", "ignore").strip()
-                        if not line.startswith("data:"):
-                            continue
-                        chunk = line[5:].strip()
-                        if not chunk or chunk == "[DONE]":
-                            continue
-                        try:
-                            obj = json.loads(chunk)
-                            for cand in obj.get("candidates", []):
-                                for part in cand.get("content", {}).get("parts", []):
-                                    if part.get("text"):
-                                        emit(part["text"])
-                        except Exception:
-                            continue
-                return  # this model succeeded
-            except urllib.error.HTTPError as e:
-                last = e
-                if e.code == 429:
-                    time.sleep(0.3); continue   # retry, then fall to next model
-                if e.code in (400, 404):
-                    break                                       # model unavailable → next model
-                raise
+        try:
+            with _gemini_open(model, payload, True) as resp:  # 429/404 raises here, before any emit
+                for raw in resp:
+                    line = raw.decode("utf-8", "ignore").strip()
+                    if not line.startswith("data:"):
+                        continue
+                    chunk = line[5:].strip()
+                    if not chunk or chunk == "[DONE]":
+                        continue
+                    try:
+                        obj = json.loads(chunk)
+                        for cand in obj.get("candidates", []):
+                            for part in cand.get("content", {}).get("parts", []):
+                                if part.get("text"):
+                                    emit(part["text"])
+                    except Exception:
+                        continue
+            return  # this model succeeded
+        except urllib.error.HTTPError as e:
+            last = _better_err(last, e)
+            if e.code == 429:
+                time.sleep(0.3)
+            if e.code in (400, 404, 429):
+                continue                                        # model unavailable/rate-limited → next model
+            raise
     if last:
         raise last
 
@@ -184,19 +197,18 @@ def gemini_stream(system, messages, emit):
 def _gemini_nonstream(payload):
     last = None
     for model in _gemini_models():
-        for attempt in range(1):
-            try:
-                with _gemini_open(model, payload, False) as resp:
-                    obj = json.loads(resp.read().decode("utf-8"))
-                parts = obj.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-                return "".join(p.get("text", "") for p in parts).strip()
-            except urllib.error.HTTPError as e:
-                last = e
-                if e.code == 429:
-                    time.sleep(0.3); continue
-                if e.code in (400, 404):
-                    break
-                raise
+        try:
+            with _gemini_open(model, payload, False) as resp:
+                obj = json.loads(resp.read().decode("utf-8"))
+            parts = obj.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+            return "".join(p.get("text", "") for p in parts).strip()
+        except urllib.error.HTTPError as e:
+            last = _better_err(last, e)
+            if e.code == 429:
+                time.sleep(0.3)
+            if e.code in (400, 404, 429):
+                continue
+            raise
     if last:
         raise last
     return ""
