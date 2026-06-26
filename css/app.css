@@ -1762,5 +1762,16 @@
 .fd-custom .btn svg { width: 18px; }
 .fd-del { color: var(--muted); flex: none; } .fd-del svg { width: 16px; }
 
+/* ---- tongue scan signal rows ---- */
+.tg-sigs { display: flex; flex-direction: column; gap: 9px; margin: 14px 0 4px; }
+.tg-sig { border: 1.5px solid var(--line); border-left-width: 4px; border-radius: var(--r-md); padding: 10px 12px; background: var(--card); }
+.tg-sig__h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.tg-sig__h b { font-size: 13.5px; color: var(--ink); }
+.tg-sig__h span { font-size: 13px; font-weight: 700; }
+.tg-sig p { font-size: 12px; color: var(--muted); margin: 4px 0 0; line-height: 1.5; }
+.tg-tone-green { border-left-color: var(--green); } .tg-tone-green .tg-sig__h span { color: var(--green); }
+.tg-tone-yellow { border-left-color: #e0a92e; } .tg-tone-yellow .tg-sig__h span { color: #c9881a; }
+.tg-tone-crimson { border-left-color: #d64550; } .tg-tone-crimson .tg-sig__h span { color: #d64550; }
+
 .td-docapp { display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 8px; padding: 12px; border: 1.5px dashed var(--line); border-radius: var(--r-md); color: var(--green-dark); font-size: 13.5px; font-weight: 600; }
 .td-docapp svg { width: 16px; } .td-docapp svg:last-child { width: 14px; transform: rotate(180deg); opacity: .6; }

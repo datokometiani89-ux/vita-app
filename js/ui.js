@@ -61,6 +61,7 @@ window.VITA = window.VITA || {};
     progress: P('<path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/>'),
     plus: P('<path d="M12 5v14M5 12h14"/>'),
     search: P('<circle cx="11" cy="11" r="7"/><path d="M20.5 20.5 16 16"/>'),
+    tongue: P('<path d="M5 7h14"/><path d="M6.5 7c0 5 2.5 9.5 5.5 9.5S17.5 12 17.5 7"/><path d="M12 16.5c-1.8 0-3-1.5-3-3.5 0-1.6 1.3-2.9 3-2.9s3 1.3 3 2.9c0 2-1.2 3.5-3 3.5Z"/><path d="M12 12.2v2.3"/>'),
     back: P('<path d="M15 5l-7 7 7 7"/>'),
     next: P('<path d="M5 12h13M13 6l6 6-6 6"/>'),
     check: P('<path d="M4.5 12.5 10 18 19.5 7"/>'),

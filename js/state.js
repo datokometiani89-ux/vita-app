@@ -72,6 +72,7 @@ window.VITA = window.VITA || {};
       skinScan: [],       // [{date, band}] guided skin (ABCDE) self-checks
       voiceScan: [],      // [{date, steadiness, band}] voice-biomarker checks
       reaction: [],       // [{date, ms, band}] cognitive reaction-time (processing speed) checks
+      tongueScan: [],     // [{date, band, color, coating, surface}] on-device tongue colour/coating/surface reads
       calib: {},          // { hr: offset } single-point personal calibration vs a real device
       bp: [],             // [{date, sys, dia}] blood-pressure log
       mood: {},           // { "2026-06-19": {score:1..5, note, tags:[]} }

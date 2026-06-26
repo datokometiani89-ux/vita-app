@@ -976,7 +976,7 @@
   // human-readable multimodal summary (for AI prompt, chat handoff, offline report)
   V.scanSummaryText = function () {
     var ka = V.lang() === "ka";
-    var scan = lastOf("scan"), skin = lastOf("skinScan"), voice = lastOf("voiceScan"), cog = lastOf("reaction"), h = V.healthAge();
+    var scan = lastOf("scan"), skin = lastOf("skinScan"), voice = lastOf("voiceScan"), cog = lastOf("reaction"), tongue = lastOf("tongueScan"), h = V.healthAge();
     var parts = [];
     if (h) parts.push((ka ? "ბიო-ასაკი " : "Bio-age ") + h.bio + (ka ? " (ქრონ. " : " (chrono ") + h.chrono + ", " + (h.delta > 0 ? "+" + h.delta : h.delta) + ")");
     if (scan) parts.push((ka ? "გულ-სისხლძარღვი: ქულა " : "Cardio: score ") + scan.score + ", HR " + scan.bpm +
@@ -985,6 +985,7 @@
     if (cog) parts.push((ka ? "კოგნიცია: რეაქცია " : "Cognition: reaction ") + cog.ms + "ms (" + t(cog.band) + ")");
     if (skin) parts.push((ka ? "კანი: " : "Skin: ") + t(skin.band));
     if (voice) parts.push((ka ? "ხმა: " : "Voice: ") + t(voice.band) + " (" + voice.steadiness + "%)");
+    if (tongue) parts.push((ka ? "ენა: " : "Tongue: ") + t(tongue.color) + ", " + t(tongue.band));
     return parts.length ? parts.join(". ") : "";
   };
 
@@ -1121,6 +1122,7 @@
         '<button class="scn-mod scn-mod--btn" data-go="skinscan">' + V.icon("camera") + L({ ka: "კანი", en: "Skin" }) + ' <i>' + t("scnActive") + "</i></button>" +
         '<button class="scn-mod scn-mod--btn" data-go="voicescan">' + V.icon("mic") + L({ ka: "ხმა", en: "Voice" }) + ' <i>' + t("scnActive") + "</i></button>" +
         '<button class="scn-mod scn-mod--btn" data-go="reactionscan">' + V.icon("brain") + L({ ka: "კოგნიცია", en: "Cognition" }) + ' <i>' + t("scnActive") + "</i></button>" +
+        '<button class="scn-mod scn-mod--btn" data-go="tonguescan">' + V.icon("tongue") + L({ ka: "ენა", en: "Tongue" }) + ' <i>' + t("scnActive") + "</i></button>" +
       "</div>";
     }
 
@@ -1329,16 +1331,18 @@
     var vo = lastOf("voiceScan"); if (vo && vo.steadiness != null) vals.push(vo.steadiness);
     var sk = lastOf("skinScan"); if (sk) vals.push(sk.band === "skLow" ? 90 : sk.band === "skWatch" ? 60 : 30);
     var rx = lastOf("reaction"); if (rx) vals.push(V.reactionScore(rx.ms));
+    var tg = lastOf("tongueScan"); if (tg) vals.push(tg.band === "tgLow" ? 90 : tg.band === "tgWatch" ? 60 : 30);
     if (!vals.length) return null;
     return Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length);
   };
 
   V.screens.fullscan = function () {
-    var cardio = lastOf("scan"), skin = lastOf("skinScan"), voice = lastOf("voiceScan"), cog = lastOf("reaction");
+    var cardio = lastOf("scan"), skin = lastOf("skinScan"), voice = lastOf("voiceScan"), cog = lastOf("reaction"), tongue = lastOf("tongueScan");
     var cTone = cardio ? scanScoreTone(cardio.score) : "gray";
     var sTone = skin ? SKIN_TONE[skin.band] : "gray";
     var vTone = voice ? VOICE_TONE[voice.band] : "gray";
     var gTone = cog ? REACT_TONE(cog.band) : "gray";
+    var tgTone = tongue ? (tongue.band === "tgLow" ? "green" : tongue.band === "tgWatch" ? "yellow" : "crimson") : "gray";
     var comp = V.scanComposite();
 
     function bodyMap() {
@@ -1349,7 +1353,8 @@
           '<path d="M78 60 h44 q14 0 14 16 v54 q0 10 -8 12 l-6 70 h-16 l-4 -52 -4 52 h-16 l-6 -70 q-8 -2 -8 -12 v-54 q0 -16 14 -16 Z"/>' +
           '<path d="M70 78 l-16 46 8 4 18 -40 Z"/><path d="M130 78 l16 46 -8 4 -18 -40 Z"/>' +
         "</g>" +
-        dot(100, 30, gTone) +  // cognition — head/brain
+        dot(100, 26, gTone) +  // cognition — head/brain
+        dot(100, 44, tgTone) + // tongue — mouth
         dot(86, 96, cTone) +   // heart — upper-left chest
         dot(114, 110, vTone) + // respiratory/voice — chest
         dot(140, 108, sTone) + // skin — forearm
@@ -1370,6 +1375,7 @@
     var sVal = skin ? t(skin.band) : null;
     var vVal = voice ? t(voice.band) + " · " + voice.steadiness + "%" : null;
     var gVal = cog ? t(cog.band) + " · " + cog.ms + " " + t("rxMs") : null;
+    var tgVal = tongue ? t(tongue.band) : null;
 
     V.mount(
       V.statusbar() +
@@ -1387,6 +1393,7 @@
             legend("brain", t("fbSysCog"), gTone, gVal) +
             legend("lungs", t("fbSysResp"), vTone, vVal) +
             legend("skin", t("fbSysSkin"), sTone, sVal) +
+            legend("tongue", t("fbSysTongue"), tgTone, tgVal) +
           "</div>" +
         "</div>" +
 
@@ -1397,6 +1404,7 @@
         step("brain", t("fbSysCog"), "reactionscan", gVal, gTone, dToday(cog)) +
         step("lungs", t("fbSysResp"), "voicescan", vVal, vTone, dToday(voice)) +
         step("skin", t("fbSysSkin"), "skinscan", sVal, sTone, dToday(skin)) +
+        step("tongue", t("fbSysTongue"), "tonguescan", tgVal, tgTone, dToday(tongue)) +
 
         '<div class="scn-report-wrap"><button class="btn btn-primary scn-report-btn" id="fsReport" style="width:100%">' + V.icon("sparkle") + " " + t("haReportCta") + plusChip() + '</button><div id="fsReportOut"></div></div>' +
 
@@ -1510,6 +1518,146 @@
   var ABCDE = [
     { k: "skA", icon: "A" }, { k: "skB", icon: "B" }, { k: "skC", icon: "C" }, { k: "skD", icon: "D" }, { k: "skE", icon: "E" },
   ];
+
+  /* ===================== TONGUE SCAN (on-device colour / coating / surface) ===================== */
+  // Pure, unit-testable readers over a flat RGBA pixel array (canvas getImageData).
+  // The "know-how": tongue colour (pale/red/purple), coating (whitish-film fraction)
+  // and surface (lightness spread → cracks). Wellness-grade signals, NOT a diagnosis.
+  V.tongueColor = function (data) {
+    if (!data || !data.length) return null;
+    var n = 0, sr = 0, sg = 0, sb = 0;
+    for (var i = 0; i < data.length; i += 4) {
+      if (data[i + 3] < 200) continue;
+      sr += data[i]; sg += data[i + 1]; sb += data[i + 2]; n++;
+    }
+    if (!n) return null;
+    var r = sr / n, g = sg / n, b = sb / n;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    var sat = mx ? (mx - mn) / mx : 0;
+    var redRatio = (g + b) ? r / ((g + b) / 2) : 1;   // tongue is red → r dominates
+    var purple = mx ? (b - g) / mx : 0;               // blue over green → purplish
+    var band;
+    if (sat < 0.22) band = "tgCPale";
+    else if (purple > 0.05 && redRatio < 1.9) band = "tgCPurple";
+    else if (redRatio > 2.1 && sat > 0.45) band = "tgCRed";   // forgiving: deep-red needs both
+    else band = "tgCNormal";
+    return { band: band, sat: Math.round(sat * 100) / 100, redRatio: Math.round(redRatio * 100) / 100, purple: Math.round(purple * 100) / 100, rgb: [Math.round(r), Math.round(g), Math.round(b)] };
+  };
+  V.tongueCoating = function (data) {
+    if (!data || !data.length) return 0;
+    var n = 0, white = 0;
+    for (var i = 0; i < data.length; i += 4) {
+      if (data[i + 3] < 200) continue;
+      var r = data[i], g = data[i + 1], b = data[i + 2];
+      var mx = Math.max(r, g, b), sat = mx ? (mx - Math.min(r, g, b)) / mx : 0;
+      if (mx > 165 && sat < 0.22) white++;            // pale, low-saturation film = coating
+      n++;
+    }
+    return n ? Math.round(white / n * 100) / 100 : 0;
+  };
+  V.tongueSurface = function (data) {
+    if (!data || !data.length) return 0;               // lightness spread → crack/unevenness proxy
+    var n = 0, sum = 0, sumsq = 0;
+    for (var i = 0; i < data.length; i += 8) {
+      if (data[i + 3] < 200) continue;
+      var light = Math.max(data[i], data[i + 1], data[i + 2]);
+      sum += light; sumsq += light * light; n++;
+    }
+    if (!n) return 0;
+    var mean = sum / n, sd = Math.sqrt(Math.max(0, sumsq / n - mean * mean));
+    return Math.round(Math.min(1, sd / 70) * 100) / 100;
+  };
+  V.tongueFlag = function (color, coating, surface) {
+    var score = 0;
+    if (color && color.band !== "tgCNormal") score += 2;
+    if (coating > 0.7) score += 2; else if (coating > 0.45) score += 1;
+    if (surface > 0.6) score += 1;
+    var tone = score <= 1 ? "green" : score <= 3 ? "yellow" : "crimson";
+    return {
+      k: tone === "green" ? "tgLow" : tone === "yellow" ? "tgWatch" : "tgHigh",
+      tone: tone, score: score,
+      coatBand: coating > 0.7 ? "tgKWhite" : coating > 0.45 ? "tgKThick" : "tgKThin",
+      surfBand: surface > 0.6 ? "tgSCracks" : "tgSSmooth",
+    };
+  };
+
+  V.screens.tonguescan = function () {
+    var w = W(); w.tongueScan = w.tongueScan || [];
+    var hasPhoto = false, color = null, coating = 0, surface = 0;
+
+    function sigRow(labelKey, val, tone, note) {
+      return '<div class="tg-sig tg-tone-' + tone + '"><div class="tg-sig__h"><b>' + t(labelKey) + "</b><span>" + esc(val) + "</span></div><p>" + esc(note) + "</p></div>";
+    }
+    function analyze() {
+      if (!hasPhoto || !color) { V.toast && V.toast(t("tgNoPhoto")); return; }
+      var flag = V.tongueFlag(color, coating, surface), coatPct = Math.round(coating * 100);
+      w.tongueScan.push({ date: today(), band: flag.k, color: color.band, coating: coating, surface: surface });
+      if (w.tongueScan.length > 40) w.tongueScan = w.tongueScan.slice(-40);
+      V.awardOnce && V.awardOnce("tongue:" + today(), V.POINTS.task, "task");
+      V.save();
+      var box = $("#tgResult");
+      box.innerHTML = '<div class="card-soft skin-res fade-in">' +
+        '<div class="rd-ring rd-tone-' + flag.tone + '" style="width:96px;height:96px;border-width:7px;margin:0 auto 12px"><b style="font-size:30px">' + flag.score + "</b></div>" +
+        '<div class="mt-sev mt-tone-' + flag.tone + '" style="text-align:center">' + t(flag.k) + "</div>" +
+        '<p class="mt-rec" style="text-align:center">' + t(flag.k + "Rec") + "</p>" +
+        '<div class="tg-sigs">' +
+          sigRow("tgSigColor", t(color.band), color.band === "tgCNormal" ? "green" : "yellow", t(color.band + "Note")) +
+          sigRow("tgSigCoat", t(flag.coatBand) + " · " + coatPct + "%", coating > 0.45 ? "yellow" : "green", t("tgKNote")) +
+          sigRow("tgSigSurf", t(flag.surfBand), surface > 0.6 ? "yellow" : "green", t("tgSNote")) +
+        "</div>" +
+        (flag.tone !== "green" ? '<button class="btn btn-primary" data-tg-doc style="width:100%;margin-top:6px">' + V.icon("calendar") + " " + t("tgBook") + "</button>" : "") +
+        '<button class="link-btn" data-tg-discuss style="margin-top:8px">' + t("tgDiscuss") + "</button></div>";
+      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      var doc = box.querySelector("[data-tg-doc]");
+      if (doc) doc.addEventListener("click", function () { deepClinic("gp", { ka: "ოჯახის ექიმი", en: "GP" }); });
+      var disc = box.querySelector("[data-tg-discuss]");
+      if (disc) disc.addEventListener("click", function () {
+        var ka = V.lang() === "ka";
+        V.state.chat = V.state.chat || [];
+        V.state.chat.push({ role: "user", text: (ka ? "ჩემი ენის სკანი: " : "My tongue scan: ") +
+          t(color.band) + (ka ? " ფერი, " : " colour, ") + t(flag.coatBand).toLowerCase() + ", " + t(flag.surfBand).toLowerCase() + ". " + (ka ? "რას მირჩევ?" : "What do you suggest?") });
+        V.save(); V.go("vita");
+      });
+    }
+    function render() {
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg fade-in">' +
+          head("tongue", "crimson", "tgTitle") +
+          '<p class="s-sub">' + t("tgSub") + "</p>" +
+          '<div class="card-soft" style="padding:16px">' +
+            '<label class="skin-photo" id="tgPhotoLbl"><canvas id="tgCanvas" width="220" height="220"></canvas>' +
+              '<div class="skin-photo__hint" id="tgHint">' + V.icon("tongue") + "<span>" + t("tgPhoto") + "</span></div>" +
+              '<input type="file" accept="image/*" capture="environment" id="tgFile" hidden></label>' +
+            '<p class="mo-how" style="margin:14px 0 8px">' + t("tgHow") + "</p>" +
+            '<button class="btn btn-primary" id="tgGo" style="width:100%;margin-top:6px">' + V.icon("sparkle") + " " + t("tgAnalyze") + "</button>" +
+          "</div>" +
+          '<div id="tgResult"></div>' +
+          '<p class="hr-multi-note">' + t("tgDisc") + "</p>" +
+        "</div>" + V.tabbar("home") + "</div>",
+        { onMount: function () {
+          backX();
+          var fileEl = $("#tgFile"), canvas = $("#tgCanvas"), hint = $("#tgHint");
+          fileEl.addEventListener("change", function () {
+            var f = fileEl.files && fileEl.files[0]; if (!f) return;
+            var img = new Image();
+            img.onload = function () {
+              var ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              hasPhoto = true; hint.style.display = "none";
+              try {
+                var d = ctx.getImageData(60, 60, 100, 100).data;
+                color = V.tongueColor(d); coating = V.tongueCoating(d); surface = V.tongueSurface(d);
+              } catch (e) { color = null; }
+            };
+            img.src = URL.createObjectURL(f);
+          });
+          $("#tgGo").addEventListener("click", analyze);
+        } }
+      );
+    }
+    render();
+  };
 
   V.screens.skinscan = function () {
     var w = W(); w.skinScan = w.skinScan || [];
