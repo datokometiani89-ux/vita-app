@@ -1772,6 +1772,13 @@
 .tg-tone-green { border-left-color: var(--green); } .tg-tone-green .tg-sig__h span { color: var(--green); }
 .tg-tone-yellow { border-left-color: #e0a92e; } .tg-tone-yellow .tg-sig__h span { color: #c9881a; }
 .tg-tone-crimson { border-left-color: #d64550; } .tg-tone-crimson .tg-sig__h span { color: #d64550; }
+.tg-ai { padding: 14px 16px; margin-top: 10px; border: 1.5px solid var(--green); }
+.tg-ai__h { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.tg-ai__h svg { width: 17px; color: var(--green); }
+.tg-ai__row { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; padding: 6px 0; border-top: 1px solid var(--line); }
+.tg-ai__row span { color: var(--muted); } .tg-ai__row b { color: var(--ink); }
+.tg-ai__signs { margin-top: 9px; } .tg-ai__signs small { color: var(--muted); font-size: 12px; }
+.tg-ai__signs .fd-items { margin-top: 6px; }
 
 .td-docapp { display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 8px; padding: 12px; border: 1.5px dashed var(--line); border-radius: var(--r-md); color: var(--green-dark); font-size: 13.5px; font-weight: 600; }
 .td-docapp svg { width: 16px; } .td-docapp svg:last-child { width: 14px; transform: rotate(180deg); opacity: .6; }

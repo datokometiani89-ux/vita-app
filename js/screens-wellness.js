@@ -1581,9 +1581,22 @@
     };
   };
 
+  // free-text observable signs the AI may return → localized chip labels
+  var TG_SIGNS = {
+    "teeth marks": { ka: "კბილის კვალი", en: "Teeth marks" }, "scalloped": { ka: "ტალღოვანი კიდე", en: "Scalloped edge" },
+    "cracks": { ka: "ღარები", en: "Cracks" }, "cracked": { ka: "დაბზარული", en: "Cracked" },
+    "red tip": { ka: "წითელი წვერი", en: "Red tip" }, "dry": { ka: "მშრალი", en: "Dry" },
+    "swollen": { ka: "გაბერილი", en: "Swollen" }, "thin": { ka: "გამხდარი", en: "Thin" },
+    "pale": { ka: "მკრთალი", en: "Pale" }, "coated": { ka: "დაფარული", en: "Coated" }, "moist": { ka: "ნოტიო", en: "Moist" },
+  };
+  function tgSignLabel(s) {
+    var k = String(s || "").toLowerCase().trim(), m = TG_SIGNS[k];
+    return m ? L(m) : (k ? k.charAt(0).toUpperCase() + k.slice(1) : "");
+  }
+
   V.screens.tonguescan = function () {
     var w = W(); w.tongueScan = w.tongueScan || [];
-    var hasPhoto = false, color = null, coating = 0, surface = 0;
+    var hasPhoto = false, color = null, coating = 0, surface = 0, aiDataUrl = null;
 
     function sigRow(labelKey, val, tone, note) {
       return '<div class="tg-sig tg-tone-' + tone + '"><div class="tg-sig__h"><b>' + t(labelKey) + "</b><span>" + esc(val) + "</span></div><p>" + esc(note) + "</p></div>";
@@ -1605,9 +1618,13 @@
           sigRow("tgSigCoat", t(flag.coatBand) + " · " + coatPct + "%", coating > 0.45 ? "yellow" : "green", t("tgKNote")) +
           sigRow("tgSigSurf", t(flag.surfBand), surface > 0.6 ? "yellow" : "green", t("tgSNote")) +
         "</div>" +
+        ((V.api && V.api.vision && aiDataUrl) ? '<button class="btn btn-ghost" id="tgAi" style="width:100%;margin-top:8px">' + V.icon("sparkle") + " " + t("tgAiCta") + "</button>" : "") +
+        '<div id="tgAiOut"></div>' +
         (flag.tone !== "green" ? '<button class="btn btn-primary" data-tg-doc style="width:100%;margin-top:6px">' + V.icon("calendar") + " " + t("tgBook") + "</button>" : "") +
         '<button class="link-btn" data-tg-discuss style="margin-top:8px">' + t("tgDiscuss") + "</button></div>";
       box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      var aiBtn = box.querySelector("#tgAi");
+      if (aiBtn) aiBtn.addEventListener("click", function () { runTongueAI(); });
       var doc = box.querySelector("[data-tg-doc]");
       if (doc) doc.addEventListener("click", function () { deepClinic("gp", { ka: "ოჯახის ექიმი", en: "GP" }); });
       var disc = box.querySelector("[data-tg-discuss]");
@@ -1618,6 +1635,32 @@
           t(color.band) + (ka ? " ფერი, " : " colour, ") + t(flag.coatBand).toLowerCase() + ", " + t(flag.surfBand).toLowerCase() + ". " + (ka ? "რას მირჩევ?" : "What do you suggest?") });
         V.save(); V.go("vita");
       });
+    }
+    function tongueAIHtml(j) {
+      var colorKey = { pale: "tgCPale", pink: "tgCNormal", red: "tgCRed", purple: "tgCPurple" }[String(j.color || "").toLowerCase()];
+      var coatKey = { none: "tgAiCoatNone", thin: "tgKThin", "thick-white": "tgKWhite", "thick-yellow": "tgAiCoatYellow" }[String(j.coating || "").toLowerCase()];
+      var signs = (j.signs || []).slice(0, 6).map(function (s) { return "<span>" + esc(tgSignLabel(s)) + "</span>"; }).join("");
+      return '<div class="card-soft tg-ai fade-in"><div class="tg-ai__h">' + V.icon("sparkle") + " <b>" + t("tgAiHead") + "</b></div>" +
+        (colorKey ? '<div class="tg-ai__row"><span>' + t("tgSigColor") + "</span><b>" + t(colorKey) + "</b></div>" : "") +
+        (coatKey ? '<div class="tg-ai__row"><span>' + t("tgSigCoat") + "</span><b>" + t(coatKey) + "</b></div>" : "") +
+        (signs ? '<div class="tg-ai__signs"><small>' + t("tgAiSigns") + '</small><div class="fd-items">' + signs + "</div></div>" : "") +
+        (j.note ? '<p class="fd-note">' + esc(j.note) + "</p>" : "") + "</div>";
+    }
+    function runTongueAI() {
+      var out = $("#tgAiOut"); if (!out || !aiDataUrl) return;
+      out.innerHTML = '<div class="scn-rep-load">' + V.icon("sparkle") + " " + t("tgAiRunning") + "</div>";
+      function fail(msg, busy) {
+        out.innerHTML = '<div class="fd-failbox">' + '<p class="fd-note">' + esc(msg) + "</p>" +
+          (busy ? '<button class="btn btn-ghost" id="tgAiRetry">' + V.icon("sparkle") + " " + t("fdRetry") + "</button>" : "") + "</div>";
+        var r = $("#tgAiRetry"); if (r) r.addEventListener("click", runTongueAI);
+      }
+      V.api.ready().then(function (on) {
+        if (!on) { fail(t("tgAiFail")); return; }
+        V.api.vision(aiDataUrl, "image/jpeg", "tongue").then(function (j) {
+          if (!j || String(j.color || "").toLowerCase() === "none") { fail(t("tgAiFail")); return; }
+          out.innerHTML = tongueAIHtml(j);
+        }).catch(function (e) { fail(e && e.busy ? t("tgAiBusy") : t("tgAiFail"), !!(e && e.busy)); });
+      }).catch(function () { fail(t("tgAiFail")); });
     }
     function render() {
       V.mount(
@@ -1649,6 +1692,13 @@
                 var d = ctx.getImageData(60, 60, 100, 100).data;
                 color = V.tongueColor(d); coating = V.tongueCoating(d); surface = V.tongueSurface(d);
               } catch (e) { color = null; }
+              try {   // higher-res copy for the optional AI reading
+                var sc = Math.min(1, 768 / Math.max(img.width, img.height));
+                var oc = document.createElement("canvas");
+                oc.width = Math.round(img.width * sc); oc.height = Math.round(img.height * sc);
+                oc.getContext("2d").drawImage(img, 0, 0, oc.width, oc.height);
+                aiDataUrl = oc.toDataURL("image/jpeg", 0.85);
+              } catch (e) { aiDataUrl = null; }
             };
             img.src = URL.createObjectURL(f);
           });

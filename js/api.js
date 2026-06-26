@@ -68,12 +68,12 @@ window.VITA = window.VITA || {};
         return r.json();
       }).then(function (j) { return j.summary; });
     },
-    // food photo → calorie estimate (multimodal). imageDataUrl = "data:image/..;base64,.."
-    vision: function (imageDataUrl, mime) {
+    // photo → multimodal read. kind: "food" (default) | "tongue". imageDataUrl = "data:image/..;base64,.."
+    vision: function (imageDataUrl, mime, kind) {
       return fetch("/api/vision", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: imageDataUrl, mime: mime, lang: V.lang() }),
+        body: JSON.stringify({ image: imageDataUrl, mime: mime, lang: V.lang(), kind: kind || "food" }),
       }).then(function (r) {
         if (r.ok) return r.json();
         // surface WHY it failed so the UI can say "busy, try again" vs "unavailable".

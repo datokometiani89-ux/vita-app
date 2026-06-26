@@ -423,16 +423,30 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if not img:
             return self._json(400, {"error": "no image"})
         lang = body.get("lang", "ka")
-        lang_line = "Use Georgian for the name." if lang == "ka" else "Use English for the name."
-        prompt = ("You are a nutrition assistant. Estimate the food in this photo and its calories. "
-                  "Return ONLY compact JSON, no markdown: "
-                  '{"name":"short dish name","kcal":<integer total>,'
-                  '"items":[{"name":"item","kcal":<int>}],"note":"one short caveat"}. '
-                  "Estimate a typical single serving. If it is not food, set kcal to 0 and name to 'not food'. " + lang_line)
+        kind = body.get("kind", "food")
+        note_lang = "Write the note in Georgian." if lang == "ka" else "Write the note in English."
+        if kind == "tongue":
+            # Observable, NON-diagnostic tongue features only (traditional tongue-observation style).
+            prompt = ("You are a wellness assistant describing a tongue photo by its OBSERVABLE features only. "
+                      "Do NOT diagnose any disease or name conditions. "
+                      "Return ONLY compact JSON, no markdown: "
+                      '{"color":"pale|pink|red|purple","coating":"none|thin|thick-white|thick-yellow",'
+                      '"signs":["short observable sign"],"note":"one short non-diagnostic wellness tip"}. '
+                      "signs are short English tags like 'teeth marks','cracks','red tip','dry','swollen'. "
+                      "If it is not a tongue, set color to 'none'. " + note_lang)
+        else:
+            prompt = ("You are a nutrition assistant. Estimate the food in this photo and its calories. "
+                      "Return ONLY compact JSON, no markdown: "
+                      '{"name":"short dish name","kcal":<integer total>,'
+                      '"items":[{"name":"item","kcal":<int>}],"note":"one short caveat"}. '
+                      "Estimate a typical single serving. If it is not food, set kcal to 0 and name to 'not food'. "
+                      + ("Use Georgian for the name." if lang == "ka" else "Use English for the name."))
         try:
             text = claude_vision(img, mime, prompt) if _provider == "claude" else gemini_vision(img, mime, prompt)
             obj = _extract_json(text)
             if obj is None:
+                if kind == "tongue":
+                    return self._json(200, {"color": "", "coating": "", "signs": [], "note": text[:160], "raw": True})
                 return self._json(200, {"name": "", "kcal": 0, "items": [], "note": text[:160], "raw": True})
             return self._json(200, obj)
         except Exception as e:

@@ -263,7 +263,16 @@ window.VITA = window.VITA || {};
     tgHighRec: { ka: "თუ ნიშნები გრძელდება ან თან ერთვის სიმპტომები — გაიარე შემოწმება.", en: "If signs persist or come with symptoms, get checked." },
     tgBook: { ka: "ექიმთან ვიზიტი", en: "Book a doctor" },
     tgDiscuss: { ka: "განიხილე VITA-სთან", en: "Discuss with VITA" },
-    tgDisc: { ka: "ენის სკანი on-device wellness-შეფასებაა (ფერი/ნადები/ზედაპირი), არა სამედიცინო დიაგნოზი. განათება და კამერა ცვლის ფერს; სიზუსტე შეიძლება დაეცეს. რეალური AI-მოდელი მომავალი ეტაპია.", en: "The tongue scan is an on-device wellness reading (colour/coating/surface), not a medical diagnosis. Lighting and camera shift colour; accuracy can vary. A real AI model is a future stage." },
+    tgDisc: { ka: "ენის სკანი on-device wellness-შეფასებაა (ფერი/ნადები/ზედაპირი), არა სამედიცინო დიაგნოზი. განათება და კამერა ცვლის ფერს; სიზუსტე შეიძლება დაეცეს.", en: "The tongue scan is an on-device wellness reading (colour/coating/surface), not a medical diagnosis. Lighting and camera shift colour; accuracy can vary." },
+    /* tongue — AI-enhanced reading (Phase 2) */
+    tgAiCta: { ka: "AI გაძლიერებული წაკითხვა", en: "AI-enhanced reading" },
+    tgAiHead: { ka: "AI წაკითხვა", en: "AI reading" },
+    tgAiRunning: { ka: "AI ანალიზდება…", en: "AI analyzing…" },
+    tgAiBusy: { ka: "AI ამჟამად დატვირთულია — სცადე ისევ ცოტა ხანში. on-device შედეგი ზემოთაა.", en: "AI is busy right now — try again shortly. The on-device result is above." },
+    tgAiFail: { ka: "AI ამჟამად მიუწვდომელია — on-device შედეგი ზემოთაა.", en: "AI is unavailable right now — the on-device result is above." },
+    tgAiSigns: { ka: "შენიშნული ნიშნები", en: "Observed signs" },
+    tgAiCoatNone: { ka: "ნადების გარეშე", en: "No coating" },
+    tgAiCoatYellow: { ka: "სქელი ყვითელი ნადები", en: "Thick yellow coating" },
     /* voice scan */
     vcTitle: { ka: "ხმის სკანი", en: "Voice scan" },
     vcSub: { ka: "5 წამი გააგრძელე ხმა „აaa“ — გავზომავ ხმის სტაბილურობას (jitter/shimmer).", en: "Hold an \"aaah\" for 5 seconds — I'll measure your vocal steadiness (jitter/shimmer)." },
