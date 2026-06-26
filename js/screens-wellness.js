@@ -1581,6 +1581,131 @@
     };
   };
 
+  // ---- analytical on-device pipeline (segment → quality → colour/coating/cracks/teeth/zones) ----
+  function tgHue(r, g, b) {
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    if (d === 0) return 0;
+    var h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h *= 60; return h < 0 ? h + 360 : h;
+  }
+  function tgClassifyColor(r, g, b) {
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = mx ? (mx - mn) / mx : 0;
+    var redRatio = (g + b) ? r / ((g + b) / 2) : 1, purple = mx ? (b - g) / mx : 0;
+    if (sat < 0.22) return "tgCPale";
+    if (purple > 0.05 && redRatio < 1.9) return "tgCPurple";
+    if (redRatio > 2.1 && sat > 0.45) return "tgCRed";
+    return "tgCNormal";
+  }
+  // reddish tongue BODY pixel (used for colour + to seed the region)
+  function tgIsBody(r, g, b) {
+    var light = Math.max(r, g, b), mn = Math.min(r, g, b), sat = light ? (light - mn) / light : 0, hue = tgHue(r, g, b);
+    return (hue <= 35 || hue >= 300) && r >= g && light > 50 && light < 242 && sat > 0.12;
+  }
+  // any tongue pixel = reddish body OR the pale whitish coating film sitting on it
+  // (not dark background, not blue-dominant) — so coating isn't filtered out of the region.
+  function tgIsTongue(r, g, b) {
+    if (tgIsBody(r, g, b)) return true;
+    var light = Math.max(r, g, b), mn = Math.min(r, g, b), sat = light ? (light - mn) / light : 0;
+    return light > 150 && light < 248 && sat < 0.22 && b <= r + 10 && b <= g + 12;   // pale coating film
+  }
+  // data = RGBA flat array of the WHOLE photo (w×h). Returns a rich analysis or {ok:false,reason}.
+  V.tongueAnalyze = function (data, w, h) {
+    if (!data || !w || !h) return { ok: false, reason: "noData", confidence: 0 };
+    var cx0 = w * 0.15, cx1 = w * 0.85, cy0 = h * 0.1, cy1 = h * 0.96;   // central crop
+    var mask = new Uint8Array(w * h);
+    var mc = 0, tn = 0, sr = 0, sg = 0, sb = 0, minX = w, minY = h, maxX = 0, maxY = 0;
+    var allN = 0, lSum = 0, lSq = 0;
+    for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) {
+      var i = (y * w + x) * 4; if (data[i + 3] < 200) continue;
+      var r = data[i], g = data[i + 1], b = data[i + 2], light = Math.max(r, g, b);
+      allN++; lSum += light; lSq += light * light;
+      if (x < cx0 || x > cx1 || y < cy0 || y > cy1) continue;
+      if (!tgIsTongue(r, g, b)) continue;
+      mask[y * w + x] = 1; mc++;
+      if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y;
+      if (tgIsBody(r, g, b)) { tn++; sr += r; sg += g; sb += b; }   // colour from BODY pixels only
+    }
+    var meanLight = allN ? lSum / allN : 0;
+    var contrast = allN ? Math.sqrt(Math.max(0, lSq / allN - meanLight * meanLight)) : 0;
+    var coverage = allN ? mc / allN : 0;
+    var reason = meanLight < 38 ? "tgQDark" : meanLight > 230 ? "tgQBright"
+      : (coverage < 0.05 || tn < 20) ? "tgQNoTongue" : contrast < 12 ? "tgQBlur" : null;
+    if (reason) return { ok: false, reason: reason, confidence: 0, coverage: Math.round(coverage * 100) / 100 };
+
+    var r0 = sr / tn, g0 = sg / tn, b0 = sb / tn;
+    var colorBand = tgClassifyColor(r0, g0, b0);
+
+    // pass 2 over the bbox: coating, gloss(moisture), cracks, hue uniformity
+    var coatN = 0, glossN = 0, crackN = 0, mN = 0, hsSum = 0, hsSq = 0;
+    for (var y2 = minY; y2 <= maxY; y2++) {
+      var rowSum = 0, rowN = 0, x2, i2, lt;
+      for (x2 = minX; x2 <= maxX; x2++) { if (!mask[y2 * w + x2]) continue; i2 = (y2 * w + x2) * 4; rowSum += Math.max(data[i2], data[i2 + 1], data[i2 + 2]); rowN++; }
+      var rowMean = rowN ? rowSum / rowN : 0;
+      for (x2 = minX; x2 <= maxX; x2++) {
+        if (!mask[y2 * w + x2]) continue;
+        i2 = (y2 * w + x2) * 4; var rr = data[i2], gg = data[i2 + 1], bb = data[i2 + 2];
+        lt = Math.max(rr, gg, bb); var st = lt ? (lt - Math.min(rr, gg, bb)) / lt : 0, hu = tgHue(rr, gg, bb);
+        var hs = hu > 180 ? hu - 360 : hu; mN++; hsSum += hs; hsSq += hs * hs;
+        if (lt > 165 && st < 0.22) coatN++;
+        if (lt > 236 && st < 0.12) glossN++;
+        if (rowMean > 0 && lt < rowMean * 0.72) crackN++;
+      }
+    }
+    var coating = mN ? coatN / mN : 0, gloss = mN ? glossN / mN : 0, cracks = mN ? crackN / mN : 0;
+    var hsMean = mN ? hsSum / mN : 0, hueSd = mN ? Math.sqrt(Math.max(0, hsSq / mN - hsMean * hsMean)) : 0;
+    var uniformity = Math.max(0, 1 - Math.min(1, hueSd / 40));
+
+    // teeth marks: scalloping of the left/right mask boundary
+    var lefts = [], rights = [];
+    for (var y3 = minY; y3 <= maxY; y3++) {
+      var lx = -1, rx = -1;
+      for (var x3 = minX; x3 <= maxX; x3++) if (mask[y3 * w + x3]) { if (lx < 0) lx = x3; rx = x3; }
+      if (lx >= 0) { lefts.push(lx); rights.push(rx); }
+    }
+    function scallop(a) { if (a.length < 6) return 0; var s = 0, n = 0; for (var k = 1; k < a.length - 1; k++) { s += Math.abs(a[k - 1] + a[k + 1] - 2 * a[k]); n++; } return n ? s / n : 0; }
+    var bw = Math.max(1, maxX - minX);
+    var teeth = Math.min(1, (scallop(lefts) + scallop(rights)) / 2 / (bw * 0.06));
+
+    // zonal readout (tip = bottom, root = top in a tongue-out photo)
+    function zone(yA, yB) {
+      yA = Math.floor(yA); yB = Math.floor(yB);
+      var zr = 0, zg = 0, zb = 0, zc = 0, zCoat = 0;
+      for (var y = yA; y < yB; y++) for (var x = minX; x <= maxX; x++) {
+        if (!mask[y * w + x]) continue; var i = (y * w + x) * 4, rr = data[i], gg = data[i + 1], bb = data[i + 2];
+        zr += rr; zg += gg; zb += bb; zc++; var lt = Math.max(rr, gg, bb), st = lt ? (lt - Math.min(rr, gg, bb)) / lt : 0;
+        if (lt > 165 && st < 0.22) zCoat++;
+      }
+      if (!zc) return null;
+      return { band: tgClassifyColor(zr / zc, zg / zc, zb / zc), coating: Math.round(zCoat / zc * 100) / 100 };
+    }
+    var bh = Math.max(1, maxY - minY), t3 = maxY - bh / 3, r3 = minY + bh / 3;
+    var zones = { root: zone(minY, r3), center: zone(r3, t3), tip: zone(t3, maxY + 1) };
+
+    // confidence from coverage / contrast / lighting
+    var covS = Math.min(1, coverage / 0.16), conS = Math.min(1, contrast / 30), ltS = 1 - Math.min(1, Math.abs(meanLight - 140) / 120);
+    var confidence = Math.round(Math.max(0.15, Math.min(1, covS * 0.4 + conS * 0.3 + ltS * 0.3)) * 100) / 100;
+
+    var flag = (function () {
+      var score = 0;
+      if (colorBand !== "tgCNormal") score += 2;
+      if (coating > 0.7) score += 2; else if (coating > 0.45) score += 1;
+      if (cracks > 0.12) score += 1;
+      if (teeth > 0.5) score += 1;
+      var tone = score <= 1 ? "green" : score <= 3 ? "yellow" : "crimson";
+      return { k: tone === "green" ? "tgLow" : tone === "yellow" ? "tgWatch" : "tgHigh", tone: tone, score: score };
+    })();
+
+    return {
+      ok: true, confidence: confidence, coverage: Math.round(coverage * 100) / 100,
+      color: { band: colorBand, rgb: [Math.round(r0), Math.round(g0), Math.round(b0)] },
+      coating: { value: Math.round(coating * 100) / 100, band: coating > 0.7 ? "tgKWhite" : coating > 0.45 ? "tgKThick" : "tgKThin" },
+      cracks: Math.round(cracks * 100) / 100, teeth: Math.round(teeth * 100) / 100,
+      moisture: Math.round(gloss * 100) / 100, uniformity: Math.round(uniformity * 100) / 100,
+      surfBand: cracks > 0.12 ? "tgSCracks" : "tgSSmooth",
+      zones: zones, flag: flag,
+    };
+  };
+
   // free-text observable signs the AI may return → localized chip labels
   var TG_SIGNS = {
     "teeth marks": { ka: "კბილის კვალი", en: "Teeth marks" }, "scalloped": { ka: "ტალღოვანი კიდე", en: "Scalloped edge" },
@@ -1596,29 +1721,63 @@
 
   V.screens.tonguescan = function () {
     var w = W(); w.tongueScan = w.tongueScan || [];
-    var hasPhoto = false, color = null, coating = 0, surface = 0, aiDataUrl = null;
+    var hasPhoto = false, A = null, aiDataUrl = null;
 
     function sigRow(labelKey, val, tone, note) {
       return '<div class="tg-sig tg-tone-' + tone + '"><div class="tg-sig__h"><b>' + t(labelKey) + "</b><span>" + esc(val) + "</span></div><p>" + esc(note) + "</p></div>";
     }
+    function zoneTone(z) { return !z ? "gray" : z.band === "tgCNormal" ? "green" : z.band === "tgCRed" ? "crimson" : "yellow"; }
+    function zRow(name, z) {
+      return '<div class="tg-zrow"><span class="tg-zdot" style="background:' + TONE_HEX[zoneTone(z)] + '"></span><b>' + name + "</b><small>" + (z ? t(z.band) : "—") + "</small></div>";
+    }
+    function zoneMap(z) {
+      var P = "M60 6c26 0 34 20 34 46 0 40-16 92-34 92S26 92 26 52C26 26 34 6 60 6Z";
+      return '<div class="tg-zonewrap"><div class="kicker" style="margin:14px 2px 8px">' + t("tgZones") + "</div>" +
+        '<div class="tg-zones"><svg viewBox="0 0 120 150" class="tg-zsvg" aria-hidden="true">' +
+          '<defs><clipPath id="tgClip"><path d="' + P + '"/></clipPath></defs>' +
+          '<g clip-path="url(#tgClip)">' +
+            '<rect x="0" y="0" width="120" height="52" fill="' + TONE_HEX[zoneTone(z.root)] + '"/>' +
+            '<rect x="0" y="52" width="120" height="46" fill="' + TONE_HEX[zoneTone(z.center)] + '"/>' +
+            '<rect x="0" y="98" width="120" height="52" fill="' + TONE_HEX[zoneTone(z.tip)] + '"/>' +
+          "</g>" +
+          '<path d="' + P + '" fill="none" stroke="var(--line)" stroke-width="2"/>' +
+          '<line x1="28" y1="52" x2="92" y2="52" stroke="#fff" stroke-width="1.5"/><line x1="24" y1="98" x2="96" y2="98" stroke="#fff" stroke-width="1.5"/>' +
+        "</svg>" +
+        '<div class="tg-zlist">' + zRow(t("tgZRoot"), z.root) + zRow(t("tgZCenter"), z.center) + zRow(t("tgZTip"), z.tip) + "</div></div>" +
+        '<p class="tg-znote">' + t("tgZonesNote") + "</p></div>";
+    }
     function analyze() {
-      if (!hasPhoto || !color) { V.toast && V.toast(t("tgNoPhoto")); return; }
-      var flag = V.tongueFlag(color, coating, surface), coatPct = Math.round(coating * 100);
-      w.tongueScan.push({ date: today(), band: flag.k, color: color.band, coating: coating, surface: surface });
+      if (!hasPhoto || !A) { V.toast && V.toast(t("tgNoPhoto")); return; }
+      var box = $("#tgResult");
+      if (!A.ok) {   // quality gating — bad photo → ask to retake
+        box.innerHTML = '<div class="card-soft skin-res fade-in" style="text-align:center">' +
+          '<div style="display:flex;justify-content:center;margin-bottom:10px">' + V.iconBox("tongue", "yellow") + "</div>" +
+          '<div class="mt-sev mt-tone-yellow">' + t("tgQTitle") + "</div>" +
+          '<p class="mt-rec">' + t(A.reason) + "</p></div>";
+        box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        return;
+      }
+      var flag = A.flag, coatPct = Math.round(A.coating.value * 100);
+      w.tongueScan.push({ date: today(), band: flag.k, color: A.color.band, coating: A.coating.value, surface: A.surfBand, confidence: A.confidence });
       if (w.tongueScan.length > 40) w.tongueScan = w.tongueScan.slice(-40);
       V.awardOnce && V.awardOnce("tongue:" + today(), V.POINTS.task, "task");
       V.save();
-      var box = $("#tgResult");
+      var chips = [];
+      if (A.teeth > 0.5) chips.push(t("tgTeeth"));
+      chips.push(A.moisture > 0.005 ? t("tgMoist") : t("tgDry"));
       box.innerHTML = '<div class="card-soft skin-res fade-in">' +
-        '<div class="rd-ring rd-tone-' + flag.tone + '" style="width:96px;height:96px;border-width:7px;margin:0 auto 12px"><b style="font-size:30px">' + flag.score + "</b></div>" +
+        '<div class="rd-ring rd-tone-' + flag.tone + '" style="width:96px;height:96px;border-width:7px;margin:0 auto 10px"><b style="font-size:30px">' + flag.score + "</b></div>" +
         '<div class="mt-sev mt-tone-' + flag.tone + '" style="text-align:center">' + t(flag.k) + "</div>" +
+        '<p class="tg-conf">' + t("tgConfidence") + " · " + Math.round(A.confidence * 100) + "%</p>" +
         '<p class="mt-rec" style="text-align:center">' + t(flag.k + "Rec") + "</p>" +
         '<div class="tg-sigs">' +
-          sigRow("tgSigColor", t(color.band), color.band === "tgCNormal" ? "green" : "yellow", t(color.band + "Note")) +
-          sigRow("tgSigCoat", t(flag.coatBand) + " · " + coatPct + "%", coating > 0.45 ? "yellow" : "green", t("tgKNote")) +
-          sigRow("tgSigSurf", t(flag.surfBand), surface > 0.6 ? "yellow" : "green", t("tgSNote")) +
+          sigRow("tgSigColor", t(A.color.band), A.color.band === "tgCNormal" ? "green" : "yellow", t(A.color.band + "Note")) +
+          sigRow("tgSigCoat", t(A.coating.band) + " · " + coatPct + "%", A.coating.value > 0.45 ? "yellow" : "green", t("tgKNote")) +
+          sigRow("tgSigSurf", t(A.surfBand), A.cracks > 0.12 ? "yellow" : "green", t("tgSNote")) +
         "</div>" +
-        ((V.api && V.api.vision && aiDataUrl) ? '<button class="btn btn-ghost" id="tgAi" style="width:100%;margin-top:8px">' + V.icon("sparkle") + " " + t("tgAiCta") + "</button>" : "") +
+        '<div class="fd-items tg-chips">' + chips.map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("") + "</div>" +
+        zoneMap(A.zones) +
+        ((V.api && V.api.vision && aiDataUrl) ? '<button class="btn btn-ghost" id="tgAi" style="width:100%;margin-top:10px">' + V.icon("sparkle") + " " + t("tgAiCta") + "</button>" : "") +
         '<div id="tgAiOut"></div>' +
         (flag.tone !== "green" ? '<button class="btn btn-primary" data-tg-doc style="width:100%;margin-top:6px">' + V.icon("calendar") + " " + t("tgBook") + "</button>" : "") +
         '<button class="link-btn" data-tg-discuss style="margin-top:8px">' + t("tgDiscuss") + "</button></div>";
@@ -1632,7 +1791,7 @@
         var ka = V.lang() === "ka";
         V.state.chat = V.state.chat || [];
         V.state.chat.push({ role: "user", text: (ka ? "ჩემი ენის სკანი: " : "My tongue scan: ") +
-          t(color.band) + (ka ? " ფერი, " : " colour, ") + t(flag.coatBand).toLowerCase() + ", " + t(flag.surfBand).toLowerCase() + ". " + (ka ? "რას მირჩევ?" : "What do you suggest?") });
+          t(A.color.band) + (ka ? " ფერი, " : " colour, ") + t(A.coating.band).toLowerCase() + ", " + t(A.surfBand).toLowerCase() + (A.teeth > 0.5 ? ", " + t("tgTeeth").toLowerCase() : "") + ". " + (ka ? "რას მირჩევ?" : "What do you suggest?") });
         V.save(); V.go("vita");
       });
     }
@@ -1688,10 +1847,10 @@
               var ctx = canvas.getContext("2d");
               ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
               hasPhoto = true; hint.style.display = "none";
-              try {
-                var d = ctx.getImageData(60, 60, 100, 100).data;
-                color = V.tongueColor(d); coating = V.tongueCoating(d); surface = V.tongueSurface(d);
-              } catch (e) { color = null; }
+              try {   // segment + analyze the WHOLE frame (not a fixed crop)
+                var d = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                A = V.tongueAnalyze(d, canvas.width, canvas.height);
+              } catch (e) { A = null; }
               try {   // higher-res copy for the optional AI reading
                 var sc = Math.min(1, 768 / Math.max(img.width, img.height));
                 var oc = document.createElement("canvas");

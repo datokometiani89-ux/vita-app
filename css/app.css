@@ -1779,6 +1779,17 @@
 .tg-ai__row span { color: var(--muted); } .tg-ai__row b { color: var(--ink); }
 .tg-ai__signs { margin-top: 9px; } .tg-ai__signs small { color: var(--muted); font-size: 12px; }
 .tg-ai__signs .fd-items { margin-top: 6px; }
+.tg-conf { text-align: center; font-size: 12.5px; color: var(--muted); margin: 2px 0 6px; font-weight: 600; }
+.tg-chips { justify-content: center; margin: 10px 0 2px; }
+.tg-zonewrap { margin-top: 12px; }
+.tg-zones { display: flex; align-items: center; gap: 16px; }
+.tg-zsvg { width: 84px; flex: none; }
+.tg-zlist { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.tg-zrow { display: flex; align-items: center; gap: 9px; font-size: 13.5px; }
+.tg-zrow b { flex: none; min-width: 52px; color: var(--ink); font-weight: 600; }
+.tg-zrow small { color: var(--muted); }
+.tg-zdot { width: 12px; height: 12px; border-radius: 99px; flex: none; }
+.tg-znote { font-size: 11.5px; color: var(--muted); line-height: 1.5; margin-top: 10px; }
 
 .td-docapp { display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 8px; padding: 12px; border: 1.5px dashed var(--line); border-radius: var(--r-md); color: var(--green-dark); font-size: 13.5px; font-weight: 600; }
 .td-docapp svg { width: 16px; } .td-docapp svg:last-child { width: 14px; transform: rotate(180deg); opacity: .6; }
