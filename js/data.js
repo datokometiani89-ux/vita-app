@@ -272,6 +272,12 @@ window.VITA = window.VITA || {};
   };
 
   /* ---------- Daily plan tasks (depend on selected goals) ---------- */
+  // today's plan completion 0-100 (done tasks / total) — real progress for the home
+  V.dayProgress = function () {
+    var tasks = V.dailyTasks();
+    var done = (V.state.doneTasks && V.state.doneTasks[V.todayISO()]) || [];
+    return tasks.length ? Math.round((done.length / tasks.length) * 100) : 0;
+  };
   V.dailyTasks = function () {
     var g = V.state.goals;
     var p = V.state.profile;

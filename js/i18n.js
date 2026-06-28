@@ -81,6 +81,15 @@ window.VITA = window.VITA || {};
     sySpecialist: { ka: "რეკომენდებული სპეციალისტი", en: "Suggested specialist" },
     syAdvice: { ka: "რჩევა", en: "Advice" },
     syBook: { ka: "ჩაეწერე ექიმთან →", en: "Book this specialist →" },
+    syHowBad: { ka: "სიმძიმე", en: "Severity" },
+    syHowLong: { ka: "ხანგრძლივობა", en: "Duration" },
+    syMild: { ka: "მსუბუქი", en: "mild" },
+    syMod: { ka: "საშუალო", en: "moderate" },
+    sySevere: { ka: "ძლიერი", en: "severe" },
+    syDurToday: { ka: "დღეს დაიწყო", en: "started today" },
+    syDurDays: { ka: "რამდენიმე დღეა", en: "a few days" },
+    syDurWeeks: { ka: "კვირებია", en: "weeks now" },
+    syDiscuss: { ka: "დეტალურად განიხილე VITA AI-სთან", en: "Discuss in detail with VITA AI" },
     syClear: { ka: "ახლიდან", en: "Start over" },
     syMatch: { ka: "სიმპტომების შესაბამისობა", en: "Symptom match" },
     syDisclaimer: { ka: "⚠️ ეს ხელსაწყო არ სვამს დიაგნოზს. გადაუდებელ შემთხვევაში დარეკე 112.", en: "⚠️ This tool does not diagnose. In an emergency call 112." },
@@ -733,6 +742,7 @@ window.VITA = window.VITA || {};
     /* ---------- dashboard ---------- */
     homepage: { ka: "მთავარი", en: "Homepage" },
     hpCreated: { ka: "შენი ჯანმრთელობის პროფილი წარმატებით შეიქმნა", en: "Your health profile was successfully created" },
+    hpToday: { ka: "დღეს", en: "today" },
     goodMorning: { ka: "დილა მშვიდობისა", en: "Good morning" },
     goodDay: { ka: "შუადღე მშვიდობისა", en: "Good afternoon" },
     goodEvening: { ka: "საღამო მშვიდობისა", en: "Good evening" },
@@ -1070,6 +1080,9 @@ window.VITA = window.VITA || {};
 
     /* ---------- plan tab ---------- */
     plAlmost: { ka: "შენი გეგმა თითქმის შესრულებულია", en: "Your plan is almost complete" },
+    plStart: { ka: "დავიწყოთ დღევანდელი გეგმა", en: "Let's start today's plan" },
+    plKeepGoing: { ka: "კარგად მიდიხარ — გააგრძელე", en: "You're doing well — keep going" },
+    plDone: { ka: "დღევანდელი გეგმა შესრულდა! 🎉", en: "Today's plan is complete! 🎉" },
     plDaily: { ka: "დღიური პროგრესი", en: "Daily progress" },
     plDaysLeft: { ka: "დარჩა {n} დღე", en: "{n} days left" },
     plDay: { ka: "დღე", en: "Day" },

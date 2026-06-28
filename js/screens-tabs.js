@@ -33,7 +33,7 @@
               '<button class="icon-box gray" data-go="reminders" aria-label="' + t("rmTitle") + '">' + V.icon("bell") + "</button>" +
               '<button class="icon-box gray" data-menu aria-label="' + t("menuTitle") + '">' + V.icon("grid") + "</button>" +
             "</div>" +
-            '<div class="score-bubble">100%</div>' +
+            '<button class="score-bubble" data-go="plan" aria-label="' + t("nPlan") + '"><b>' + V.dayProgress() + '%</b><i>' + t("hpToday") + "</i></button>" +
           "</div>" +
         "</div>" +
         '<div class="kicker" style="margin:20px 0 10px">' + t("yourData") + "</div>" +
@@ -143,7 +143,7 @@
           '<button class="icon-box gray" data-open-settings>' + V.icon("cog") + "</button>" +
         "</div>" +
         '<div class="plan-hero"><div class="plan-hero__top">' +
-          "<h2>" + t("plAlmost") + '</h2><div class="plan-hero__pct">' + pct + "<span>%</span></div></div>" +
+          "<h2>" + (pct >= 100 ? t("plDone") : pct >= 50 ? t("plAlmost") : pct > 0 ? t("plKeepGoing") : t("plStart")) + '</h2><div class="plan-hero__pct">' + pct + "<span>%</span></div></div>" +
           '<div class="day-row">' + dayChips(day) + "</div>" +
           '<div class="daysleft"><span>' + t("plDaysLeft", { n: Math.max(0, 4 - ((day - 1) % 4)) }) + "</span></div>" +
         "</div>" +
