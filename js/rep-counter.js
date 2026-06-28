@@ -75,7 +75,9 @@
           '<button class="rep-x" data-x>' + (V.icon ? V.icon("x") : "✕") + '</button>' +
           '<div class="rep-title">' + V.esc(lname) + '</div>' +
         '</div>' +
+        '<div class="rep-depth"><span class="rep-depth__fill" data-depth style="height:0%"></span></div>' +
         '<div class="rep-status" data-status>' + t("rcStarting") + '</div>' +
+        '<div class="rep-form" data-form></div>' +
         '<div class="rep-count"><b data-reps>0</b><span>/ ' + target + '</span></div>' +
         '<div class="rep-bar"><span data-bar style="width:0%"></span></div>' +
         '<div class="rep-actions">' +
@@ -94,10 +96,20 @@
     var elBar = el.querySelector("[data-bar]");
     var elStatus = el.querySelector("[data-status]");
     var elTip = el.querySelector("[data-tip]");
+    var elForm = el.querySelector("[data-form]");
+    var elDepth = el.querySelector("[data-depth]");
 
     var reps = 0, stage = "up", finished = false;
+    var minAng = 999, lastRepTs = 0, formScores = [], fbTimer = null;
     var stream = null, pose = null, rafId = null, running = true;
 
+    function flashForm(msg, good) {
+      elForm.textContent = msg;
+      elForm.className = "rep-form on " + (good ? "good" : "warn");
+      if (good && navigator.vibrate) navigator.vibrate(35);
+      clearTimeout(fbTimer);
+      fbTimer = setTimeout(function () { elForm.className = "rep-form"; }, 1200);
+    }
     function setReps(n) {
       reps = Math.max(0, n);
       elReps.textContent = reps;
@@ -105,7 +117,8 @@
       if (reps >= target && !finished) {
         finished = true;
         el.querySelector(".rep-count").classList.add("hit");
-        elStatus.textContent = t("rcGoalHit");
+        var avg = formScores.length ? Math.round(formScores.reduce(function (a, b) { return a + b; }, 0) / formScores.length) : 100;
+        elStatus.textContent = t("rcGoalHit") + " · " + t("rcForm") + " " + avg + "%";
         if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
       }
     }
@@ -116,8 +129,11 @@
       ctx.clearRect(0, 0, w, h);
       var lm = res.poseLandmarks;
       if (!lm) { elStatus.textContent = t("rcNoBody"); return; }
-      // draw a light skeleton of the tracked joints
-      ctx.strokeStyle = "rgba(43,169,76,.9)"; ctx.lineWidth = 4;
+      var ang = moveAngle(lm, move);
+      var inDeep = ang != null && ang <= move.down;     // reached full depth
+      // colour the skeleton by form: green at full depth, amber mid-rep
+      ctx.strokeStyle = inDeep ? "rgba(43,169,76,.95)" : "rgba(224,169,46,.92)";
+      ctx.lineWidth = 4;
       [move.joints.L, move.joints.R].forEach(function (j) {
         ctx.beginPath();
         for (var i = 0; i < j.length; i++) {
@@ -127,12 +143,27 @@
         }
         ctx.stroke();
       });
-      var ang = moveAngle(lm, move);
-      if (ang == null) { elStatus.textContent = t("rcAdjust"); return; }
-      // rep state machine
-      if (ang <= move.down && stage === "up") { stage = "down"; }
-      if (ang >= move.up && stage === "down") { stage = "up"; if (!finished) setReps(reps + 1); }
-      elStatus.textContent = (stage === "down" ? "▼ " : "▲ ") + t("rcTracking");
+      if (ang == null) { elStatus.textContent = t("rcAdjust"); elDepth.style.height = "0%"; return; }
+      // depth gauge: 0% at top (move.up) → 100% at bottom (move.down)
+      var depthPct = Math.max(0, Math.min(100, Math.round((move.up - ang) / (move.up - move.down) * 100)));
+      elDepth.style.height = depthPct + "%";
+      elDepth.parentNode.classList.toggle("deep", inDeep);
+      // rep state machine + range-of-motion / tempo coaching
+      if (ang <= move.down && stage === "up") { stage = "down"; minAng = ang; }
+      else if (stage === "down") { minAng = Math.min(minAng, ang); }
+      if (ang >= move.up && stage === "down") {
+        stage = "up";
+        if (!finished) {
+          var now = performance.now();
+          var dt = lastRepTs ? now - lastRepTs : 9999; lastRepTs = now;
+          if (dt < 800) { formScores.push(60); flashForm(t("rcTooFast"), false); }
+          else { formScores.push(100); flashForm(t("rcGoodRep"), true); }
+          setReps(reps + 1);
+        }
+      }
+      // live coaching: descending but not deep enough yet
+      if (stage === "up" && depthPct > 25 && !inDeep) elStatus.textContent = "▼ " + t("rcLower");
+      else elStatus.textContent = (stage === "down" ? "▼ " : "▲ ") + t("rcTracking");
     }
 
     function fitCanvas() {

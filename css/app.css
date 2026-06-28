@@ -669,6 +669,14 @@
 .rep-minus, .rep-plus { width: 60px; flex: 0 0 auto; background: rgba(255,255,255,.18); color: #fff; border: none; font-size: 20px; font-weight: 700; }
 .rep-done { flex: 1; }
 .rep-tip { position: absolute; left: 20px; right: 20px; bottom: 22px; text-align: center; color: rgba(255,255,255,.75); font-size: 12.5px; z-index: 2; }
+/* form feedback + depth gauge */
+.rep-form { position: absolute; top: 92px; left: 0; right: 0; text-align: center; font-size: 17px; font-weight: 800; z-index: 2; opacity: 0; transform: translateY(-4px); transition: opacity .2s, transform .2s; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+.rep-form.on { opacity: 1; transform: translateY(0); }
+.rep-form.good { color: #5BE6A0; }
+.rep-form.warn { color: #FFD36B; }
+.rep-depth { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 10px; height: 180px; border-radius: 99px; background: rgba(255,255,255,.18); z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
+.rep-depth__fill { display: block; width: 100%; border-radius: 99px; background: #FFD36B; transition: height .12s ease-out; }
+.rep-depth.deep .rep-depth__fill { background: var(--green); }
 
 /* toast */
 .vtoast { position: absolute; left: 50%; bottom: 96px; transform: translate(-50%, 16px); z-index: 70; background: rgba(20,28,24,.95); color: #fff; padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.3); opacity: 0; transition: opacity .25s, transform .25s; max-width: 80%; text-align: center; }
