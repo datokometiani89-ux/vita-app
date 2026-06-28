@@ -251,7 +251,7 @@
           sevTag(item.sev) + "</div>" +
         '<div class="cu-card__div"></div>' +
         '<div class="cu-card__spec">' + V.icon("user") + "<span>" + t("cpSpec") + ": <b>" + L(ex.spec) + "</b> · " + ex.clinic + "</span></div>" +
-        '<div class="cu-card__bot"><div class="cu-card__date"><b>' + t("cpRec") + "</b><small>" + L(item.date) + "</small></div>" +
+        '<div class="cu-card__bot"><div class="cu-card__date"><b>' + t("cpRec") + "</b><small>" + t(item.sev === "high" ? "cpWinHigh" : item.sev === "medium" ? "cpWinMed" : "cpWinLow") + "</small></div>" +
           '<button class="cal-btn ' + (inCal ? "done" : "") + '" data-cal="' + item.id + '">' +
             V.icon(inCal ? "check" : "calendar") + (inCal ? t("cpBooked") : t("cpBook")) + "</button>" +
         "</div></div>";
