@@ -942,12 +942,44 @@
   };
 
   /* ===================== WOMEN'S CYCLE ===================== */
+  var cycleView = null;   // {y, m} month being viewed in the calendar (persists across re-renders)
   V.screens.cycle = function () {
     var c = V.cycle();
     var info = V.cycleInfo();
     var today = V.todayISO();
     var todayLog = (c.logs && c.logs[today]) || [];
     var tip = V.cyclePhaseTip(info.phase);
+    var hasData = Object.keys(c.periodDays).length > 0;
+    var ka = V.lang() === "ka";
+
+    function calendar() {
+      if (!cycleView) { var n = new Date(today); cycleView = { y: n.getFullYear(), m: n.getMonth() }; }
+      var y = cycleView.y, m = cycleView.m;
+      var startDow = (new Date(y, m, 1).getDay() + 6) % 7;          // Monday-first
+      var dim = new Date(y, m + 1, 0).getDate();
+      var cells = "";
+      for (var i = 0; i < startDow; i++) cells += '<span class="cal-cell cal-empty"></span>';
+      for (var dd = 1; dd <= dim; dd++) {
+        var iso = y + "-" + String(m + 1).padStart(2, "0") + "-" + String(dd).padStart(2, "0");
+        var type = V.cycleDayType(iso);
+        cells += '<button class="cal-cell' + (type ? " cal-" + type : "") + (iso === today ? " cal-today" : "") + '" data-day="' + iso + '">' + dd + "</button>";
+      }
+      var dow = ka ? ["ორ", "სა", "ოთ", "ხუ", "პა", "შა", "კვ"] : ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+      return '<div class="cal-card">' +
+        '<div class="cal-head"><button class="cal-nav" data-mon="-1">' + V.icon("back") + "</button>" +
+          "<b>" + V.monthName(m + 1) + " " + y + "</b>" +
+          '<button class="cal-nav" data-mon="1">' + V.icon("next") + "</button></div>" +
+        '<div class="cal-dow">' + dow.map(function (d) { return "<span>" + d + "</span>"; }).join("") + "</div>" +
+        '<div class="cal-grid">' + cells + "</div>" +
+        '<div class="cal-legend">' +
+          '<span><i class="cal-lg cal-period"></i>' + t("cyLegPeriod") + "</span>" +
+          '<span><i class="cal-lg cal-predPeriod"></i>' + t("cyLegPred") + "</span>" +
+          '<span><i class="cal-lg cal-fertile"></i>' + t("cyLegFertile") + "</span>" +
+          '<span><i class="cal-lg cal-ovulation"></i>' + t("cyLegOv") + "</span>" +
+        "</div></div>";
+    }
+
+    var FLOWS = [["light", "cyFlowLight"], ["med", "cyFlowMed"], ["heavy", "cyFlowHeavy"]];
 
     V.mount(
       V.statusbar() +
@@ -965,16 +997,21 @@
             "<div><b>" + t("cyFertile") + "</b><small>" + t("cyDay") + " " + info.fertileStart + "–" + info.fertileEnd + "</small></div></div>" +
         "</div>" +
 
-        '<div class="list-card" style="padding:14px 16px;margin-bottom:16px"><div style="display:flex;gap:10px;align-items:flex-start">' +
+        (!hasData ? '<div class="cy-hint">' + V.icon("calendar") + "<span>" + t("cyTapHint") + "</span></div>" : "") +
+        calendar() +
+
+        '<div class="list-card" style="padding:14px 16px;margin:16px 0"><div style="display:flex;gap:10px;align-items:flex-start">' +
           V.iconBox("sparkle", "pink") + "<div><b style='display:block;font-size:15px'>" + t("cyTip") + "</b><small style='color:var(--muted);font-size:14px'>" + L(tip) + "</small></div></div></div>" +
 
-        '<button class="btn btn-primary" data-period style="width:100%;margin-bottom:18px">' + V.icon("drop") + " " + t("cyLogStart") + "</button>" +
-
-        '<div class="section-head"><h3>' + t("cySymptoms") + "</h3></div>" +
-        '<div class="chips" data-symwrap>' +
+        '<div class="section-head"><h3>' + t("cyDailyLog") + "</h3></div>" +
+        '<p class="cy-sub2">' + t("cyFlow") + "</p>" +
+        '<div class="chips">' + FLOWS.map(function (f) {
+          return '<button class="chip ' + (c.flow[today] === f[0] ? "on" : "") + '" data-flow="' + f[0] + '">' + t(f[1]) + "</button>";
+        }).join("") + "</div>" +
+        '<p class="cy-sub2">' + t("cySymptoms") + "</p>" +
+        '<div class="chips">' +
           V.cycleSymptoms().map(function (s) {
-            var on = todayLog.indexOf(s) >= 0;
-            return '<button class="chip ' + (on ? "on" : "") + '" data-sym="' + s + '">' + t(s) + "</button>";
+            return '<button class="chip ' + (todayLog.indexOf(s) >= 0 ? "on" : "") + '" data-sym="' + s + '">' + t(s) + "</button>";
           }).join("") +
         "</div>" +
 
@@ -986,14 +1023,27 @@
       "</div>",
       { onMount: function () {
         $("[data-x]").addEventListener("click", function () { V.go("home"); });
-        $("[data-period]").addEventListener("click", function () {
-          V.state.cycle.lastPeriod = V.todayISO(); V.save(); V.render();
+        each("[data-day]", function (b) {
+          b.addEventListener("click", function () { V.cycleToggleDay(b.getAttribute("data-day")); V.render(); });
+        });
+        each("[data-mon]", function (b) {
+          b.addEventListener("click", function () {
+            var d = +b.getAttribute("data-mon");
+            var nm = cycleView.m + d, ny = cycleView.y;
+            if (nm < 0) { nm = 11; ny--; } else if (nm > 11) { nm = 0; ny++; }
+            cycleView = { y: ny, m: nm }; V.render();
+          });
+        });
+        each("[data-flow]", function (b) {
+          b.addEventListener("click", function () {
+            var f = b.getAttribute("data-flow");
+            c.flow[today] = c.flow[today] === f ? null : f; V.save(); V.render();
+          });
         });
         each("[data-sym]", function (b) {
           b.addEventListener("click", function () {
             var s = b.getAttribute("data-sym");
-            V.state.cycle.logs = V.state.cycle.logs || {};
-            var arr = V.state.cycle.logs[today] = V.state.cycle.logs[today] || [];
+            var arr = c.logs[today] = c.logs[today] || [];
             var i = arr.indexOf(s);
             if (i >= 0) arr.splice(i, 1); else arr.push(s);
             V.save(); b.classList.toggle("on");
@@ -1001,8 +1051,8 @@
         });
         function saveLen() {
           var l = parseInt($("#cyLen").value) || 28, p = parseInt($("#cyPlen").value) || 5;
-          V.state.cycle.cycleLen = Math.min(40, Math.max(20, l));
-          V.state.cycle.periodLen = Math.min(10, Math.max(2, p));
+          c.cycleLen = Math.min(40, Math.max(20, l));
+          c.periodLen = Math.min(10, Math.max(2, p));
           V.save();
         }
         $("#cyLen").addEventListener("change", function () { saveLen(); V.render(); });

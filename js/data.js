@@ -662,11 +662,42 @@ window.VITA = window.VITA || {};
   function addDays(iso, n) { var d = new Date(iso); d.setDate(d.getDate() + n); return d; }
 
   V.cycleDefault = function () {
-    return { lastPeriod: dISO(addDays(V.todayISO(), -8)), cycleLen: 28, periodLen: 5, logs: {} };
+    return { lastPeriod: dISO(addDays(V.todayISO(), -8)), cycleLen: 28, periodLen: 5, logs: {}, periodDays: {}, flow: {} };
   };
   V.cycle = function () {
     if (!V.state.cycle) { V.state.cycle = V.cycleDefault(); V.save(); }
-    return V.state.cycle;
+    var c = V.state.cycle;
+    c.periodDays = c.periodDays || {}; c.flow = c.flow || {}; c.logs = c.logs || {};
+    return c;
+  };
+  // most recent period START = first day of the latest contiguous run of logged days
+  V.cycleLastStart = function () {
+    var c = V.cycle();
+    var days = Object.keys(c.periodDays).filter(function (k) { return c.periodDays[k]; }).sort();
+    if (!days.length) return c.lastPeriod;
+    var start = days[days.length - 1];
+    for (var i = days.length - 2; i >= 0; i--) {
+      if (dISO(addDays(start, -1)) === days[i]) start = days[i]; else break;
+    }
+    return start;
+  };
+  V.cycleToggleDay = function (iso) {
+    var c = V.cycle();
+    if (c.periodDays[iso]) delete c.periodDays[iso]; else c.periodDays[iso] = 1;
+    c.lastPeriod = V.cycleLastStart();   // keep predictions + calendar in sync
+    V.save();
+  };
+  // classify a date for the calendar: logged period > predicted period/fertile/ovulation
+  V.cycleDayType = function (iso) {
+    var c = V.cycle();
+    if (c.periodDays[iso]) return "period";
+    var len = c.cycleLen || 28, plen = c.periodLen || 5, ovDay = len - 14;
+    var elapsed = Math.floor((new Date(iso) - new Date(V.cycleLastStart())) / 86400000);
+    var dayInCycle = ((elapsed % len) + len) % len + 1;   // 1..len, wraps both directions
+    if (dayInCycle <= plen) return "predPeriod";
+    if (dayInCycle === ovDay) return "ovulation";
+    if (dayInCycle >= ovDay - 3 && dayInCycle <= ovDay + 1) return "fertile";
+    return null;
   };
   // current phase + predictions
   V.cycleInfo = function () {
