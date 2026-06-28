@@ -297,6 +297,49 @@ window.VITA = window.VITA || {};
   };
   V.setHomeCards = function (prefs) { V.state.homeCards = prefs; V.save(); };
 
+  /* ---------- Plan insights (streak / focus / daily tip) ---------- */
+  // consecutive days (up to today) with at least one task done
+  V.taskStreak = function () {
+    function diso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+    var n = 0, base = new Date(V.todayISO());
+    for (var i = 0; i < 180; i++) {
+      var d = new Date(base.getFullYear(), base.getMonth(), base.getDate() - i);
+      var has = (((V.state.doneTasks || {})[diso(d)]) || []).length > 0;
+      if (i === 0 && !has) continue;     // today not started yet — don't break the streak
+      if (has) n++; else break;
+    }
+    return n;
+  };
+  // today's focus theme (rotates by weekday)
+  V.DAY_FOCUS = [
+    { icon: "moon", key: "df0", label: { ka: "დასვენება & აღდგენა", en: "Rest & recovery" } },
+    { icon: "walk", key: "df1", label: { ka: "მოძრაობა", en: "Movement" } },
+    { icon: "drop", key: "df2", label: { ka: "ჰიდრატაცია", en: "Hydration" } },
+    { icon: "food", key: "df3", label: { ka: "კვება", en: "Nutrition" } },
+    { icon: "moon", key: "df4", label: { ka: "ძილი", en: "Sleep" } },
+    { icon: "brain", key: "df5", label: { ka: "მენტალური სიმშვიდე", en: "Mental calm" } },
+    { icon: "bolt", key: "df6", label: { ka: "აქტიურობა", en: "Be active" } },
+  ];
+  V.dayFocus = function () { return V.DAY_FOCUS[new Date(V.todayISO()).getDay()]; };
+  // rotating daily tip (deterministic by date)
+  V.DAILY_TIPS = [
+    { ka: "დილით 1 ჭიქა წყალი მეტაბოლიზმს აღვიძებს.", en: "A glass of water on waking kick-starts your metabolism." },
+    { ka: "10-წუთიანი გასეირნება ჭამის შემდეგ შაქარს აქვეითებს.", en: "A 10-minute walk after meals lowers blood sugar." },
+    { ka: "7–8 სთ ძილი ჰორმონებსა და მადას არეგულირებს.", en: "7–8h of sleep regulates hormones and appetite." },
+    { ka: "ცილა ყოველ კვებაზე — სიმაძღრე და კუნთი.", en: "Protein at each meal — fullness and muscle." },
+    { ka: "2 წუთი ღრმა სუნთქვა სტრესს ამცირებს.", en: "Two minutes of deep breathing lowers stress." },
+    { ka: "ეკრანი ძილის წინ 1 საათით ადრე გამორთე.", en: "Switch screens off an hour before bed." },
+    { ka: "ფერადი ბოსტნეული = მეტი ანტიოქსიდანტი.", en: "Colourful vegetables = more antioxidants." },
+    { ka: "დილის მზე ენერგიასა და D ვიტამინს მატებს.", en: "Morning sunlight boosts energy and vitamin D." },
+    { ka: "ნაკლები შაქარი — სტაბილური ენერგია დღეში.", en: "Less sugar — steadier energy through the day." },
+    { ka: "ყოველ საათში 2–3 წუთით წამოდექი.", en: "Stand up for 2–3 minutes every hour." },
+  ];
+  V.dailyTip = function () {
+    var d = new Date(V.todayISO());
+    var idx = (d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % V.DAILY_TIPS.length;
+    return V.DAILY_TIPS[idx];
+  };
+
   // today's plan completion 0-100 (done tasks / total) — real progress for the home
   V.dayProgress = function () {
     var tasks = V.dailyTasks();

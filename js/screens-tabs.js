@@ -176,6 +176,23 @@
     var morningMeds = meds.filter(function (m) { return m.when === "morning"; });
     var eveningMeds = meds.filter(function (m) { return m.when === "evening"; });
     var doneMeds = V.state.doneMeds[today] || [];
+    var userMeds = V.userMeds ? V.userMeds() : [];
+    // the user's own meds (from the tracker) grouped by time slot, with taken-state
+    function userMedsBlock() {
+      var slots = [["morning", "sun", "08:00", "plWithBreakfast"], ["noon", "sun", "13:00", "mdNoon"], ["evening", "moon", "19:00", "plWithDinner"], ["bed", "moon", "22:00", "mdBed"]];
+      return slots.map(function (sl) {
+        var inSlot = userMeds.filter(function (m) { return m.when.indexOf(sl[0]) >= 0; });
+        if (!inSlot.length) return "";
+        return '<div class="med-when">' + V.icon(sl[1]) + " " + sl[2] + " — " + t(sl[3]) + "</div>" +
+          inSlot.map(function (m) {
+            var taken = V.medTakenToday(m.id, sl[0]);
+            return '<div class="task' + (taken ? " done" : "") + '">' +
+              '<button class="task__box" data-umed="' + m.id + "|" + sl[0] + '">' + V.icon("check") + "</button>" +
+              V.iconBox("pill", "crimson") +
+              '<span class="task__t">' + esc(m.name) + (m.dose ? " · " + esc(m.dose) : "") + "</span></div>";
+          }).join("");
+      }).join("");
+    }
     var food = V.foodPlan();
 
     function waterWidget() {
@@ -203,6 +220,12 @@
           weekStrip() +
           '<div class="daysleft"><span>' + ((tasks.length - done.length) > 0 ? t("plTasksLeft", { n: tasks.length - done.length }) : t("plAllDoneToday")) + "</span></div>" +
         "</div>" +
+
+        '<div class="pl-insight">' +
+          '<div class="pl-streak"><span class="pl-streak__n">' + V.icon("bolt") + V.taskStreak() + "</span><small>" + t("plStreakDays") + "</small></div>" +
+          '<div class="pl-focus">' + V.iconBox(V.dayFocus().icon, "green") + "<div><small>" + t("plFocus") + "</small><b>" + L(V.dayFocus().label) + "</b></div></div>" +
+        "</div>" +
+        '<div class="pl-tip">' + V.icon("sparkle") + "<p>" + L(V.dailyTip()) + "</p></div>" +
 
         waterWidget() +
         '<button class="careplans-cta" data-careplans>' + V.iconBox("heart", "green") +
@@ -232,11 +255,13 @@
             '<span class="pts-badge ' + (d ? "earned" : "") + '">' + (d ? "✓ " : "+") + V.POINTS.task + "</span></div>";
         }).join("") +
 
-        (meds.length ? '<div class="section-head"><h3>' + t("plMeds") + '</h3><small>' + t("plDoctor") + "</small></div>" +
-          (morningMeds.length ? '<div class="med-when">' + V.icon("sun") + " 08:00 — " + t("plWithBreakfast") + "</div>" +
-            morningMeds.map(function (m) { return medRow(m, doneMeds, today); }).join("") : "") +
-          (eveningMeds.length ? '<div class="med-when">' + V.icon("moon") + " 19:00 — " + t("plWithDinner") + "</div>" +
-            eveningMeds.map(function (m) { return medRow(m, doneMeds, today); }).join("") : "") : "") +
+        (userMeds.length
+          ? '<div class="section-head"><h3>' + t("plMeds") + '</h3><a class="section-head__link" data-go="meds">' + t("plManageMeds") + "</a></div>" + userMedsBlock()
+          : (meds.length ? '<div class="section-head"><h3>' + t("plMeds") + '</h3><small>' + t("plDoctor") + "</small></div>" +
+            (morningMeds.length ? '<div class="med-when">' + V.icon("sun") + " 08:00 — " + t("plWithBreakfast") + "</div>" +
+              morningMeds.map(function (m) { return medRow(m, doneMeds, today); }).join("") : "") +
+            (eveningMeds.length ? '<div class="med-when">' + V.icon("moon") + " 19:00 — " + t("plWithDinner") + "</div>" +
+              eveningMeds.map(function (m) { return medRow(m, doneMeds, today); }).join("") : "") : "")) +
 
         '<div class="section-head"><h3>' + t("plFood") + "</h3></div>" +
         '<div class="cal-note">' + t("plCalRange") + "</div>" +
@@ -284,6 +309,9 @@
             el.classList.toggle("done");
             el.querySelector(".task__box").className = "task__box";
           });
+        });
+        each("[data-umed]", function (b) {
+          b.addEventListener("click", function () { var p = b.getAttribute("data-umed").split("|"); V.toggleMedTaken(p[0], p[1]); V.render(); });
         });
 
         /* ----- interactive proof logger (text / photo / voice) ----- */

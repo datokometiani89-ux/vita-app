@@ -549,6 +549,19 @@
 .plan-hero__top h2 { font-size: 25px; font-weight: 800; line-height: 1.15; max-width: 64%; }
 .plan-hero__pct { font-size: 44px; font-weight: 800; }
 .plan-hero__pct span { font-size: 26px; }
+/* plan insights (streak / focus / tip) */
+.pl-insight { display: flex; gap: 12px; margin-bottom: 12px; }
+.pl-streak { flex: none; background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 14px 16px; text-align: center; display: flex; flex-direction: column; justify-content: center; min-width: 92px; }
+.pl-streak__n { font-size: 24px; font-weight: 800; color: #d9831a; display: inline-flex; align-items: center; gap: 2px; justify-content: center; }
+.pl-streak__n svg { width: 18px; }
+.pl-streak small { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.pl-focus { flex: 1; display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 14px 16px; min-width: 0; }
+.pl-focus small { display: block; font-size: 12px; color: var(--muted); }
+.pl-focus b { font-size: 15.5px; }
+.pl-tip { display: flex; gap: 10px; align-items: flex-start; background: var(--green-tint); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 16px; }
+.pl-tip svg { width: 18px; color: var(--green); flex: none; margin-top: 1px; }
+.pl-tip p { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; margin: 0; }
+.section-head__link { font-size: 13px; color: var(--green); font-weight: 700; }
 .wk-strip { display: flex; justify-content: space-between; gap: 4px; margin-top: 18px; }
 .wk-day { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .wk-day__n { font-size: 11px; font-weight: 600; color: var(--muted); }
