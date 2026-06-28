@@ -735,6 +735,46 @@ window.VITA = window.VITA || {};
     return ["symCramps", "symMood", "symHeadache", "symFatigue", "symBloating", "symAcne"];
   };
 
+  /* ---------- Sex- & age-tailored health ---------- */
+  // returns the topics relevant to the user's sex + age (self-exams + screenings)
+  V.sexHealthTopics = function () {
+    var p = V.state.profile || {}, sex = p.sex || "man", age = p.age || 30;
+    var ALL = [
+      // women
+      { id: "breast", sex: "woman", icon: "heart", tone: "pink", title: { ka: "მკერდის თვითშემოწმება", en: "Breast self-exam" },
+        body: { ka: "ყოველთვიურად, მენსტრუაციის შემდეგ. ეძებე ახალი კვანძი, ფორმის/კანის ცვლილება, გამონადენი.", en: "Monthly, after your period. Look for new lumps, shape/skin changes, or discharge." },
+        steps: { ka: ["დადექი სარკესთან, შეამოწმე ვიზუალურად აწეული და ჩამოშვებული ხელებით", "თითების ბალიშებით, წრიული მოძრაობით შეამოწმე მთელი მკერდი და იღლია", "დააჭირე ძუძუს თავს — შეამოწმე გამონადენი"], en: ["At the mirror, look with arms up then down", "With finger pads, circle the whole breast + armpit", "Gently squeeze the nipple — check for discharge"] },
+        clinic: { cat: "medical", label: { ka: "მამოლოგი", en: "Breast doctor" } } },
+      { id: "cervix", sex: "woman", minAge: 21, icon: "shield", tone: "pink", title: { ka: "საშვილოსნოს ყელის სკრინინგი", en: "Cervical screening (Pap/HPV)" },
+        body: { ka: "Pap-ტესტი ~3 წელიწადში ერთხელ 21+ ასაკში; HPV-ტესტი 30+. ადრე აღმოჩენა მაღალ შედეგს იძლევა.", en: "Pap test ~every 3 years from 21; HPV test from 30. Early detection works." },
+        clinic: { cat: "medical", label: { ka: "გინეკოლოგი", en: "Gynecologist" } } },
+      { id: "iron", sex: "woman", icon: "drop", tone: "crimson", title: { ka: "რკინა და ანემია", en: "Iron & anemia" },
+        body: { ka: "მენსტრუაცია ზრდის რკინის საჭიროებას. დაღლა/სიფერმკრთალე? შეამოწმე ფერიტინი/ჰემოგლობინი.", en: "Periods raise iron needs. Fatigue/paleness? Check ferritin/hemoglobin." },
+        clinic: { cat: "medical", label: { ka: "ლაბორატორია", en: "Lab test" } } },
+      { id: "bone", sex: "woman", minAge: 50, icon: "shield", tone: "blue", title: { ka: "ძვლის სიმკვრივე", en: "Bone density" },
+        body: { ka: "მენოპაუზის შემდეგ ოსტეოპოროზის რისკი იზრდება — D ვიტამინი, კალციუმი, წონითი ვარჯიში, DEXA სკანი.", en: "Osteoporosis risk rises after menopause — vitamin D, calcium, weight-bearing exercise, a DEXA scan." } },
+      // men
+      { id: "testicular", sex: "man", icon: "shield", tone: "blue", title: { ka: "სათესლე ჯირკვლის თვითშემოწმება", en: "Testicular self-exam" },
+        body: { ka: "ყოველთვიურად, თბილ შხაპში. ეძებე კვანძი, შეშუპება ან სიმძიმის შეგრძნება.", en: "Monthly, in a warm shower. Feel for lumps, swelling or heaviness." },
+        steps: { ka: ["თბილ წყალში კანი მოდუნებულია — გააგორე თითო სათესლე ცერსა და თითებს შორის", "ეძებე მაგარი, უმტკივნეულო კვანძი", "ცვლილებაზე — მიმართე ექიმს"], en: ["In warm water the skin relaxes — roll each testicle between thumb & fingers", "Feel for a firm, painless lump", "Any change → see a doctor"] },
+        clinic: { cat: "medical", label: { ka: "უროლოგი", en: "Urologist" } } },
+      { id: "prostate", sex: "man", minAge: 45, icon: "shield", tone: "blue", title: { ka: "პროსტატა (PSA)", en: "Prostate (PSA)" },
+        body: { ka: "45+ ასაკში განიხილე PSA-ტესტი ექიმთან, განსაკუთრებით ოჯახური ისტორიის შემთხვევაში.", en: "From 45, discuss a PSA test with your doctor — especially with family history." },
+        clinic: { cat: "medical", label: { ka: "უროლოგი", en: "Urologist" } } },
+      { id: "heartm", sex: "man", minAge: 35, icon: "heart", tone: "crimson", title: { ka: "გულის ადრეული რისკი", en: "Early heart risk" },
+        body: { ka: "მამაკაცებში გულსისხლძარღვთა რისკი ადრე ჩნდება. აკონტროლე წნევა, ქოლესტერინი, წონა.", en: "Cardiovascular risk appears earlier in men. Track blood pressure, cholesterol, weight." } },
+      // both
+      { id: "colon", sex: "all", minAge: 45, icon: "shield", tone: "green", title: { ka: "ნაწლავის სკრინინგი", en: "Colorectal screening" },
+        body: { ka: "45 წლიდან დაიწყე ნაწლავის სკრინინგი (კოლონოსკოპია ან FIT-ტესტი).", en: "Start colorectal screening at 45 (colonoscopy or a FIT test)." },
+        clinic: { cat: "medical", label: { ka: "გასტროენტეროლოგი", en: "Gastroenterologist" } } },
+    ];
+    return ALL.filter(function (x) {
+      if (x.sex !== "all" && x.sex !== sex) return false;
+      if (x.minAge && age < x.minAge) return false;
+      return true;
+    });
+  };
+
   /* ---------- Rewards / brand elements ---------- */
   V.POINTS = { task: 5, med: 5, workout: 15, water: 10, lab: 25, booking: 20 };
   V.ELEMENT_ORDER = ["cross", "stetho", "pill", "capsule", "vitamin", "syringe"];

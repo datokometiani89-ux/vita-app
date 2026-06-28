@@ -827,6 +827,12 @@ window.VITA = window.VITA || {};
     tdDisc: { ka: "დემო ტელემედიცინაა; გადაუდებელ შემთხვევაში დარეკეთ 112.", en: "Demo telemedicine; in an emergency call your local emergency number." },
     tdForDoctors: { ka: "ექიმი ხართ? VITA for Doctors", en: "Are you a doctor? VITA for Doctors" },
     mCycle: { ka: "ციკლი", en: "Cycle" },
+    mSexHealth: { ka: "შენთვის (ჯანმრთელობა)", en: "For you (health)" },
+    /* sex- & age-tailored health */
+    shTitle: { ka: "შენთვის", en: "For you" },
+    shDesc: { ka: "სქესისა და ასაკის მიხედვით — თვითშემოწმება და სკრინინგი", en: "Tailored to sex & age — self-exams and screenings" },
+    shHow: { ka: "როგორ გავაკეთო", en: "How to do it" },
+    shDisc: { ka: "ზოგადი ჯანმრთელობის ინფორმაციაა, არა სამედიცინო რჩევა. კონკრეტული რეკომენდაციისთვის ესაუბრე ექიმს.", en: "General health information, not medical advice. Talk to a doctor for personal recommendations." },
     /* VITA+ subscription */
     vpIntro: { ka: "გახსენი მთელი ძალა — AI ანგარიშები, ექიმის რეპორტი და მეტი.", en: "Unlock the full power — AI reports, doctor exports and more." },
     vpTagline: { ka: "პრემიუმ ჯანმრთელობის ინტელექტი", en: "Premium health intelligence" },
@@ -1069,6 +1075,8 @@ window.VITA = window.VITA || {};
     rcDenied: { ka: "კამერაზე წვდომა უარყოფილია", en: "Camera access denied" },
     rcModelFail: { ka: "მოდელი ვერ ჩაიტვირთა — ხელით რეჟიმი", en: "Model failed to load — manual mode" },
     rcSaved: { ka: "{n} გამეორება დაფიქსირდა · +15 ქულა", en: "{n} reps logged · +15 pts" },
+    swUpdate: { ka: "ახალი ვერსია ხელმისაწვდომია", en: "A new version is available" },
+    swReload: { ka: "განახლება", en: "Update" },
     /* vitaapp.ge integration */
     mVitaapp: { ka: "vitaapp.ge", en: "vitaapp.ge" },
     vaHeader: { ka: "ვიტა ანგარიში", en: "VITA account" },

@@ -1,5 +1,5 @@
 /* VITA service worker — caches the app shell for offline use. */
-var CACHE = "vita-v86";
+var CACHE = "vita-v87";
 var ASSETS = [
   "index.html",
   "app.html",
@@ -32,8 +32,15 @@ self.addEventListener("install", function (e) {
       return Promise.all(ASSETS.map(function (u) {
         return c.add(u).catch(function () {});
       }));
-    }).then(function () { return self.skipWaiting(); })
+    })
+    // NB: no skipWaiting here — the new worker waits so the page can prompt the
+    // user ("update available → refresh") instead of silently keeping old JS.
   );
+});
+
+// the page asks us to activate the freshly-installed worker
+self.addEventListener("message", function (e) {
+  if (e.data && e.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", function (e) {

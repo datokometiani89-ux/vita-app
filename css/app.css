@@ -678,6 +678,11 @@
 .rep-depth__fill { display: block; width: 100%; border-radius: 99px; background: #FFD36B; transition: height .12s ease-out; }
 .rep-depth.deep .rep-depth__fill { background: var(--green); }
 
+/* service-worker update banner */
+.sw-update { position: fixed; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 9999; display: flex; align-items: center; gap: 12px; background: var(--ink); color: #fff; border-radius: 99px; padding: 10px 12px 10px 18px; box-shadow: 0 8px 28px rgba(0,0,0,.3); font-size: 13.5px; max-width: 92%; animation: swUp .3s ease; }
+.sw-update button { background: var(--green); color: #fff; border: none; border-radius: 99px; padding: 8px 16px; font-size: 13.5px; font-weight: 700; font-family: inherit; cursor: pointer; flex: none; }
+@keyframes swUp { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
 /* toast */
 .vtoast { position: absolute; left: 50%; bottom: 96px; transform: translate(-50%, 16px); z-index: 70; background: rgba(20,28,24,.95); color: #fff; padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.3); opacity: 0; transition: opacity .25s, transform .25s; max-width: 80%; text-align: center; }
 .vtoast.on { opacity: 1; transform: translate(-50%, 0); }
@@ -1257,6 +1262,19 @@
 .cycle-pred__item { display: flex; align-items: center; gap: 10px; background: var(--card); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 14px; }
 .cycle-pred__item b { font-size: 14.5px; display: block; }
 .cycle-pred__item small { color: var(--muted); font-size: 13px; }
+
+/* sex- & age-tailored health */
+.sh-card { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 16px; margin-bottom: 12px; }
+.sh-card__h { display: flex; gap: 12px; align-items: flex-start; }
+.sh-card__h b { font-size: 15.5px; display: block; margin-bottom: 3px; }
+.sh-card__h small { color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.sh-steps { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+.sh-steps summary { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 700; color: var(--green); cursor: pointer; list-style: none; }
+.sh-steps summary::-webkit-details-marker { display: none; }
+.sh-steps summary svg { width: 16px; }
+.sh-steps ol { margin: 10px 0 2px; padding-left: 20px; }
+.sh-steps li { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; margin-bottom: 4px; }
+.sh-book { width: 100%; margin-top: 12px; }
 
 /* cycle calendar (Flo-style) */
 .cy-hint { display: flex; align-items: center; gap: 10px; background: var(--pink-tint); color: var(--pink); border-radius: var(--r-md); padding: 12px 14px; font-size: 13px; font-weight: 600; margin-bottom: 12px; line-height: 1.45; }

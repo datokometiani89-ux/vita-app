@@ -1079,6 +1079,38 @@
     );
   };
 
+  V.screens.sexhealth = function () {
+    var topics = V.sexHealthTopics();
+    var sexLabel = (V.state.profile.sex === "woman") ? { ka: "ქალის", en: "Women's" } : { ka: "მამაკაცის", en: "Men's" };
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("shTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + L(sexLabel) + " · " + t("shDesc") + "</p>" +
+        topics.map(function (x, i) {
+          return '<div class="sh-card">' +
+            '<div class="sh-card__h">' + V.iconBox(x.icon, x.tone) +
+              "<div><b>" + L(x.title) + "</b><small>" + L(x.body) + "</small></div></div>" +
+            (x.steps ? '<details class="sh-steps"><summary>' + V.icon("check") + " " + t("shHow") + "</summary><ol>" +
+              L(x.steps).map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ol></details>" : "") +
+            (x.clinic ? '<button class="btn btn-ghost sh-book" data-book="' + i + '">' + V.icon("location") + " " + L(x.clinic.label) + "</button>" : "") +
+          "</div>";
+        }).join("") +
+        '<p class="hr-multi-note">' + t("shDisc") + "</p>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        each("[data-book]", function (b) {
+          b.addEventListener("click", function () {
+            var x = topics[+b.getAttribute("data-book")];
+            if (V.openClinics) V.openClinics("general", x.clinic.label); else V.go("clinics");
+          });
+        });
+      } }
+    );
+  };
+
   function cycleRing(info) {
     var R = 78, cx = 100, cy = 100, C = 2 * Math.PI * R;
     // phase segments as arc dashes
@@ -1231,6 +1263,7 @@
           tile("calendar", "pink", "mAnnual", 'data-go="annual"', screenP && screenP.total ? screenP.pct + "%" : null),
           tile("shield", "blue", "mBody", 'data-go="bodymap"'),
           tile("flask", "yellow", "mResults", 'data-go="results"'),
+          tile("shield", V.state.profile.sex === "woman" ? "pink" : "blue", "mSexHealth", 'data-go="sexhealth"'),
         ].concat(V.state.profile.sex === "woman" ? [tile("heart", "pink", "mCycle", 'data-go="cycle"')] : [])) +
         group("grpCare", [
           tile("plan", "green", "mPlan", 'data-go="plan"'),

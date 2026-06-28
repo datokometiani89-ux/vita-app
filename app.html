@@ -13,31 +13,53 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Noto+Sans+Georgian:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/base.css?v=86">
-  <link rel="stylesheet" href="css/app.css?v=86">
+  <link rel="stylesheet" href="css/base.css?v=87">
+  <link rel="stylesheet" href="css/app.css?v=87">
 </head>
 <body>
   <div id="app"></div>
 
-  <script src="js/i18n.js?v=86"></script>
-  <script src="js/ui.js?v=86"></script>
-  <script src="js/state.js?v=86"></script>
-  <script src="js/data.js?v=86"></script>
-  <script src="js/chat-engine.js?v=86"></script>
-  <script src="js/api.js?v=86"></script>
-  <script src="js/bridge.js?v=86"></script>
-  <script src="js/features.js?v=86"></script>
-  <script src="js/rep-counter.js?v=86"></script>
-  <script src="js/auth.js?v=86"></script>
-  <script src="js/screens-onboarding.js?v=86"></script>
-  <script src="js/screens-analysis.js?v=86"></script>
-  <script src="js/screens-tabs.js?v=86"></script>
-  <script src="js/screens-wellness.js?v=86"></script>
-  <script src="js/app.js?v=86"></script>
+  <script src="js/i18n.js?v=87"></script>
+  <script src="js/ui.js?v=87"></script>
+  <script src="js/state.js?v=87"></script>
+  <script src="js/data.js?v=87"></script>
+  <script src="js/chat-engine.js?v=87"></script>
+  <script src="js/api.js?v=87"></script>
+  <script src="js/bridge.js?v=87"></script>
+  <script src="js/features.js?v=87"></script>
+  <script src="js/rep-counter.js?v=87"></script>
+  <script src="js/auth.js?v=87"></script>
+  <script src="js/screens-onboarding.js?v=87"></script>
+  <script src="js/screens-analysis.js?v=87"></script>
+  <script src="js/screens-tabs.js?v=87"></script>
+  <script src="js/screens-wellness.js?v=87"></script>
+  <script src="js/app.js?v=87"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function () {
-        navigator.serviceWorker.register("sw.js").catch(function () {});
+        function tr(k, fb) { return (window.VITA && VITA.t) ? VITA.t(k) : fb; }
+        function showUpdate(worker) {
+          if (document.querySelector(".sw-update")) return;
+          var b = document.createElement("div");
+          b.className = "sw-update";
+          b.innerHTML = "<span>" + tr("swUpdate", "ახალი ვერსია ხელმისაწვდომია") + "</span>" +
+            "<button>" + tr("swReload", "განახლება") + "</button>";
+          b.querySelector("button").onclick = function () { worker.postMessage({ type: "SKIP_WAITING" }); b.remove(); };
+          document.body.appendChild(b);
+        }
+        navigator.serviceWorker.register("sw.js").then(function (reg) {
+          if (reg.waiting && navigator.serviceWorker.controller) showUpdate(reg.waiting);
+          reg.addEventListener("updatefound", function () {
+            var nw = reg.installing;
+            if (nw) nw.addEventListener("statechange", function () {
+              if (nw.state === "installed" && navigator.serviceWorker.controller) showUpdate(nw);
+            });
+          });
+        }).catch(function () {});
+        var reloaded = false;
+        navigator.serviceWorker.addEventListener("controllerchange", function () {
+          if (reloaded) return; reloaded = true; window.location.reload();
+        });
       });
     }
   </script>
