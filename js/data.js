@@ -782,7 +782,22 @@ window.VITA = window.VITA || {};
 
   /* ---------- Water tracker ---------- */
   V.WATER_GLASS = 250;            // ml per glass
-  V.waterGoal = function () { return 2500; };   // ml/day target (2–2.5L)
+  // personalized: ~35 ml per kg of body weight (clamped), else a 2.5 L default
+  V.waterGoal = function () {
+    var wkg = V.state.profile && V.state.profile.weight;
+    if (wkg) return Math.min(4000, Math.max(1500, Math.round(wkg * 35 / 100) * 100));
+    return 2500;
+  };
+  V.waterStreak = function () {
+    var n = 0, goal = V.waterGoal();
+    for (var i = 0; i < 90; i++) {
+      var iso = dISO(addDays(V.todayISO(), -i));
+      var ml = (V.state.waterLog || {})[iso] || 0;
+      if (i === 0 && ml < goal) continue;        // today not yet hit — don't break the streak
+      if (ml >= goal) n++; else break;
+    }
+    return n;
+  };
   V.waterToday = function () { return V.state.waterLog[V.todayISO()] || 0; };
   V.waterAdd = function (ml) {
     var d = V.todayISO();

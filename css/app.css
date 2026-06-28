@@ -1312,6 +1312,13 @@
 .wg { color: var(--line); }
 .wg svg { width: 20px; height: 20px; }
 .wg.on { color: var(--blue); }
+.water-goalnote { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+.water-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.water-preset { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border-radius: var(--r-md); background: var(--blue-tint); color: var(--blue); }
+.water-preset:active { transform: scale(.95); }
+.water-preset svg { width: 18px; }
+.water-preset b { font-size: 15px; font-weight: 800; line-height: 1.1; }
+.water-preset span { font-size: 10.5px; color: var(--ink-2); }
 .water-card { display: flex; align-items: center; gap: 14px; width: 100%; background: var(--card); border: 1.5px solid var(--blue-tint); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 14px 16px; margin-bottom: 12px; text-align: left; }
 .water-card b { font-size: 15.5px; display: block; }
 .water-card small { color: var(--muted); font-size: 13px; }

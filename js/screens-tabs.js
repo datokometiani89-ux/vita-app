@@ -665,6 +665,7 @@
     var goalGlasses = Math.round(goal / V.WATER_GLASS);
     var series = V.waterSeries(7);
     var maxMl = Math.max(goal, Math.max.apply(null, series.map(function (s) { return s.ml; })));
+    var streak = V.waterStreak ? V.waterStreak() : 0;
 
     V.mount(
       V.statusbar() +
@@ -677,8 +678,17 @@
           waterBottle(pct) +
           '<div class="water-stat"><div class="water-stat__big">' + (ml / 1000).toFixed(2).replace(/\.?0+$/, "") + '<span> / ' + (goal / 1000) + " ლ</span></div>" +
             '<div class="water-stat__sub">' + pct + "% " + t("waterOf") + " · " + glasses + "/" + goalGlasses + " " + t("waterGlass") + "</div>" +
-            (ml >= goal ? '<div class="tag green" style="margin-top:10px">' + t("waterGoalHit") + "</div>" : "") +
+            (V.state.profile && V.state.profile.weight ? '<div class="water-goalnote">' + t("waterGoalNote") + "</div>" : "") +
+            (streak > 0 ? '<div class="tag green" style="margin-top:10px">' + V.icon("bolt") + " " + t("waterStreak", { n: streak }) + "</div>"
+              : ml >= goal ? '<div class="tag green" style="margin-top:10px">' + t("waterGoalHit") + "</div>" : "") +
           "</div>" +
+        "</div>" +
+
+        '<div class="water-presets">' +
+          [[200, "wpCup"], [250, "wpGlass"], [500, "wpBottle"]].map(function (p) {
+            return '<button class="water-preset" data-water="' + p[0] + '">' + V.icon("drop") + "<b>" + p[0] + "</b><span>" + t(p[1]) + "</span></button>";
+          }).join("") +
+          '<button class="water-preset" data-watercustom>' + V.icon("plus") + "<span>" + t("wpCustom") + "</span></button>" +
         "</div>" +
 
         '<div class="water-controls">' +
@@ -690,7 +700,6 @@
           "</div>" +
           '<button class="water-btn plus" data-water="250">+</button>' +
         "</div>" +
-        '<button class="btn btn-primary" data-water="250" style="width:100%;margin-top:6px">' + V.icon("drop") + " " + t("waterAddGlass") + "</button>" +
 
         '<div class="section-head"><h3>' + t("waterWeek") + "</h3></div>" +
         '<div class="chart-card"><svg viewBox="0 0 320 130">' +
@@ -711,6 +720,12 @@
         each("[data-water]", function (b) {
           b.addEventListener("click", function () { V.waterAdd(parseInt(b.getAttribute("data-water"), 10)); V.render(); });
         });
+        var cu = $("[data-watercustom]");
+        if (cu) cu.addEventListener("click", function () {
+          var v = prompt(t("wpCustomPrompt"));
+          var n = parseInt(v, 10);
+          if (n && n > 0) { V.waterAdd(Math.min(2000, n)); V.render(); }
+        });
       }}
     );
   };
@@ -723,6 +738,9 @@
       '<g clip-path="url(#bottleClip)">' +
         '<rect x="0" y="0" width="80" height="120" fill="var(--field)"/>' +
         '<rect x="0" y="' + fillY + '" width="80" height="120" fill="url(#wfill)"><animate attributeName="y" to="' + fillY + '" dur="0.5s" fill="freeze"/></rect>' +
+        (pct > 1 && pct < 100 ?
+          '<path d="M-40 ' + fillY + ' q 20 -5 40 0 t 40 0 t 40 0 t 40 0 v 30 h -160 Z" fill="#8FD4F0" opacity=".55">' +
+            '<animateTransform attributeName="transform" type="translate" from="0 0" to="80 0" dur="2.4s" repeatCount="indefinite"/></path>' : "") +
         '<ellipse cx="40" cy="' + fillY + '" rx="42" ry="5" fill="#A7E0F5" opacity=".7"/>' +
       "</g>" +
       '<path d="M28 8 h24 v10 q12 6 12 22 v66 q0 10 -12 10 h-24 q-12 0 -12 -10 v-66 q0 -16 12 -22 Z" fill="none" stroke="var(--line)" stroke-width="2.5"/>' +
