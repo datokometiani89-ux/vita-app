@@ -1170,6 +1170,8 @@ window.VITA = window.VITA || {};
     scAllDone: { ka: "ყველა შემოწმება შესრულდა წელს! 🎉", en: "All screenings done this year! 🎉" },
     scMarkDone: { ka: "შესრულდა", en: "Mark done" },
     scDoneBadge: { ka: "შესრულდა ✓", en: "Done ✓" },
+    scRemind: { ka: "შემახსენე (კალენდარი)", en: "Remind me (calendar)" },
+    scRemindDone: { ka: "კალენდრის შეხსენება ჩამოიტვირთა 📅", en: "Calendar reminder downloaded 📅" },
     /* body regions */
     regHead: { ka: "თავი", en: "Head" },
     regNeck: { ka: "კისერი / ფარისებრი", en: "Neck / thyroid" },

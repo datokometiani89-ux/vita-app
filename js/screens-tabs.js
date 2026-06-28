@@ -1620,6 +1620,7 @@
             '<button class="btn btn-primary sc-book" data-book="' + s.id + '">' + V.icon("calendar") + " " + t("scBook") + "</button>" +
             '<button class="btn ' + (done ? "btn-primary" : "btn-ghost") + ' sc-donebtn" data-done="' + s.id + '">' + V.icon("check") + " " + t(done ? "scDoneBadge" : "scMarkDone") + "</button>" +
           "</div>" +
+          (!done ? '<button class="link-btn sc-remind" data-remind="' + s.id + '">' + V.icon("bell") + " " + t("scRemind") + "</button>" : "") +
         "</div></div>";
     }
 
@@ -1717,6 +1718,17 @@
             var id = b.getAttribute("data-book");
             var cat = V.screeningCatalog().filter(function (x) { return x.id === id; })[0];
             if (V.openClinics) V.openClinics(V.screeningCheckup(id), cat ? cat.name : { ka: "ვიზიტი", en: "Visit" }); else V.go("clinics");
+          });
+        });
+        each("[data-remind]", function (b) {
+          b.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var id = b.getAttribute("data-remind");
+            var cat = V.screeningCatalog().filter(function (x) { return x.id === id; })[0];
+            if (V.features && V.features.exportScreeningReminder) {
+              V.features.exportScreeningReminder(cat ? L(cat.name) : t("scRemind"), id);
+              V.toast && V.toast(t("scRemindDone"));
+            }
           });
         });
         each("[data-done]", function (b) {

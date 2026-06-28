@@ -145,6 +145,21 @@ window.VITA = window.VITA || {};
   };
   F.exportScanReminder = function (hour) { download("vita-scan-reminder.ics", F.scanReminderICS(hour), "text/calendar"); };
 
+  // a single screening reminder ~2 weeks out, with a yearly recurrence + alarm
+  F.screeningReminderICS = function (name, id) {
+    var start = new Date(); start.setDate(start.getDate() + 14); start.setHours(10, 0, 0, 0);
+    var end = new Date(start.getTime() + 30 * 60000);
+    var sum = (ka() ? "VITA: " : "VITA: ") + name;
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//VITA Health AI//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+      "BEGIN:VEVENT", "UID:vita-screening-" + (id || "x") + "@vita", "DTSTAMP:" + icsDate(new Date()),
+      "DTSTART:" + icsDate(start), "DTEND:" + icsDate(end), "RRULE:FREQ=YEARLY",
+      "SUMMARY:" + icsEsc(sum), "DESCRIPTION:" + icsEsc(ka() ? "დაგეგმე ეს სკრინინგი — VITA გახსენებს." : "Schedule this screening — VITA reminder."),
+      "BEGIN:VALARM\r\nTRIGGER:-P1D\r\nACTION:DISPLAY\r\nDESCRIPTION:VITA screening\r\nEND:VALARM",
+      "END:VEVENT", "END:VCALENDAR"];
+    return lines.join("\r\n");
+  };
+  F.exportScreeningReminder = function (name, id) { download("vita-screening-" + (id || "reminder") + ".ics", F.screeningReminderICS(name, id), "text/calendar"); };
+
   /* ---------------- data export (JSON) ---------------- */
   F.exportJSON = function () {
     var data = { exported: new Date().toISOString(), app: "VITA Health AI", state: V.state };
