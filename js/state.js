@@ -49,6 +49,11 @@ window.VITA = window.VITA || {};
     awarded: {},           // per-day award guards { "2026-06-18:task:water": true }
     redeemed: [],          // [{tier, code, date}]
     cycle: null,           // women's cycle { lastPeriod, cycleLen, periodLen, logs:[] }
+    userMeds: [],          // user-added meds [{id, name, dose, when:[slots], food, note}]
+    medLog: {},            // taken log { "2026-06-27": { "umId|morning": true } }
+    coach: "female",       // workout coach persona: female | male
+    exPlan: [],            // exercise ids added to "my plan" from the library
+    homeCards: null,       // home widget prefs { order:[ids], hidden:{id:true} }; null = defaults
     bookings: [],          // [{checkupId, clinicId, date, time, status}]
     calendar: [],         // checkup ids added to calendar
     labResults: [],       // [{id, date, values:{glucose:..}, summary}]

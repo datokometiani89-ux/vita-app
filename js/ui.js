@@ -62,6 +62,8 @@ window.VITA = window.VITA || {};
     plus: P('<path d="M12 5v14M5 12h14"/>'),
     search: P('<circle cx="11" cy="11" r="7"/><path d="M20.5 20.5 16 16"/>'),
     tongue: P('<path d="M5 7h14"/><path d="M6.5 7c0 5 2.5 9.5 5.5 9.5S17.5 12 17.5 7"/><path d="M12 16.5c-1.8 0-3-1.5-3-3.5 0-1.6 1.3-2.9 3-2.9s3 1.3 3 2.9c0 2-1.2 3.5-3 3.5Z"/><path d="M12 12.2v2.3"/>'),
+    cog: P('<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5 5l2.1 2.1M16.9 16.9 19 19M19 5l-2.1 2.1M7.1 16.9 5 19"/>'),
+    sliders: P('<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.4"/><circle cx="8" cy="17" r="2.4"/>'),
     back: P('<path d="M15 5l-7 7 7 7"/>'),
     next: P('<path d="M5 12h13M13 6l6 6-6 6"/>'),
     check: P('<path d="M4.5 12.5 10 18 19.5 7"/>'),

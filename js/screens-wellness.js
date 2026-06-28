@@ -414,6 +414,7 @@
   }
 
   V.screens.symptom = function () {
+    var lastSyText = "";
     var CHIPS = [
       { k: "syHeadache" }, { k: "syFever" }, { k: "syCough" }, { k: "syThroat" }, { k: "syChest" }, { k: "syBreath" },
       { k: "syTummy" }, { k: "syBack" }, { k: "syFatigue" }, { k: "syDizzy" }, { k: "syRash" }, { k: "syAnxiety" },
@@ -427,6 +428,10 @@
         '<div class="card-soft" style="padding:14px">' +
           '<textarea id="syInput" class="sy-input" rows="3" placeholder="' + esc(t("syPlaceholder")) + '"></textarea>' +
           '<div class="sy-chips">' + CHIPS.map(function (c) { return '<button class="sy-chip" data-chip="' + esc(t(c.k)) + '">' + esc(t(c.k)) + "</button>"; }).join("") + "</div>" +
+          '<div class="sy-meta"><small class="sy-meta__l">' + t("syHowBad") + "</small>" +
+            '<div class="sy-chips">' + [t("syMild"), t("syMod"), t("sySevere")].map(function (c) { return '<button class="sy-chip" data-chip="' + esc(c) + '">' + esc(c) + "</button>"; }).join("") + "</div>" +
+            '<small class="sy-meta__l">' + t("syHowLong") + "</small>" +
+            '<div class="sy-chips">' + [t("syDurToday"), t("syDurDays"), t("syDurWeeks")].map(function (c) { return '<button class="sy-chip" data-chip="' + esc(c) + '">' + esc(c) + "</button>"; }).join("") + "</div></div>" +
           '<button class="btn btn-primary" id="syGo" style="width:100%;margin-top:6px">' + V.icon("stethoscope") + " " + t("syAnalyze") + "</button>" +
         "</div>" +
         '<div id="syResult"></div>' +
@@ -448,6 +453,7 @@
           var text = input.value.trim();
           var box = $("#syResult");
           if (!text) { box.innerHTML = '<div class="note-warn">' + V.icon("info") + " " + t("syEmpty") + "</div>"; return; }
+          lastSyText = text;
           var r = triage(text);
           renderTriage(box, r);
           V.awardOnce && V.awardOnce("symptom:" + today(), V.POINTS.task, "task");
@@ -478,9 +484,18 @@
       html += '<div class="sy-act">' +
         '<button class="btn btn-primary" data-book>' + V.icon("calendar") + " " + t("syBook") + "</button>" +
         '<button class="btn btn-ghost" data-clear>' + t("syClear") + "</button>" +
-        "</div></div>";
+        "</div>" +
+        '<button class="link-btn" data-sy-ai style="margin-top:10px">' + V.icon("sparkle") + " " + t("syDiscuss") + "</button>" +
+        "</div>";
       box.innerHTML = html;
       box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      var ai = box.querySelector("[data-sy-ai]");
+      if (ai) ai.addEventListener("click", function () {
+        var ka = V.lang() === "ka";
+        V.state.chat = V.state.chat || [];
+        V.state.chat.push({ role: "user", text: (ka ? "სიმპტომები: " : "Symptoms: ") + lastSyText + ". " + (ka ? "რა შეიძლება იყოს და რა ვქნა?" : "What could this be and what should I do?") });
+        V.save(); V.go("vita");
+      });
       var bk = box.querySelector("[data-book]");
       if (bk) bk.addEventListener("click", function () {
         if (V.openClinics) V.openClinics(r.checkupId, r.spec); else V.go("clinics");
@@ -730,6 +745,7 @@
           '<div class="hr-extra" id="hrExtra"></div>' +
           '<canvas id="hrWave" class="hr-wave" width="600" height="120"></canvas>' +
           '<div class="hr-status" id="hrStatus">' + t("hrRestNote") + "</div>" +
+          '<div class="hr-prog" id="hrProgWrap" style="display:none"><span id="hrProg" style="width:0%"></span></div>' +
           '<button class="btn btn-primary" id="hrStart" style="width:100%">' + V.icon("heart") + " " + t("hrStart") + "</button>" +
         "</div>" +
 
@@ -817,11 +833,16 @@
       drawWave();
 
       var fingerOn = v < 150 && ampEMA > 0.25; // dark red-saturated frame + pulsation
+      var pw = $("#hrProgWrap");
       if (!fingerOn) {
         $("#hrStatus").textContent = ampEMA <= 0.25 && v < 150 ? t("hrWeak") : t("hrPlace");
+        if (pw) pw.style.display = "none";
       } else {
-        $("#hrStatus").textContent = t("hrMeasuring");
         if (!measT) measT = now;
+        // live progress + countdown over the ~22s measurement window
+        var secs = Math.max(0, Math.ceil(22 - elapsed));
+        $("#hrStatus").textContent = t("hrMeasuring") + (secs > 0 ? " · " + secs + "s" : "");
+        if (pw) { pw.style.display = "block"; var pf = $("#hrProg"); if (pf) pf.style.width = Math.min(100, Math.round(elapsed / 22 * 100)) + "%"; }
         rawBuf.push(v); if (rawBuf.length > 4000) rawBuf.shift();
         // beat = downward zero-crossing of detrended signal, with refractory
         if (prevSig > 0 && sig <= 0 && (now - lastBeat) > 300) {
@@ -3777,6 +3798,35 @@
       '<span class="stp-home__t"><b>' + c.toLocaleString() + " " + t("fdKcal") + '</b><small>' + pct + "% / " + goal.toLocaleString() + " · " + t("fdToday") + "</small></span>" + V.icon("next") + "</button>";
   };
   V.wireFoodHome = function () { var c = document.getElementById("foodHome"); if (c) c.addEventListener("click", function () { V.go("food"); }); };
+
+  // ---- extra home widgets (water / meds-due / bio-age) — registry-driven ----
+  V.waterHomeCard = function () {
+    var goal = V.waterGoal(), w = V.waterToday(), pct = Math.min(100, Math.round(w / goal * 100));
+    return '<button class="card-soft stp-home" id="waterHome"><span class="stp-home__ring" style="background:conic-gradient(#36A0D8 ' + (pct * 3.6) + 'deg, var(--field) 0)"><i>' + V.icon("drop") + "</i></span>" +
+      '<span class="stp-home__t"><b>' + (w / 1000).toFixed(2).replace(/\.?0+$/, "") + " / " + (goal / 1000) + ' ' + t("waterUnitL") + '</b><small>' + pct + "% · " + t("waterWidget") + "</small></span>" +
+      '<span class="stp-home__add" id="waterHomeAdd">' + V.icon("plus") + "</span></button>";
+  };
+  V.wireWaterHome = function () {
+    var c = document.getElementById("waterHome");
+    if (c) c.addEventListener("click", function () { V.go("water"); });
+    var a = document.getElementById("waterHomeAdd");
+    if (a) a.addEventListener("click", function (e) { e.stopPropagation(); V.waterAdd(250); V.toast && V.toast(t("qaWaterDone")); V.render(); });
+  };
+  V.medsHomeCard = function () {
+    if (!V.userMeds || !V.userMeds().length) return "";   // nothing to show without meds
+    var due = (V.medsDueToday ? V.medsDueToday() : []).length;
+    var pct = due ? 30 : 100;
+    return '<button class="card-soft stp-home" id="medsHome"><span class="stp-home__ring" style="background:conic-gradient(#e8536b ' + (pct * 3.6) + 'deg, var(--field) 0)"><i>' + V.icon("pill") + "</i></span>" +
+      '<span class="stp-home__t"><b>' + (due ? t("mdDueToday", { n: due }) : t("mdAllTaken")) + '</b><small>' + t("mdTitle") + "</small></span>" + V.icon("next") + "</button>";
+  };
+  V.wireMedsHome = function () { var c = document.getElementById("medsHome"); if (c) c.addEventListener("click", function () { V.go("meds"); }); };
+  V.bioAgeHomeCard = function () {
+    var h = V.healthAge && V.healthAge(); if (!h) return "";
+    var tone = h.delta <= 0 ? "#2BA94C" : h.delta <= 3 ? "#e0a92e" : "#e8536b";
+    return '<button class="card-soft stp-home" id="bioHome"><span class="stp-home__ring" style="background:conic-gradient(' + tone + ' 200deg, var(--field) 0)"><i>' + V.icon("sparkle") + "</i></span>" +
+      '<span class="stp-home__t"><b>' + h.bio + " " + t("haYears") + '</b><small>' + t("haBioAge") + " · " + (h.delta > 0 ? "+" : "") + h.delta + "</small></span>" + V.icon("next") + "</button>";
+  };
+  V.wireBioHome = function () { var c = document.getElementById("bioHome"); if (c) c.addEventListener("click", function () { V.go("fullscan"); }); };
 
   /* ---------- small shared helpers for the new screens ---------- */
   function head(icon, tone, titleKey) {

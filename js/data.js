@@ -272,6 +272,80 @@ window.VITA = window.VITA || {};
   };
 
   /* ---------- Daily plan tasks (depend on selected goals) ---------- */
+  /* ---------- Home widgets (customizable cards) ---------- */
+  // each widget renders via V[card]() and wires via V[wire](); kicker = optional label above
+  V.HOME_WIDGETS = [
+    { id: "scan", key: "hwScan", card: "scanHomeCard", wire: "wireScanHome", kicker: "scnTitle" },
+    { id: "today", key: "hwToday", card: "todayMini", wire: "wireTodayMini", kicker: "todayK" },
+    { id: "meds", key: "hwMeds", card: "medsHomeCard", wire: "wireMedsHome" },
+    { id: "water", key: "hwWater", card: "waterHomeCard", wire: "wireWaterHome" },
+    { id: "steps", key: "hwSteps", card: "stepsHomeCard", wire: "wireStepsHome" },
+    { id: "food", key: "hwFood", card: "foodHomeCard", wire: "wireFoodHome" },
+    { id: "mood", key: "hwMood", card: "moodHomeCard", wire: "wireMoodHome" },
+    { id: "readiness", key: "hwReadiness", card: "readinessHomeCard", wire: "wireReadinessHome" },
+    { id: "bio", key: "hwBio", card: "bioAgeHomeCard", wire: "wireBioHome" },
+    { id: "garden", key: "hwGarden", card: "gardenHomeCard", wire: "wireGardenHome" },
+  ];
+  V.homeWidget = function (id) { return V.HOME_WIDGETS.filter(function (w) { return w.id === id; })[0]; };
+  V.homeCardsDefault = function () { return { order: ["scan", "today", "meds", "water", "steps", "food", "mood", "readiness", "bio", "garden"], hidden: { bio: true, garden: true } }; };
+  // merge saved prefs with the registry so newly-added widgets always appear
+  V.homeCardsPrefs = function () {
+    var d = V.homeCardsDefault(), p = V.state.homeCards || {};
+    var order = (p.order || d.order).slice().filter(function (id) { return V.homeWidget(id); });
+    V.HOME_WIDGETS.forEach(function (w) { if (order.indexOf(w.id) < 0) order.push(w.id); });
+    return { order: order, hidden: p.hidden || d.hidden };
+  };
+  V.setHomeCards = function (prefs) { V.state.homeCards = prefs; V.save(); };
+
+  /* ---------- Plan insights (streak / focus / daily tip) ---------- */
+  // consecutive days (up to today) with at least one task done
+  V.taskStreak = function () {
+    function diso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+    var n = 0, base = new Date(V.todayISO());
+    for (var i = 0; i < 180; i++) {
+      var d = new Date(base.getFullYear(), base.getMonth(), base.getDate() - i);
+      var has = (((V.state.doneTasks || {})[diso(d)]) || []).length > 0;
+      if (i === 0 && !has) continue;     // today not started yet — don't break the streak
+      if (has) n++; else break;
+    }
+    return n;
+  };
+  // today's focus theme (rotates by weekday)
+  V.DAY_FOCUS = [
+    { icon: "moon", key: "df0", label: { ka: "დასვენება & აღდგენა", en: "Rest & recovery" } },
+    { icon: "walk", key: "df1", label: { ka: "მოძრაობა", en: "Movement" } },
+    { icon: "drop", key: "df2", label: { ka: "ჰიდრატაცია", en: "Hydration" } },
+    { icon: "food", key: "df3", label: { ka: "კვება", en: "Nutrition" } },
+    { icon: "moon", key: "df4", label: { ka: "ძილი", en: "Sleep" } },
+    { icon: "brain", key: "df5", label: { ka: "მენტალური სიმშვიდე", en: "Mental calm" } },
+    { icon: "bolt", key: "df6", label: { ka: "აქტიურობა", en: "Be active" } },
+  ];
+  V.dayFocus = function () { return V.DAY_FOCUS[new Date(V.todayISO()).getDay()]; };
+  // rotating daily tip (deterministic by date)
+  V.DAILY_TIPS = [
+    { ka: "დილით 1 ჭიქა წყალი მეტაბოლიზმს აღვიძებს.", en: "A glass of water on waking kick-starts your metabolism." },
+    { ka: "10-წუთიანი გასეირნება ჭამის შემდეგ შაქარს აქვეითებს.", en: "A 10-minute walk after meals lowers blood sugar." },
+    { ka: "7–8 სთ ძილი ჰორმონებსა და მადას არეგულირებს.", en: "7–8h of sleep regulates hormones and appetite." },
+    { ka: "ცილა ყოველ კვებაზე — სიმაძღრე და კუნთი.", en: "Protein at each meal — fullness and muscle." },
+    { ka: "2 წუთი ღრმა სუნთქვა სტრესს ამცირებს.", en: "Two minutes of deep breathing lowers stress." },
+    { ka: "ეკრანი ძილის წინ 1 საათით ადრე გამორთე.", en: "Switch screens off an hour before bed." },
+    { ka: "ფერადი ბოსტნეული = მეტი ანტიოქსიდანტი.", en: "Colourful vegetables = more antioxidants." },
+    { ka: "დილის მზე ენერგიასა და D ვიტამინს მატებს.", en: "Morning sunlight boosts energy and vitamin D." },
+    { ka: "ნაკლები შაქარი — სტაბილური ენერგია დღეში.", en: "Less sugar — steadier energy through the day." },
+    { ka: "ყოველ საათში 2–3 წუთით წამოდექი.", en: "Stand up for 2–3 minutes every hour." },
+  ];
+  V.dailyTip = function () {
+    var d = new Date(V.todayISO());
+    var idx = (d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % V.DAILY_TIPS.length;
+    return V.DAILY_TIPS[idx];
+  };
+
+  // today's plan completion 0-100 (done tasks / total) — real progress for the home
+  V.dayProgress = function () {
+    var tasks = V.dailyTasks();
+    var done = (V.state.doneTasks && V.state.doneTasks[V.todayISO()]) || [];
+    return tasks.length ? Math.round((done.length / tasks.length) * 100) : 0;
+  };
   V.dailyTasks = function () {
     var g = V.state.goals;
     var p = V.state.profile;
@@ -319,6 +393,41 @@ window.VITA = window.VITA || {};
       meds.push({ id: "atorva", when: "evening", name: { ka: "ატორვასტატინი", en: "Atorvastatin" },
         dose: "10–20 mg", purpose: { ka: "LDL ქოლესტერინი", en: "Lowers LDL cholesterol" } });
     return meds;
+  };
+
+  /* ---------- User medication tracker ---------- */
+  V.MED_SLOTS = ["morning", "noon", "evening", "bed"];
+  V.userMeds = function () { return V.state.userMeds || (V.state.userMeds = []); };
+  V.addMed = function (m) {
+    var meds = V.userMeds();
+    meds.push({
+      id: "um" + Date.now(), name: (m.name || "").trim(), dose: (m.dose || "").trim(),
+      when: (m.when && m.when.length ? m.when : ["morning"]), food: m.food || "any", note: (m.note || "").trim(),
+    });
+    V.save();
+  };
+  V.removeMed = function (id) { V.state.userMeds = V.userMeds().filter(function (x) { return x.id !== id; }); V.save(); };
+  V.medTakenToday = function (id, slot) {
+    var d = (V.state.medLog || {})[V.todayISO()] || {};
+    return !!d[id + "|" + slot];
+  };
+  V.toggleMedTaken = function (id, slot) {
+    V.state.medLog = V.state.medLog || {};
+    var day = V.state.medLog[V.todayISO()] = V.state.medLog[V.todayISO()] || {};
+    var k = id + "|" + slot;
+    if (day[k]) delete day[k];
+    else { day[k] = true; if (V.awardOnce) V.awardOnce("med:" + k, V.POINTS.med, "med"); }
+    V.save();
+  };
+  // today's outstanding med doses (not yet taken) — for reminders + the "to take" list
+  V.medsDueToday = function () {
+    var out = [];
+    V.userMeds().forEach(function (m) {
+      m.when.forEach(function (slot) {
+        if (!V.medTakenToday(m.id, slot)) out.push({ med: m, slot: slot });
+      });
+    });
+    return out;
   };
 
   /* ---------- Food plan (from doc) ---------- */
@@ -589,6 +698,61 @@ window.VITA = window.VITA || {};
       joints: { L: [11, 13, 15], R: [12, 14, 16] }, down: 55, up: 150, tip: { ka: "გვერდულად, ხელი ჩანდეს", en: "Side-on, keep your arm visible" } },
   ];
   V.repMove = function (id) { return V.repMoves.filter(function (m) { return m.id === id; })[0] || null; };
+
+  /* ---------- Gym exercise library (real movements, grouped by muscle) ---------- */
+  V.EX_CATS = [
+    { id: "chest", icon: "heart", label: { ka: "გულმკერდი", en: "Chest" } },
+    { id: "back", icon: "shield", label: { ka: "ზურგი", en: "Back" } },
+    { id: "legs", icon: "walk", label: { ka: "ფეხები", en: "Legs" } },
+    { id: "shoulders", icon: "bolt", label: { ka: "მხრები", en: "Shoulders" } },
+    { id: "arms", icon: "bolt", label: { ka: "მკლავები", en: "Arms" } },
+    { id: "core", icon: "shield", label: { ka: "კორი", en: "Core" } },
+  ];
+  V.EXERCISE_LIB = [
+    { id: "bench", cat: "chest", scheme: "4×8", name: { ka: "ბენჩ-პრესი", en: "Bench press" }, target: { ka: "გულმკერდი, ტრიცეფსი", en: "Chest, triceps" },
+      steps: { ka: ["დაწექი სკამზე, შტანგა მხრების სიგანეზე", "ჩამოუშვი გულმკერდამდე, კონტროლით ასწიე"], en: ["Lie on the bench, grip shoulder-width", "Lower to the chest, press up under control"] } },
+    { id: "pushup", cat: "chest", scheme: "3×12", rep: "pushup", name: { ka: "აზიდვები", en: "Push-ups" }, target: { ka: "გულმკერდი, კორი", en: "Chest, core" },
+      steps: { ka: ["ხელები მხრების ქვეშ, სხეული სწორ ხაზზე", "ჩაიწიე, იდაყვები ~45°, ასწი"], en: ["Hands under shoulders, body in a line", "Lower with elbows ~45°, push up"] } },
+    { id: "incline", cat: "chest", scheme: "3×10", name: { ka: "დახრილი დამბელ-პრესი", en: "Incline dumbbell press" }, target: { ka: "ზედა გულმკერდი", en: "Upper chest" },
+      steps: { ka: ["სკამი 30–45°, დამბელები მხართან", "ასწი ზემოთ, ჩამოუშვი ნელა"], en: ["Bench at 30–45°, dumbbells at shoulders", "Press up, lower slowly"] } },
+    { id: "latpull", cat: "back", scheme: "3×10", name: { ka: "ლატ-პულდაუნი", en: "Lat pulldown" }, target: { ka: "ბეჭები (ლატები)", en: "Lats" },
+      steps: { ka: ["ფართო ხელით დაიჭირე, მკერდი წინ", "ჩამოწიე გულმკერდამდე, ჩაკუმშე ბეჭები"], en: ["Wide grip, chest up", "Pull to the chest, squeeze the lats"] } },
+    { id: "row", cat: "back", scheme: "4×8", name: { ka: "ნიჩბისებრი წევა", en: "Bent-over row" }, target: { ka: "შუა ზურგი", en: "Mid-back" },
+      steps: { ka: ["მუხლები ოდნავ მოხრილი, ზურგი სწორი", "მიწიე მუცელთან, ჩაკუმშე ბეჭები"], en: ["Knees soft, back flat", "Row to the belly, squeeze the shoulder blades"] } },
+    { id: "deadlift", cat: "back", scheme: "3×5", name: { ka: "წოლითი წევა (Deadlift)", en: "Deadlift" }, target: { ka: "ზურგი, დუნდულები", en: "Back, glutes" },
+      steps: { ka: ["შტანგა წვივთან, ზურგი სწორი", "ასწი თეძოს ბიძგით, ჩაკუმშე დუნდულები"], en: ["Bar over mid-foot, flat back", "Drive with the hips, lock out the glutes"] } },
+    { id: "squat", cat: "legs", scheme: "4×10", rep: "squat", name: { ka: "ჩაჯდომები", en: "Squats" }, target: { ka: "ბარძაყი, დუნდულები", en: "Quads, glutes" },
+      steps: { ka: ["ფეხები მხრების სიგანეზე", "ჩაჯექი თეძო მუხლის ქვემოთ, ასწი"], en: ["Feet shoulder-width", "Sit hips below knees, drive up"] } },
+    { id: "lunge", cat: "legs", scheme: "3×10", rep: "lunge", name: { ka: "ნახტომები (Lunges)", en: "Lunges" }, target: { ka: "ბარძაყი, დუნდულები", en: "Quads, glutes" },
+      steps: { ka: ["ნაბიჯი წინ, ორივე მუხლი 90°", "ასწი და გაიმეორე მეორე ფეხით"], en: ["Step forward, both knees to 90°", "Push up, alternate legs"] } },
+    { id: "legpress", cat: "legs", scheme: "3×12", name: { ka: "ფეხის პრესი", en: "Leg press" }, target: { ka: "ბარძაყი", en: "Quads" },
+      steps: { ka: ["ფეხები პლატფორმაზე მხრის სიგანეზე", "ჩაუშვი 90°-მდე, ასწი (მუხლი არ ჩაკეტო)"], en: ["Feet on the platform shoulder-width", "Lower to 90°, press (don't lock knees)"] } },
+    { id: "ohp", cat: "shoulders", scheme: "4×8", name: { ka: "ზედა პრესი", en: "Overhead press" }, target: { ka: "მხრები", en: "Shoulders" },
+      steps: { ka: ["შტანგა მხართან, კორი დაჭიმე", "ასწი თავზე ზემოთ, ჩამოუშვი"], en: ["Bar at shoulders, brace the core", "Press overhead, lower under control"] } },
+    { id: "lateral", cat: "shoulders", scheme: "3×12", name: { ka: "გვერდითი აწევა", en: "Lateral raise" }, target: { ka: "გვერდითი დელტა", en: "Side delts" },
+      steps: { ka: ["დამბელები გვერდით, იდაყვი ოდნავ მოხრილი", "ასწი მხრის სიმაღლემდე, ნელა ჩამოუშვი"], en: ["Dumbbells at sides, slight elbow bend", "Raise to shoulder height, lower slowly"] } },
+    { id: "facepull", cat: "shoulders", scheme: "3×15", name: { ka: "Face pull", en: "Face pull" }, target: { ka: "უკანა დელტა", en: "Rear delts" },
+      steps: { ka: ["თოკი სახის სიმაღლეზე, მიწიე შუბლისკენ", "ჩაკუმშე ბეჭები, ნელა დააბრუნე"], en: ["Rope at face height, pull to the forehead", "Squeeze the rear delts, return slowly"] } },
+    { id: "curl", cat: "arms", scheme: "3×12", rep: "curl", name: { ka: "ბაიცეფსის მოხრა", en: "Bicep curl" }, target: { ka: "ბაიცეფსი", en: "Biceps" },
+      steps: { ka: ["იდაყვები სხეულთან, მოხარე ზემოთ", "ჩაკუმშე, ნელა ჩამოუშვი"], en: ["Elbows at your sides, curl up", "Squeeze, lower slowly"] } },
+    { id: "dip", cat: "arms", scheme: "3×10", name: { ka: "ტრიცეფსის დიპი", en: "Tricep dip" }, target: { ka: "ტრიცეფსი", en: "Triceps" },
+      steps: { ka: ["ხელები სკამზე, ჩაიწიე იდაყვის მოხრით", "ასწი სხეული ბოლომდე"], en: ["Hands on a bench, lower by bending elbows", "Press back up fully"] } },
+    { id: "hammer", cat: "arms", scheme: "3×12", name: { ka: "ჩაქუჩისებრი მოხრა", en: "Hammer curl" }, target: { ka: "ბაიცეფსი, წინამხარი", en: "Biceps, forearms" },
+      steps: { ka: ["დამბელები ნეიტრალურად (ცერა ზემოთ)", "მოხარე და ჩაკუმშე"], en: ["Dumbbells neutral (thumbs up)", "Curl and squeeze"] } },
+    { id: "plank", cat: "core", scheme: "3×40წმ", name: { ka: "პლანკი", en: "Plank" }, target: { ka: "კორი", en: "Core" },
+      steps: { ka: ["იდაყვები მხრების ქვეშ, სხეული სწორ ხაზზე", "დაჭიმე მუცელი, არ ჩაუშვა მენჯი"], en: ["Elbows under shoulders, body in a line", "Brace the abs, don't drop the hips"] } },
+    { id: "crunch", cat: "core", scheme: "3×15", name: { ka: "მუცლის აწევა", en: "Crunch" }, target: { ka: "მუცელი", en: "Abs" },
+      steps: { ka: ["დაწექი, მუხლები მოხრილი", "ასწი მხრები, ჩაკუმშე მუცელი"], en: ["Lie down, knees bent", "Curl the shoulders up, squeeze the abs"] } },
+    { id: "rtwist", cat: "core", scheme: "3×20", name: { ka: "რუსული ტრიალი", en: "Russian twist" }, target: { ka: "ირიბი მუცელი", en: "Obliques" },
+      steps: { ka: ["იჯექი, ფეხები აწეული, ტანი უკან", "ატრიალე ტანი მარცხნივ-მარჯვნივ"], en: ["Sit with feet up, lean back", "Rotate the torso side to side"] } },
+  ];
+  V.exInPlan = function (id) { return (V.state.exPlan || []).indexOf(id) >= 0; };
+  V.toggleExPlan = function (id) {
+    V.state.exPlan = V.state.exPlan || [];
+    var i = V.state.exPlan.indexOf(id);
+    if (i >= 0) V.state.exPlan.splice(i, 1); else V.state.exPlan.push(id);
+    V.save();
+  };
   // best-effort map a workout exercise name → a trackable move
   V.repMoveForExercise = function (name) {
     var en = ((name && name.en) || "").toLowerCase();

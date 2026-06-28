@@ -89,14 +89,49 @@
   }
   V.settingsSheet = settingsSheet;
 
+  /* ---------- quick-add sheet (the + button) ---------- */
+  function quickAddSheet() {
+    function item(icon, tone, key, act) {
+      return '<button class="qa-item" data-qa="' + act + '">' + V.iconBox(icon, tone) + "<span>" + V.t(key) + "</span></button>";
+    }
+    return (
+      '<div class="sheet-overlay" id="qaSheet"><div class="sheet">' +
+      '<div class="sheet__grab"></div>' +
+      "<h3>" + V.t("qaTitle") + "</h3>" +
+      '<div class="qa-grid">' +
+        item("drop", "blue", "qaWater", "water") +
+        item("food", "yellow", "qaFood", "food") +
+        item("heart", "pink", "qaMood", "mood") +
+        item("pill", "crimson", "qaMed", "meds") +
+        item("camera", "green", "qaScan", "scan") +
+        item("bolt", "blue", "qaWorkout", "workouts") +
+      "</div></div></div>"
+    );
+  }
+  function openQuickAdd() {
+    var phone = root.querySelector(".phone");
+    if (!root.querySelector("#qaSheet")) phone.insertAdjacentHTML("beforeend", quickAddSheet());
+    var sh = root.querySelector("#qaSheet");
+    sh.addEventListener("click", function (e) { if (e.target === sh) sh.classList.remove("on"); });
+    sh.querySelectorAll("[data-qa]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var act = b.getAttribute("data-qa");
+        sh.classList.remove("on");
+        if (act === "water") { if (V.waterAdd) { V.waterAdd(250); V.toast && V.toast(V.t("qaWaterDone")); render(); } }
+        else go(act);
+      });
+    });
+    requestAnimationFrame(function () { sh.classList.add("on"); });
+  }
+
   function wireChrome() {
     // tabs
     root.querySelectorAll("[data-tab]").forEach(function (b) {
       b.addEventListener("click", function () { go(b.getAttribute("data-tab")); });
     });
-    // fab → results upload
+    // fab → quick-add sheet
     var fab = root.querySelector("[data-fab]");
-    if (fab) fab.addEventListener("click", function () { go("results"); });
+    if (fab) fab.addEventListener("click", openQuickAdd);
 
     // settings sheet open
     root.querySelectorAll("[data-open-settings]").forEach(function (b) {

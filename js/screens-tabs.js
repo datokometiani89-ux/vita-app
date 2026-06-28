@@ -9,14 +9,22 @@
   function L(o) { return o[V.lang()] || o.en; }
 
   /* ===================== HOME / DASHBOARD ===================== */
+  // time-of-day greeting + first name (replaces the one-time 'profile created' line)
+  function homeGreeting() {
+    var hour = new Date().getHours();
+    var greet = hour < 12 ? t("goodMorning") : hour < 18 ? t("goodDay") : t("goodEvening");
+    var nm = (V.state.profile && V.state.profile.name) ? V.state.profile.name.split(" ")[0] : "";
+    return nm ? greet + ", " + nm : greet;
+  }
   V.screens.home = function () {
     var p = V.state.profile;
     var score = V.healthScore();
-    var bmi = V.bmi() || 28.4;
-    var bmiSt = V.bmiStatus() || "medium";
+    var bmiVal = V.bmi();
+    var bmiSt = V.bmiStatus();
     var concerns = V.concerns();
-    var weight = p.weight || 85;
-    var target = p.weight ? Math.max(60, Math.round(p.weight - 8)) : 77;
+    var hasW = p.weight != null;
+    var weight = hasW ? p.weight : null;
+    var target = hasW ? Math.max(60, Math.round(p.weight - 8)) : null;
     var facePos = score; // 0..100
 
     var scoreStatus = score >= 71 ? t("hsGood") : score >= 41 ? t("hsModerate") : t("hsRisk");
@@ -25,16 +33,21 @@
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
         '<div class="dash-head">' +
-          '<div><div class="s-head">' + V.logoBadge(34) + "<h1>" + t("homepage") + "</h1></div>" +
-            '<p class="s-sub" style="max-width:210px;margin-bottom:0">' + t("hpCreated") + "</p></div>" +
-          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">' +
-            '<div style="display:flex;gap:8px;align-items:center">' +
-              '<button class="pts-chip" data-rewards aria-label="' + t("rwTitle") + '">' + V.icon("sparkle") + (V.state.points || 0) + "</button>" +
-              '<button class="icon-box gray" data-menu aria-label="' + t("menuTitle") + '">' + V.icon("grid") + "</button>" +
-            "</div>" +
-            '<div class="score-bubble">100%</div>' +
+          '<span class="dash-logo">' + V.logoBadge(34) + "</span>" +
+          '<div class="dash-icons">' +
+            '<button class="pts-chip" data-rewards aria-label="' + t("rwTitle") + '">' + V.icon("sparkle") + (V.state.points || 0) + "</button>" +
+            '<button class="icon-box gray" data-go="reminders" aria-label="' + t("rmTitle") + '">' + V.icon("bell") + "</button>" +
+            '<button class="icon-box gray" data-go="customize" aria-label="' + t("customizeHome") + '">' + V.icon("sliders") + "</button>" +
+            '<button class="icon-box gray" data-menu aria-label="' + t("menuTitle") + '">' + V.icon("grid") + "</button>" +
           "</div>" +
         "</div>" +
+        '<h1 class="dash-greet">' + esc(homeGreeting()) + "</h1>" +
+        '<button class="day-prog" data-go="plan">' +
+          '<span class="day-prog__ic">' + V.icon("plan") + "</span>" +
+          '<span class="day-prog__t"><b>' + t("hpDayPlan") + "</b>" +
+            '<span class="day-prog__bar"><i style="width:' + V.dayProgress() + '%"></i></span></span>' +
+          '<span class="day-prog__pct">' + V.dayProgress() + "%</span>" +
+        "</button>" +
         '<div class="kicker" style="margin:20px 0 10px">' + t("yourData") + "</div>" +
         '<div class="score-card"><div class="score-card__top">' +
           '<div class="score-card__num">' + score + '<span>/100</span></div>' +
@@ -44,20 +57,23 @@
           "<h3>" + t("healthScore") + "</h3><p>" + scoreStatus + "</p>" +
         "</div>" +
         '<div class="metric-row">' +
-          '<div class="metric p"><div class="metric__tag">' + V.icon("scale") + "</div>" +
-            '<div class="metric__num">' + weight + '<span>' + t("kg") + '</span></div>' +
-            '<div class="metric__lbl">' + t("weight") + '</div>' +
-            '<div class="metric__sub">' + t("target") + ": " + target + t("kg") + "</div></div>" +
-          '<div class="metric y"><div class="metric__tag">' + V.icon("ruler") + "</div>" +
-            '<div class="metric__num">' + bmi + "</div>" +
-            '<div class="metric__lbl">' + t("bmi") + '</div>' +
-            '<div class="metric__sub">' + (bmiSt === "good" ? t("normal") : t("caution")) + "</div></div>" +
+          '<div class="metric p"' + (hasW ? "" : ' data-go="profile" style="cursor:pointer"') + '><div class="metric__tag">' + V.icon("scale") + "</div>" +
+            '<div class="metric__num">' + (hasW ? weight + '<span>' + t("kg") + "</span>" : "—") + "</div>" +
+            '<div class="metric__lbl">' + t("weight") + "</div>" +
+            '<div class="metric__sub">' + (hasW ? t("target") + ": " + target + t("kg") : t("hpSetProfile")) + "</div></div>" +
+          '<div class="metric y"' + (bmiVal != null ? "" : ' data-go="profile" style="cursor:pointer"') + '><div class="metric__tag">' + V.icon("ruler") + "</div>" +
+            '<div class="metric__num">' + (bmiVal != null ? bmiVal : "—") + "</div>" +
+            '<div class="metric__lbl">' + t("bmi") + "</div>" +
+            '<div class="metric__sub">' + (bmiVal != null ? (bmiSt === "good" ? t("normal") : t("caution")) : t("hpSetProfile")) + "</div></div>" +
         "</div>" +
-        (V.scanHomeCard ? '<div class="kicker" style="margin:22px 0 10px">' + t("scnTitle") + "</div>" + V.scanHomeCard() : "") +
-        (V.todayMini ? '<div class="kicker" style="margin:22px 0 10px">' + t("todayK") + "</div>" + V.todayMini() : "") +
-        (V.moodHomeCard ? V.moodHomeCard() : "") +
-        (V.stepsHomeCard ? V.stepsHomeCard() : "") +
-        (V.foodHomeCard ? V.foodHomeCard() : "") +
+        V.homeCardsPrefs().order.map(function (id) {
+          if (V.homeCardsPrefs().hidden[id]) return "";
+          var w = V.homeWidget(id);
+          if (!w || typeof V[w.card] !== "function") return "";
+          var html = V[w.card](); if (!html) return "";
+          return (w.kicker ? '<div class="kicker" style="margin:22px 0 10px">' + t(w.kicker) + "</div>" : "") + html;
+        }).join("") +
+        '<button class="hc-cta" data-go="customize">' + V.icon("cog") + " " + t("customizeHome") + "</button>" +
         nextScreeningCard() +
         '<div class="kicker" style="margin:22px 0 10px">' + t("areas") + "</div>" +
         '<div class="list-card">' +
@@ -73,17 +89,19 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
+        each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
         var m = $("[data-menu]");
         if (m) m.addEventListener("click", function () { V.go("menu"); });
         var rw = $("[data-rewards]");
         if (rw) rw.addEventListener("click", function () { V.go("rewards"); });
         var ns = $("[data-next-screening]");
         if (ns) ns.addEventListener("click", function () { V.go("annual"); });
-        if (V.wireScanHome) V.wireScanHome();
-        if (V.wireTodayMini) V.wireTodayMini();
-        if (V.wireMoodHome) V.wireMoodHome();
-        if (V.wireStepsHome) V.wireStepsHome();
-        if (V.wireFoodHome) V.wireFoodHome();
+        var pr = V.homeCardsPrefs();
+        pr.order.forEach(function (id) {
+          if (pr.hidden[id]) return;
+          var w = V.homeWidget(id);
+          if (w && typeof V[w.wire] === "function") V[w.wire]();
+        });
       }}
     );
 
@@ -102,6 +120,46 @@
     }
   };
 
+  /* ===================== HOME CUSTOMIZATION ===================== */
+  V.screens.customize = function () {
+    var pr = V.homeCardsPrefs();
+    function rows() {
+      return pr.order.map(function (id, i) {
+        var w = V.homeWidget(id); if (!w) return "";
+        var on = !pr.hidden[id];
+        return '<div class="hc-row' + (on ? "" : " off") + '">' +
+          '<div class="hc-move">' +
+            '<button class="hc-mv hc-up" data-up="' + id + '"' + (i === 0 ? " disabled" : "") + ' aria-label="up">' + V.icon("next") + "</button>" +
+            '<button class="hc-mv hc-down" data-down="' + id + '"' + (i === pr.order.length - 1 ? " disabled" : "") + ' aria-label="down">' + V.icon("next") + "</button>" +
+          "</div>" +
+          '<span class="hc-name">' + t(w.key) + "</span>" +
+          '<div class="toggle ' + (on ? "on" : "") + '" data-tg="' + id + '"></div>' +
+        "</div>";
+      }).join("");
+    }
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("hcTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("hcDesc") + "</p>" +
+        '<div class="card-soft hc-list" id="hcList">' + rows() + "</div>" +
+        '<button class="btn btn-primary" id="hcDone" style="width:100%;margin-top:16px">' + V.icon("check") + " " + t("hcDone") + "</button>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("#hcDone").addEventListener("click", function () { V.go("home"); });
+        function save() { V.setHomeCards(pr); $("#hcList").innerHTML = rows(); wire(); }
+        function wire() {
+          each("[data-tg]", function (b) { b.addEventListener("click", function () { var id = b.getAttribute("data-tg"); if (pr.hidden[id]) delete pr.hidden[id]; else pr.hidden[id] = true; save(); }); });
+          each("[data-up]", function (b) { b.addEventListener("click", function () { var id = b.getAttribute("data-up"), i = pr.order.indexOf(id); if (i > 0) { pr.order.splice(i, 1); pr.order.splice(i - 1, 0, id); save(); } }); });
+          each("[data-down]", function (b) { b.addEventListener("click", function () { var id = b.getAttribute("data-down"), i = pr.order.indexOf(id); if (i < pr.order.length - 1) { pr.order.splice(i, 1); pr.order.splice(i + 1, 0, id); save(); } }); });
+        }
+        wire();
+      } }
+    );
+  };
+
   /* ===================== PLAN ===================== */
   V.screens.plan = function () {
     var p = V.state.profile;
@@ -110,7 +168,7 @@
     var done = V.state.doneTasks[today] || [];
     var pct = tasks.length ? Math.round((done.length / tasks.length) * 100) : 0;
     var day = V.planDay();
-    var name = p.name ? p.name.split(" ")[0].toUpperCase() : "GIORGI K";
+    var name = p.name ? p.name.split(" ")[0] : "";
     var hour = new Date().getHours();
     var greet = hour < 12 ? t("goodMorning") : hour < 18 ? t("goodDay") : t("goodEvening");
 
@@ -118,6 +176,23 @@
     var morningMeds = meds.filter(function (m) { return m.when === "morning"; });
     var eveningMeds = meds.filter(function (m) { return m.when === "evening"; });
     var doneMeds = V.state.doneMeds[today] || [];
+    var userMeds = V.userMeds ? V.userMeds() : [];
+    // the user's own meds (from the tracker) grouped by time slot, with taken-state
+    function userMedsBlock() {
+      var slots = [["morning", "sun", "08:00", "plWithBreakfast"], ["noon", "sun", "13:00", "mdNoon"], ["evening", "moon", "19:00", "plWithDinner"], ["bed", "moon", "22:00", "mdBed"]];
+      return slots.map(function (sl) {
+        var inSlot = userMeds.filter(function (m) { return m.when.indexOf(sl[0]) >= 0; });
+        if (!inSlot.length) return "";
+        return '<div class="med-when">' + V.icon(sl[1]) + " " + sl[2] + " — " + t(sl[3]) + "</div>" +
+          inSlot.map(function (m) {
+            var taken = V.medTakenToday(m.id, sl[0]);
+            return '<div class="task' + (taken ? " done" : "") + '">' +
+              '<button class="task__box" data-umed="' + m.id + "|" + sl[0] + '">' + V.icon("check") + "</button>" +
+              V.iconBox("pill", "crimson") +
+              '<span class="task__t">' + esc(m.name) + (m.dose ? " · " + esc(m.dose) : "") + "</span></div>";
+          }).join("");
+      }).join("");
+    }
     var food = V.foodPlan();
 
     function waterWidget() {
@@ -136,14 +211,21 @@
       '<div class="screen"><div class="pad-lg fade-in">' +
         '<div style="display:flex;align-items:center;gap:12px;margin:4px 0 18px">' +
           V.avatar(48) +
-          '<div style="flex:1"><span style="color:var(--muted)">' + greet + ' , </span><b>' + esc(name) + "</b></div>" +
-          '<button class="icon-box gray" data-open-settings>' + V.icon("bell") + "</button>" +
+          '<div style="flex:1">' + (name ? '<span style="color:var(--muted)">' + greet + ", </span><b>" + esc(name) + "</b>" : "<b>" + greet + "</b>") + "</div>" +
+          '<button class="icon-box gray" data-go="reminders" style="margin-right:8px">' + V.icon("bell") + "</button>" +
+          '<button class="icon-box gray" data-open-settings>' + V.icon("cog") + "</button>" +
         "</div>" +
         '<div class="plan-hero"><div class="plan-hero__top">' +
-          "<h2>" + t("plAlmost") + '</h2><div class="plan-hero__pct">' + pct + "<span>%</span></div></div>" +
-          '<div class="day-row">' + dayChips(day) + "</div>" +
-          '<div class="daysleft"><span>' + t("plDaysLeft", { n: Math.max(0, 4 - ((day - 1) % 4)) }) + "</span></div>" +
+          "<h2>" + (pct >= 100 ? t("plDone") : pct >= 50 ? t("plAlmost") : pct > 0 ? t("plKeepGoing") : t("plStart")) + '</h2><div class="plan-hero__pct">' + pct + "<span>%</span></div></div>" +
+          weekStrip() +
+          '<div class="daysleft"><span>' + ((tasks.length - done.length) > 0 ? t("plTasksLeft", { n: tasks.length - done.length }) : t("plAllDoneToday")) + "</span></div>" +
         "</div>" +
+
+        '<div class="pl-insight">' +
+          '<div class="pl-streak"><span class="pl-streak__n">' + V.icon("bolt") + V.taskStreak() + "</span><small>" + t("plStreakDays") + "</small></div>" +
+          '<div class="pl-focus">' + V.iconBox(V.dayFocus().icon, "green") + "<div><small>" + t("plFocus") + "</small><b>" + L(V.dayFocus().label) + "</b></div></div>" +
+        "</div>" +
+        '<div class="pl-tip">' + V.icon("sparkle") + "<p>" + L(V.dailyTip()) + "</p></div>" +
 
         waterWidget() +
         '<button class="careplans-cta" data-careplans>' + V.iconBox("heart", "green") +
@@ -173,11 +255,13 @@
             '<span class="pts-badge ' + (d ? "earned" : "") + '">' + (d ? "✓ " : "+") + V.POINTS.task + "</span></div>";
         }).join("") +
 
-        (meds.length ? '<div class="section-head"><h3>' + t("plMeds") + '</h3><small>' + t("plDoctor") + "</small></div>" +
-          (morningMeds.length ? '<div class="med-when">' + V.icon("sun") + " 08:00 — " + t("plWithBreakfast") + "</div>" +
-            morningMeds.map(function (m) { return medRow(m, doneMeds, today); }).join("") : "") +
-          (eveningMeds.length ? '<div class="med-when">' + V.icon("moon") + " 19:00 — " + t("plWithDinner") + "</div>" +
-            eveningMeds.map(function (m) { return medRow(m, doneMeds, today); }).join("") : "") : "") +
+        (userMeds.length
+          ? '<div class="section-head"><h3>' + t("plMeds") + '</h3><a class="section-head__link" data-go="meds">' + t("plManageMeds") + "</a></div>" + userMedsBlock()
+          : (meds.length ? '<div class="section-head"><h3>' + t("plMeds") + '</h3><small>' + t("plDoctor") + "</small></div>" +
+            (morningMeds.length ? '<div class="med-when">' + V.icon("sun") + " 08:00 — " + t("plWithBreakfast") + "</div>" +
+              morningMeds.map(function (m) { return medRow(m, doneMeds, today); }).join("") : "") +
+            (eveningMeds.length ? '<div class="med-when">' + V.icon("moon") + " 19:00 — " + t("plWithDinner") + "</div>" +
+              eveningMeds.map(function (m) { return medRow(m, doneMeds, today); }).join("") : "") : "")) +
 
         '<div class="section-head"><h3>' + t("plFood") + "</h3></div>" +
         '<div class="cal-note">' + t("plCalRange") + "</div>" +
@@ -191,6 +275,7 @@
       V.tabbar("plan") +
       "</div>",
       { onMount: function () {
+        each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
         var cp = $("[data-careplans]");
         if (cp) cp.addEventListener("click", function () { V.go("careplans"); });
         var wo = $("[data-workouts]");
@@ -224,6 +309,9 @@
             el.classList.toggle("done");
             el.querySelector(".task__box").className = "task__box";
           });
+        });
+        each("[data-umed]", function (b) {
+          b.addEventListener("click", function () { var p = b.getAttribute("data-umed").split("|"); V.toggleMedTaken(p[0], p[1]); V.render(); });
         });
 
         /* ----- interactive proof logger (text / photo / voice) ----- */
@@ -305,6 +393,28 @@
       }}
     );
   };
+
+  // current week (Mon–Sun) with per-day task-completion rings — replaces the cryptic DAY1/DAY2 chips
+  function weekStrip() {
+    var todayIso = V.todayISO(), now = new Date(todayIso);
+    var dow = (now.getDay() + 6) % 7;            // Mon = 0
+    var monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow);
+    var total = (V.dailyTasks() || []).length || 1;
+    var names = V.lang() === "ka" ? ["ორ", "სა", "ოთ", "ხუ", "პა", "შა", "კვ"] : ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+    var cells = "";
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      var iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      var done = ((V.state.doneTasks || {})[iso] || []).length;
+      var pct = Math.min(100, Math.round(done / total * 100));
+      var isToday = iso === todayIso, isFuture = iso > todayIso;
+      var cls = isToday ? "today" : isFuture ? "future" : pct >= 100 ? "full" : pct > 0 ? "partial" : "";
+      var inner = (!isFuture && pct >= 100) ? V.icon("check") : d.getDate();
+      cells += '<div class="wk-day ' + cls + '"><span class="wk-day__n">' + names[i] + "</span>" +
+        '<span class="wk-day__r" style="background:conic-gradient(var(--green) ' + (pct * 3.6) + 'deg, rgba(0,0,0,.06) 0)"><i>' + inner + "</i></span></div>";
+    }
+    return '<div class="wk-strip">' + cells + "</div>";
+  }
 
   function dayChips(day) {
     // show pairs DAY1/DAY2 done, current, upcoming
@@ -1079,6 +1189,124 @@
     );
   };
 
+  V.screens.reminders = function () {
+    var F = V.features || {};
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    var items = (F.todaysReminders ? F.todaysReminders() : []).slice().sort(function (a, b) { return (a.h * 60 + a.m) - (b.h * 60 + b.m); });
+    var supported = F.notifSupported ? F.notifSupported() : false;
+    var on = F.notifOn ? F.notifOn() : false;
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("rmTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("rmDesc") + "</p>" +
+        (supported
+          ? '<div class="rm-toggle"><div class="rm-toggle__t"><b>' + t("rmEnable") + "</b><small>" + t("rmEnableSub") + "</small></div>" +
+            '<div class="toggle ' + (on ? "on" : "") + '" id="rmTog"></div></div>'
+          : '<div class="md-done">' + V.icon("bell") + " " + t("rmUnsupported") + "</div>") +
+        '<div class="section-head"><h3>' + t("rmToday") + "</h3></div>" +
+        items.map(function (r) {
+          return '<div class="rm-item"><span class="rm-time">' + pad(r.h) + ":" + pad(r.m) + "</span>" +
+            '<div class="rm-body"><b>' + esc(r.title) + "</b><small>" + esc(r.body) + "</small></div></div>";
+        }).join("") +
+        '<p class="hr-multi-note">' + t("rmNote") + "</p>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        var tog = $("#rmTog");
+        if (tog) tog.addEventListener("click", function () {
+          if (F.notifOn()) { F.disableNotifications(); V.render(); }
+          else F.enableNotifications().then(function (ok) {
+            V.render();
+            if (!ok && F.notifSupported() && Notification.permission === "denied") alert(V.t("setNotifBlocked"));
+          });
+        });
+      } }
+    );
+  };
+
+  V.screens.meds = function () {
+    var slotKey = { morning: "mdMorning", noon: "mdNoon", evening: "mdEvening", bed: "mdBed" };
+    var foodKey = { any: "mdFoodAny", before: "mdFoodBefore", with: "mdFoodWith", after: "mdFoodAfter" };
+    var foods = ["any", "before", "with", "after"];
+    var formWhen = [], formFood = "any";
+    var due = V.medsDueToday(), mine = V.userMeds(), suggested = V.medications() || [];
+
+    function medCard(m) {
+      return '<div class="md-card"><div class="md-card__h"><div class="md-card__t">' +
+        "<b>" + esc(m.name) + "</b>" + (m.dose ? ' <span class="md-dose">' + esc(m.dose) + "</span>" : "") +
+        "<small>" + m.when.map(function (s) { return t(slotKey[s]); }).join(" · ") +
+          (m.food !== "any" ? " · " + t(foodKey[m.food]) : "") + (m.note ? " · " + esc(m.note) : "") + "</small></div>" +
+        '<button class="md-del" data-del="' + m.id + '">' + V.icon("x") + "</button></div>" +
+        '<div class="md-slots">' + m.when.map(function (s) {
+          var on = V.medTakenToday(m.id, s);
+          return '<button class="md-slot ' + (on ? "on" : "") + '" data-take="' + m.id + "|" + s + '">' + (on ? V.icon("check") + " " : "") + t(slotKey[s]) + "</button>";
+        }).join("") + "</div></div>";
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("mdTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("mdDesc") + "</p>" +
+        (due.length
+          ? '<div class="md-due"><b>' + t("mdDueToday", { n: due.length }) + "</b>" + due.map(function (d) { return "<span>" + esc(d.med.name) + " · " + t(slotKey[d.slot]) + "</span>"; }).join("") + "</div>"
+          : (mine.length ? '<div class="md-done">' + V.icon("check") + " " + t("mdAllTaken") + "</div>" : "")) +
+        '<div class="section-head"><h3>' + t("mdMine") + "</h3></div>" +
+        (mine.length ? mine.map(medCard).join("") : '<p class="md-empty">' + t("mdNoMeds") + "</p>") +
+        '<div class="section-head"><h3>' + t("mdAdd") + "</h3></div>" +
+        '<div class="card-soft md-form">' +
+          '<input id="mdName" class="field" placeholder="' + esc(t("mdNamePh")) + '">' +
+          '<input id="mdDose" class="field" placeholder="' + esc(t("mdDosePh")) + '" style="margin-top:8px">' +
+          '<p class="cy-sub2">' + t("mdWhen") + "</p>" +
+          '<div class="chips">' + V.MED_SLOTS.map(function (s) { return '<button class="chip" data-when="' + s + '">' + t(slotKey[s]) + "</button>"; }).join("") + "</div>" +
+          '<p class="cy-sub2">' + t("mdFood") + "</p>" +
+          '<div class="chips">' + foods.map(function (f) { return '<button class="chip ' + (f === "any" ? "on" : "") + '" data-food="' + f + '">' + t(foodKey[f]) + "</button>"; }).join("") + "</div>" +
+          '<input id="mdNote" class="field" placeholder="' + esc(t("mdNotePh")) + '" style="margin-top:10px">' +
+          '<button class="btn btn-primary" id="mdAddBtn" style="width:100%;margin-top:12px">' + V.icon("plus") + " " + t("mdAddBtn") + "</button>" +
+        "</div>" +
+        (suggested.length ? '<div class="section-head"><h3>' + t("mdSuggested") + "</h3></div>" +
+          suggested.map(function (s, i) {
+            return '<div class="md-sug"><div class="md-sug__l">' + V.iconBox("pill", "green") + "<div><b>" + L(s.name) + "</b><small>" + (s.dose || "") + " · " + L(s.purpose) + "</small></div></div>" +
+              '<button class="md-sugadd" data-sug="' + i + '">' + V.icon("plus") + "</button></div>";
+          }).join("") : "") +
+        '<p class="hr-multi-note">' + t("mdDisc") + "</p>" +
+      "</div>" + V.tabbar("plan") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        each("[data-del]", function (b) { b.addEventListener("click", function () { V.removeMed(b.getAttribute("data-del")); V.render(); }); });
+        each("[data-take]", function (b) {
+          b.addEventListener("click", function () { var p = b.getAttribute("data-take").split("|"); V.toggleMedTaken(p[0], p[1]); V.render(); });
+        });
+        each("[data-when]", function (b) {
+          b.addEventListener("click", function () {
+            var s = b.getAttribute("data-when"), i = formWhen.indexOf(s);
+            if (i >= 0) formWhen.splice(i, 1); else formWhen.push(s);
+            b.classList.toggle("on");
+          });
+        });
+        each("[data-food]", function (b) {
+          b.addEventListener("click", function () { formFood = b.getAttribute("data-food"); each("[data-food]", function (x) { x.classList.toggle("on", x === b); }); });
+        });
+        $("#mdAddBtn").addEventListener("click", function () {
+          var name = ($("#mdName").value || "").trim();
+          if (!name) { $("#mdName").focus(); return; }
+          V.addMed({ name: name, dose: $("#mdDose").value, when: formWhen, food: formFood, note: $("#mdNote").value });
+          V.toast && V.toast(t("mdAdded")); V.render();
+        });
+        each("[data-sug]", function (b) {
+          b.addEventListener("click", function () {
+            var s = suggested[+b.getAttribute("data-sug")];
+            V.addMed({ name: L(s.name), dose: s.dose, when: [s.when], food: "any" });
+            V.toast && V.toast(t("mdAdded")); V.render();
+          });
+        });
+      } }
+    );
+  };
+
   V.screens.sexhealth = function () {
     var topics = V.sexHealthTopics();
     var sexLabel = (V.state.profile.sex === "woman") ? { ka: "ქალის", en: "Women's" } : { ka: "მამაკაცის", en: "Men's" };
@@ -1267,6 +1495,8 @@
         ].concat(V.state.profile.sex === "woman" ? [tile("heart", "pink", "mCycle", 'data-go="cycle"')] : [])) +
         group("grpCare", [
           tile("plan", "green", "mPlan", 'data-go="plan"'),
+          tile("pill", "crimson", "mMeds", 'data-go="meds"'),
+          tile("bolt", "green", "mExercises", 'data-go="exercises"'),
           tile("heart", "green", "mCare", 'data-go="careplans"'),
           tile("bolt", "blue", "mWorkouts", 'data-go="workouts"'),
           tile("walk", "green", "mSteps", 'data-go="steps"'),
@@ -1379,6 +1609,64 @@
   };
 
   /* ===================== WORKOUTS ===================== */
+  var exCat = "all";   // exercise-library filter, persists across re-renders
+  function coachAvatar(c) {
+    var bg = c === "female" ? "var(--pink)" : "var(--blue)";
+    return '<svg viewBox="0 0 44 44" class="ex-av"><circle cx="22" cy="22" r="22" fill="' + bg + '" opacity=".15"/>' +
+      '<circle cx="22" cy="17" r="7" fill="' + bg + '"/>' +
+      '<path d="M9 41c1-8 7-12 13-12s12 4 13 12Z" fill="' + bg + '"/>' +
+      (c === "female" ? '<path d="M13 17c0-6 4-9 9-9s9 3 9 9c0 3-1 5-1 5l-2-3c0-4-2-6-6-6s-6 2-6 6l-2 3s-1-2-1-5Z" fill="#5a3a1e" opacity=".5"/>' : "") +
+      "</svg>";
+  }
+  V.screens.exercises = function () {
+    var coach = V.state.coach || "female";
+    var list = V.EXERCISE_LIB.filter(function (ex) { return exCat === "all" || ex.cat === exCat; });
+
+    function exCard(ex) {
+      var inPlan = V.exInPlan(ex.id);
+      return '<div class="ex-card">' +
+        '<div class="ex-card__h">' +
+          '<div class="ex-demo">' + V.icon("bolt") + '<span class="ex-soon">' + t("exSoon") + "</span></div>" +
+          '<div class="ex-card__t"><b>' + L(ex.name) + "</b><small>" + L(ex.target) + " · " + ex.scheme + "</small></div>" +
+          '<button class="ex-add ' + (inPlan ? "on" : "") + '" data-explan="' + ex.id + '">' + V.icon(inPlan ? "check" : "plus") + "</button>" +
+        "</div>" +
+        '<details class="ex-how"><summary>' + V.icon("next") + " " + t("exHow") + "</summary><ol>" +
+          L(ex.steps).map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ol>" +
+          (ex.rep ? '<button class="btn btn-ghost ex-cam" data-excam="' + ex.rep + '">' + V.icon("camera") + " " + t("rcLive") + "</button>" : "") +
+        "</details></div>";
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("exTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("exDesc") + "</p>" +
+        '<div class="ex-coach">' + coachAvatar(coach) +
+          '<div class="ex-coach__t"><b>' + t("exCoach") + "</b><small>" + t(coach === "female" ? "exCoachF" : "exCoachM") + "</small></div>" +
+          '<div class="seg"><button data-coach="female" class="' + (coach === "female" ? "on" : "") + '">' + t("exFemale") + "</button>" +
+            '<button data-coach="male" class="' + (coach === "male" ? "on" : "") + '">' + t("exMale") + "</button></div>" +
+        "</div>" +
+        '<p class="ex-vnote">' + V.icon("sparkle") + " " + t("exVideoNote") + "</p>" +
+        '<div class="chips ex-cats"><button class="chip ' + (exCat === "all" ? "on" : "") + '" data-cat="all">' + t("exAll") + "</button>" +
+          V.EX_CATS.map(function (c) { return '<button class="chip ' + (exCat === c.id ? "on" : "") + '" data-cat="' + c.id + '">' + L(c.label) + "</button>"; }).join("") + "</div>" +
+        list.map(exCard).join("") +
+      "</div>" + V.tabbar("plan") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("workouts"); });
+        each("[data-coach]", function (b) { b.addEventListener("click", function () { V.state.coach = b.getAttribute("data-coach"); V.save(); V.render(); }); });
+        each("[data-cat]", function (b) { b.addEventListener("click", function () { exCat = b.getAttribute("data-cat"); V.render(); }); });
+        each("[data-explan]", function (b) { b.addEventListener("click", function () { V.toggleExPlan(b.getAttribute("data-explan")); V.render(); }); });
+        each("[data-excam]", function (b) {
+          b.addEventListener("click", function () {
+            var mv = V.repMove(b.getAttribute("data-excam"));
+            if (mv && V.openRepCounter) V.openRepCounter({ move: mv, onDone: function () {} });
+          });
+        });
+      } }
+    );
+  };
+
   V.screens.workouts = function () {
     var week = V.workoutWeek();
     var done = V.state.doneWorkouts || {};
@@ -1414,6 +1702,8 @@
         '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("woTitle") + "</h1></div>" +
           '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
         '<p class="s-sub">' + t("woDesc") + "</p>" +
+        '<button class="ex-libcta" data-go="exercises">' + V.iconBox("bolt", "green") +
+          '<div><b>' + t("exTitle") + "</b><small>" + t("exCtaSub") + "</small></div>" + V.icon("next") + "</button>" +
         '<div class="section-head"><h3>' + t("woThisWeek") + '</h3><small>' + t("woWeekDone", { n: doneCount }) + "</small></div>" +
         '<div class="track"><span style="width:' + Math.round(doneCount / 3 * 100) + '%"></span></div>' +
         week.map(dayCard).join("") +
@@ -1422,6 +1712,7 @@
       "</div>",
       { onMount: function () {
         $("[data-x]").addEventListener("click", function () { V.go("plan"); });
+        each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
         each("[data-wo]", function (b) {
           b.addEventListener("click", function () {
             var k = b.getAttribute("data-wo");
@@ -1497,6 +1788,7 @@
             '<button class="btn btn-primary sc-book" data-book="' + s.id + '">' + V.icon("calendar") + " " + t("scBook") + "</button>" +
             '<button class="btn ' + (done ? "btn-primary" : "btn-ghost") + ' sc-donebtn" data-done="' + s.id + '">' + V.icon("check") + " " + t(done ? "scDoneBadge" : "scMarkDone") + "</button>" +
           "</div>" +
+          (!done ? '<button class="link-btn sc-remind" data-remind="' + s.id + '">' + V.icon("bell") + " " + t("scRemind") + "</button>" : "") +
         "</div></div>";
     }
 
@@ -1594,6 +1886,17 @@
             var id = b.getAttribute("data-book");
             var cat = V.screeningCatalog().filter(function (x) { return x.id === id; })[0];
             if (V.openClinics) V.openClinics(V.screeningCheckup(id), cat ? cat.name : { ka: "ვიზიტი", en: "Visit" }); else V.go("clinics");
+          });
+        });
+        each("[data-remind]", function (b) {
+          b.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var id = b.getAttribute("data-remind");
+            var cat = V.screeningCatalog().filter(function (x) { return x.id === id; })[0];
+            if (V.features && V.features.exportScreeningReminder) {
+              V.features.exportScreeningReminder(cat ? L(cat.name) : t("scRemind"), id);
+              V.toast && V.toast(t("scRemindDone"));
+            }
           });
         });
         each("[data-done]", function (b) {
