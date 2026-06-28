@@ -1790,6 +1790,14 @@
 .tg-zrow small { color: var(--muted); }
 .tg-zdot { width: 12px; height: 12px; border-radius: 99px; flex: none; }
 .tg-znote { font-size: 11.5px; color: var(--muted); line-height: 1.5; margin-top: 10px; }
+.tg-zcoat { font-style: normal; color: #c9881a; font-size: 11.5px; margin-left: 4px; }
+.tg-hist { padding: 14px 16px; }
+.tg-hist__h { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 700; color: var(--ink); margin-bottom: 12px; }
+.tg-hist__h svg { width: 16px; color: var(--green); }
+.tg-hist__row { display: flex; align-items: flex-end; gap: 6px; flex-wrap: wrap; }
+.tg-hist__dot { width: 16px; height: 16px; border-radius: 99px; flex: none; }
+.tg-hist__lbl { display: flex; justify-content: space-between; margin-top: 8px; }
+.tg-hist__lbl small { font-size: 11.5px; color: var(--muted); }
 
 .td-docapp { display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 8px; padding: 12px; border: 1.5px dashed var(--line); border-radius: var(--r-md); color: var(--green-dark); font-size: 13.5px; font-weight: 600; }
 .td-docapp svg { width: 16px; } .td-docapp svg:last-child { width: 14px; transform: rotate(180deg); opacity: .6; }

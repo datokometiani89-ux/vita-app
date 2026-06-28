@@ -1728,7 +1728,8 @@
     }
     function zoneTone(z) { return !z ? "gray" : z.band === "tgCNormal" ? "green" : z.band === "tgCRed" ? "crimson" : "yellow"; }
     function zRow(name, z) {
-      return '<div class="tg-zrow"><span class="tg-zdot" style="background:' + TONE_HEX[zoneTone(z)] + '"></span><b>' + name + "</b><small>" + (z ? t(z.band) : "—") + "</small></div>";
+      var coat = z && z.coating > 0.3 ? ' <i class="tg-zcoat">' + t("tgSigCoat") + " " + Math.round(z.coating * 100) + "%</i>" : "";
+      return '<div class="tg-zrow"><span class="tg-zdot" style="background:' + TONE_HEX[zoneTone(z)] + '"></span><b>' + name + "</b><small>" + (z ? t(z.band) + coat : "—") + "</small></div>";
     }
     function zoneMap(z) {
       var P = "M60 6c26 0 34 20 34 46 0 40-16 92-34 92S26 92 26 52C26 26 34 6 60 6Z";
@@ -1745,6 +1746,16 @@
         "</svg>" +
         '<div class="tg-zlist">' + zRow(t("tgZRoot"), z.root) + zRow(t("tgZCenter"), z.center) + zRow(t("tgZTip"), z.tip) + "</div></div>" +
         '<p class="tg-znote">' + t("tgZonesNote") + "</p></div>";
+    }
+    function bandTone(b) { return b === "tgLow" ? "green" : b === "tgWatch" ? "yellow" : "crimson"; }
+    function tongueHistory() {
+      var hist = w.tongueScan.slice(-12);
+      if (hist.length < 2) return "";
+      return '<div class="card-soft tg-hist"><div class="tg-hist__h">' + V.icon("progress") + " " + t("tgTrend") + "</div>" +
+        '<div class="tg-hist__row">' + hist.map(function (s) {
+          return '<div class="tg-hist__dot" style="background:' + TONE_HEX[bandTone(s.band)] + '"></div>';
+        }).join("") + "</div>" +
+        '<div class="tg-hist__lbl"><small>' + esc(hist[0].date.slice(5)) + "</small><small>" + t(hist[hist.length - 1].band) + "</small></div></div>";
     }
     function analyze() {
       if (!hasPhoto || !A) { V.toast && V.toast(t("tgNoPhoto")); return; }
@@ -1834,6 +1845,7 @@
             '<p class="mo-how" style="margin:14px 0 8px">' + t("tgHow") + "</p>" +
             '<button class="btn btn-primary" id="tgGo" style="width:100%;margin-top:6px">' + V.icon("sparkle") + " " + t("tgAnalyze") + "</button>" +
           "</div>" +
+          tongueHistory() +
           '<div id="tgResult"></div>' +
           '<p class="hr-multi-note">' + t("tgDisc") + "</p>" +
         "</div>" + V.tabbar("home") + "</div>",

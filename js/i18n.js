@@ -288,6 +288,7 @@ window.VITA = window.VITA || {};
     tgTeeth: { ka: "კბილის კვალი", en: "Teeth marks" },
     tgMoist: { ka: "ნოტიო", en: "Moist" },
     tgDry: { ka: "მშრალი", en: "Dry" },
+    tgTrend: { ka: "ცვლილება დროში", en: "Trend over time" },
     /* voice scan */
     vcTitle: { ka: "ხმის სკანი", en: "Voice scan" },
     vcSub: { ka: "5 წამი გააგრძელე ხმა „აaa“ — გავზომავ ხმის სტაბილურობას (jitter/shimmer).", en: "Hold an \"aaah\" for 5 seconds — I'll measure your vocal steadiness (jitter/shimmer)." },
