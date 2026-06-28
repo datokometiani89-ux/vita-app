@@ -1263,6 +1263,22 @@
 .cycle-pred__item b { font-size: 14.5px; display: block; }
 .cycle-pred__item small { color: var(--muted); font-size: 13px; }
 
+/* quick-add sheet */
+.qa-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 4px 0 8px; }
+.qa-item { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 6px; border-radius: var(--r-md); background: var(--field); }
+.qa-item:active { transform: scale(.95); }
+.qa-item .icon-box { width: 44px; height: 44px; }
+.qa-item span { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+
+/* reminders screen */
+.rm-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 16px; margin-bottom: 12px; }
+.rm-toggle__t b { font-size: 15px; display: block; }
+.rm-toggle__t small { color: var(--muted); font-size: 12.5px; }
+.rm-item { display: flex; gap: 14px; align-items: flex-start; background: var(--card); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 13px 15px; margin-bottom: 9px; }
+.rm-time { font-size: 14px; font-weight: 800; color: var(--green); flex: none; min-width: 44px; padding-top: 1px; }
+.rm-body b { font-size: 14.5px; display: block; }
+.rm-body small { color: var(--muted); font-size: 12.5px; line-height: 1.5; display: block; margin-top: 2px; }
+
 /* medication tracker */
 .md-due { background: var(--crimson-tint, var(--pink-tint)); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 8px; }
 .md-due b { display: block; font-size: 13.5px; color: var(--ink); margin-bottom: 6px; }

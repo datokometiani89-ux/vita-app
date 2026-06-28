@@ -42,14 +42,19 @@ window.VITA = window.VITA || {};
     out.push({ h: 8, m: 0, title: ka() ? "დილის წყალი 💧" : "Morning water 💧",
       body: ka() ? "დალიე 1 ჭიქა წყალი და დაიწყე დღე ცილოვანი საუზმით." : "Drink a glass of water and start with a protein breakfast." });
     var meds = (V.medications && V.medications()) || [];
-    if (meds.some(function (m) { return m.when === "morning"; }))
-      out.push({ h: 8, m: 30, title: ka() ? "დილის მედიკამენტები 💊" : "Morning meds 💊",
-        body: ka() ? "ომეგა-3 + ვიტამინი D3 საუზმესთან ერთად." : "Omega-3 + vitamin D3 with breakfast." });
+    var userMeds = (V.userMeds && V.userMeds()) || [];
+    function hasMedSlot(slot) { return meds.some(function (m) { return m.when === slot; }) || userMeds.some(function (m) { return m.when.indexOf(slot) >= 0; }); }
+    var medBody = ka() ? "მიიღე დანიშნული წამლები — გადახედე სიას აპში." : "Take your scheduled meds — check the list in the app.";
+    if (hasMedSlot("morning"))
+      out.push({ h: 8, m: 30, title: ka() ? "დილის წამლები 💊" : "Morning meds 💊", body: medBody });
+    if (hasMedSlot("noon"))
+      out.push({ h: 13, m: 0, title: ka() ? "შუადღის წამლები 💊" : "Midday meds 💊", body: medBody });
     out.push({ h: 14, m: 0, title: ka() ? "მოძრაობის შესვენება 🚶" : "Movement break 🚶",
       body: ka() ? "ადექი, გაიარე 10–15 წთ — შაქარს დააწევს." : "Stand up, walk 10–15 min — it lowers your blood sugar." });
-    if (meds.some(function (m) { return m.when === "evening"; }))
-      out.push({ h: 19, m: 0, title: ka() ? "საღამოს მედიკამენტები 💊" : "Evening meds 💊",
-        body: ka() ? "ვახშამთან ერთად, ექიმის დანიშნულებით." : "With dinner, as prescribed by your doctor." });
+    if (hasMedSlot("evening"))
+      out.push({ h: 19, m: 0, title: ka() ? "საღამოს წამლები 💊" : "Evening meds 💊", body: medBody });
+    if (hasMedSlot("bed"))
+      out.push({ h: 22, m: 0, title: ka() ? "ძილის წინ წამლები 💊" : "Bedtime meds 💊", body: medBody });
     // daily mood check-in nudge — only if not logged yet today
     var moodToday = V.state.wellness && V.state.wellness.mood && V.state.wellness.mood[V.todayISO()];
     if (!moodToday)

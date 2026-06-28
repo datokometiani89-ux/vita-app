@@ -30,6 +30,7 @@
           '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">' +
             '<div style="display:flex;gap:8px;align-items:center">' +
               '<button class="pts-chip" data-rewards aria-label="' + t("rwTitle") + '">' + V.icon("sparkle") + (V.state.points || 0) + "</button>" +
+              '<button class="icon-box gray" data-go="reminders" aria-label="' + t("rmTitle") + '">' + V.icon("bell") + "</button>" +
               '<button class="icon-box gray" data-menu aria-label="' + t("menuTitle") + '">' + V.icon("grid") + "</button>" +
             "</div>" +
             '<div class="score-bubble">100%</div>' +
@@ -73,6 +74,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
+        each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
         var m = $("[data-menu]");
         if (m) m.addEventListener("click", function () { V.go("menu"); });
         var rw = $("[data-rewards]");
@@ -137,7 +139,8 @@
         '<div style="display:flex;align-items:center;gap:12px;margin:4px 0 18px">' +
           V.avatar(48) +
           '<div style="flex:1"><span style="color:var(--muted)">' + greet + ' , </span><b>' + esc(name) + "</b></div>" +
-          '<button class="icon-box gray" data-open-settings>' + V.icon("bell") + "</button>" +
+          '<button class="icon-box gray" data-go="reminders" style="margin-right:8px">' + V.icon("bell") + "</button>" +
+          '<button class="icon-box gray" data-open-settings>' + V.icon("cog") + "</button>" +
         "</div>" +
         '<div class="plan-hero"><div class="plan-hero__top">' +
           "<h2>" + t("plAlmost") + '</h2><div class="plan-hero__pct">' + pct + "<span>%</span></div></div>" +
@@ -191,6 +194,7 @@
       V.tabbar("plan") +
       "</div>",
       { onMount: function () {
+        each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
         var cp = $("[data-careplans]");
         if (cp) cp.addEventListener("click", function () { V.go("careplans"); });
         var wo = $("[data-workouts]");
@@ -1076,6 +1080,43 @@
         $("#cyLen").addEventListener("change", function () { saveLen(); V.render(); });
         $("#cyPlen").addEventListener("change", function () { saveLen(); V.render(); });
       }}
+    );
+  };
+
+  V.screens.reminders = function () {
+    var F = V.features || {};
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    var items = (F.todaysReminders ? F.todaysReminders() : []).slice().sort(function (a, b) { return (a.h * 60 + a.m) - (b.h * 60 + b.m); });
+    var supported = F.notifSupported ? F.notifSupported() : false;
+    var on = F.notifOn ? F.notifOn() : false;
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("rmTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("rmDesc") + "</p>" +
+        (supported
+          ? '<div class="rm-toggle"><div class="rm-toggle__t"><b>' + t("rmEnable") + "</b><small>" + t("rmEnableSub") + "</small></div>" +
+            '<div class="toggle ' + (on ? "on" : "") + '" id="rmTog"></div></div>'
+          : '<div class="md-done">' + V.icon("bell") + " " + t("rmUnsupported") + "</div>") +
+        '<div class="section-head"><h3>' + t("rmToday") + "</h3></div>" +
+        items.map(function (r) {
+          return '<div class="rm-item"><span class="rm-time">' + pad(r.h) + ":" + pad(r.m) + "</span>" +
+            '<div class="rm-body"><b>' + esc(r.title) + "</b><small>" + esc(r.body) + "</small></div></div>";
+        }).join("") +
+        '<p class="hr-multi-note">' + t("rmNote") + "</p>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        var tog = $("#rmTog");
+        if (tog) tog.addEventListener("click", function () {
+          if (F.notifOn()) { F.disableNotifications(); V.render(); }
+          else F.enableNotifications().then(function (ok) {
+            V.render();
+            if (!ok && F.notifSupported() && Notification.permission === "denied") alert(V.t("setNotifBlocked"));
+          });
+        });
+      } }
     );
   };
 

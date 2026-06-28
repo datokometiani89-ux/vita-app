@@ -829,6 +829,23 @@ window.VITA = window.VITA || {};
     mCycle: { ka: "ციკლი", en: "Cycle" },
     mSexHealth: { ka: "შენთვის (ჯანმრთელობა)", en: "For you (health)" },
     mMeds: { ka: "ჩემი წამლები", en: "My meds" },
+    /* quick-add sheet (+ button) */
+    qaTitle: { ka: "სწრაფი დამატება", en: "Quick add" },
+    qaWater: { ka: "წყალი", en: "Water" },
+    qaWaterDone: { ka: "+1 ჭიქა წყალი 💧", en: "+1 glass of water 💧" },
+    qaFood: { ka: "საჭმელი", en: "Food" },
+    qaMood: { ka: "განწყობა", en: "Mood" },
+    qaMed: { ka: "წამალი", en: "Medication" },
+    qaScan: { ka: "AI სკანი", en: "AI scan" },
+    qaWorkout: { ka: "ვარჯიში", en: "Workout" },
+    /* reminders / notifications screen */
+    rmTitle: { ka: "შეხსენებები", en: "Reminders" },
+    rmDesc: { ka: "შენი დღის შეხსენებები — წყალი, წამლები, მოძრაობა, ძილი.", en: "Your day's nudges — water, meds, movement, sleep." },
+    rmEnable: { ka: "შეხსენებები ჩართე", en: "Enable reminders" },
+    rmEnableSub: { ka: "VITA შეგახსენებს მნიშვნელოვან მომენტებში", en: "VITA will nudge you at the right moments" },
+    rmUnsupported: { ka: "ამ მოწყობილობაზე ნოთიფიკაციები მიუწვდომელია", en: "Notifications aren't available on this device" },
+    rmToday: { ka: "დღევანდელი შეხსენებები", en: "Today's reminders" },
+    rmNote: { ka: "ახლანდელი შეხსენებები აპის ღიად ყოფნისას მუშაობს. სრული push-ნოთიფიკაცია მომავალი ეტაპია.", en: "Reminders currently fire while the app is open. Full push notifications are a planned step." },
     /* medication tracker */
     mdTitle: { ka: "წამლები", en: "Medications" },
     mdDesc: { ka: "დაამატე შენი წამლები — VITA გაჩვენებს რა და როდის უნდა მიიღო.", en: "Add your medications — VITA shows what to take and when." },
