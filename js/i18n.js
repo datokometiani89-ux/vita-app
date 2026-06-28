@@ -1109,6 +1109,7 @@ window.VITA = window.VITA || {};
     plTasksLeft: { ka: "დღეს დარჩა {n} დავალება", en: "{n} tasks left today" },
     plStreakDays: { ka: "დღე ზედიზედ 🔥", en: "day streak 🔥" },
     plFocus: { ka: "დღის ფოკუსი", en: "Today's focus" },
+    plMyPlan: { ka: "ჩემი გეგმა", en: "My plan" },
     plManageMeds: { ka: "მართვა →", en: "Manage →" },
     plAllDoneToday: { ka: "დღევანდელი დავალებები შესრულდა 🎉", en: "Today's tasks are all done 🎉" },
     plDay: { ka: "დღე", en: "Day" },

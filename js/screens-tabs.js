@@ -209,12 +209,15 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div style="display:flex;align-items:center;gap:12px;margin:4px 0 18px">' +
-          V.avatar(48) +
-          '<div style="flex:1">' + (name ? '<span style="color:var(--muted)">' + greet + ", </span><b>" + esc(name) + "</b>" : "<b>" + greet + "</b>") + "</div>" +
-          '<button class="icon-box gray" data-go="reminders" style="margin-right:8px">' + V.icon("bell") + "</button>" +
-          '<button class="icon-box gray" data-open-settings>' + V.icon("cog") + "</button>" +
+        '<div class="dash-head">' +
+          '<span class="dash-logo">' + V.logoBadge(34) + "</span>" +
+          '<div class="dash-icons">' +
+            '<button class="icon-box gray" data-go="reminders" aria-label="' + t("rmTitle") + '">' + V.icon("bell") + "</button>" +
+            '<button class="icon-box gray" data-go="menu" aria-label="' + t("menuTitle") + '">' + V.icon("grid") + "</button>" +
+            '<button class="icon-box gray" data-open-settings aria-label="' + t("setTitle") + '">' + V.icon("cog") + "</button>" +
+          "</div>" +
         "</div>" +
+        '<h1 class="dash-greet">' + t("plMyPlan") + "</h1>" +
         '<div class="plan-hero"><div class="plan-hero__top">' +
           "<h2>" + (pct >= 100 ? t("plDone") : pct >= 50 ? t("plAlmost") : pct > 0 ? t("plKeepGoing") : t("plStart")) + '</h2><div class="plan-hero__pct">' + pct + "<span>%</span></div></div>" +
           weekStrip() +
