@@ -1263,6 +1263,32 @@
 .cycle-pred__item b { font-size: 14.5px; display: block; }
 .cycle-pred__item small { color: var(--muted); font-size: 13px; }
 
+/* exercise library */
+.ex-libcta { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 14px 16px; margin-bottom: 16px; }
+.ex-libcta b { font-size: 15px; display: block; } .ex-libcta small { color: var(--muted); font-size: 12.5px; }
+.ex-libcta > svg:last-child { margin-left: auto; width: 18px; color: var(--muted); }
+.ex-coach { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 12px 14px; margin-bottom: 12px; }
+.ex-av { width: 44px; height: 44px; flex: none; }
+.ex-coach__t { flex: 1; min-width: 0; } .ex-coach__t b { font-size: 14px; display: block; } .ex-coach__t small { color: var(--muted); font-size: 12px; }
+.ex-vnote { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--muted); background: var(--field); border-radius: var(--r-md); padding: 10px 12px; margin-bottom: 14px; line-height: 1.5; }
+.ex-vnote svg { width: 16px; flex: none; color: var(--green); margin-top: 1px; }
+.ex-cats { margin-bottom: 14px; }
+.ex-card { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 14px 16px; margin-bottom: 10px; }
+.ex-card__h { display: flex; align-items: center; gap: 12px; }
+.ex-demo { width: 56px; height: 56px; flex: none; border-radius: var(--r-md); background: var(--green-tint); color: var(--green); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; }
+.ex-demo > svg { width: 22px; }
+.ex-soon { font-size: 7.5px; font-weight: 700; line-height: 1; text-align: center; }
+.ex-card__t { flex: 1; min-width: 0; } .ex-card__t b { font-size: 15px; display: block; } .ex-card__t small { color: var(--muted); font-size: 12.5px; }
+.ex-add { width: 38px; height: 38px; border-radius: 99px; background: var(--field); color: var(--ink-2); flex: none; display: flex; align-items: center; justify-content: center; }
+.ex-add svg { width: 18px; } .ex-add.on { background: var(--green); color: #fff; }
+.ex-how { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
+.ex-how summary { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--green); cursor: pointer; list-style: none; }
+.ex-how summary::-webkit-details-marker { display: none; }
+.ex-how summary svg { width: 15px; }
+.ex-how[open] summary svg { transform: rotate(90deg); }
+.ex-how ol { margin: 10px 0 4px; padding-left: 20px; } .ex-how li { font-size: 13px; color: var(--ink-2); line-height: 1.6; margin-bottom: 3px; }
+.ex-cam { width: 100%; margin-top: 8px; }
+
 /* quick-add sheet */
 .qa-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 4px 0 8px; }
 .qa-item { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 6px; border-radius: var(--r-md); background: var(--field); }

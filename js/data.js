@@ -624,6 +624,61 @@ window.VITA = window.VITA || {};
       joints: { L: [11, 13, 15], R: [12, 14, 16] }, down: 55, up: 150, tip: { ka: "გვერდულად, ხელი ჩანდეს", en: "Side-on, keep your arm visible" } },
   ];
   V.repMove = function (id) { return V.repMoves.filter(function (m) { return m.id === id; })[0] || null; };
+
+  /* ---------- Gym exercise library (real movements, grouped by muscle) ---------- */
+  V.EX_CATS = [
+    { id: "chest", icon: "heart", label: { ka: "გულმკერდი", en: "Chest" } },
+    { id: "back", icon: "shield", label: { ka: "ზურგი", en: "Back" } },
+    { id: "legs", icon: "walk", label: { ka: "ფეხები", en: "Legs" } },
+    { id: "shoulders", icon: "bolt", label: { ka: "მხრები", en: "Shoulders" } },
+    { id: "arms", icon: "bolt", label: { ka: "მკლავები", en: "Arms" } },
+    { id: "core", icon: "shield", label: { ka: "კორი", en: "Core" } },
+  ];
+  V.EXERCISE_LIB = [
+    { id: "bench", cat: "chest", scheme: "4×8", name: { ka: "ბენჩ-პრესი", en: "Bench press" }, target: { ka: "გულმკერდი, ტრიცეფსი", en: "Chest, triceps" },
+      steps: { ka: ["დაწექი სკამზე, შტანგა მხრების სიგანეზე", "ჩამოუშვი გულმკერდამდე, კონტროლით ასწიე"], en: ["Lie on the bench, grip shoulder-width", "Lower to the chest, press up under control"] } },
+    { id: "pushup", cat: "chest", scheme: "3×12", rep: "pushup", name: { ka: "აზიდვები", en: "Push-ups" }, target: { ka: "გულმკერდი, კორი", en: "Chest, core" },
+      steps: { ka: ["ხელები მხრების ქვეშ, სხეული სწორ ხაზზე", "ჩაიწიე, იდაყვები ~45°, ასწი"], en: ["Hands under shoulders, body in a line", "Lower with elbows ~45°, push up"] } },
+    { id: "incline", cat: "chest", scheme: "3×10", name: { ka: "დახრილი დამბელ-პრესი", en: "Incline dumbbell press" }, target: { ka: "ზედა გულმკერდი", en: "Upper chest" },
+      steps: { ka: ["სკამი 30–45°, დამბელები მხართან", "ასწი ზემოთ, ჩამოუშვი ნელა"], en: ["Bench at 30–45°, dumbbells at shoulders", "Press up, lower slowly"] } },
+    { id: "latpull", cat: "back", scheme: "3×10", name: { ka: "ლატ-პულდაუნი", en: "Lat pulldown" }, target: { ka: "ბეჭები (ლატები)", en: "Lats" },
+      steps: { ka: ["ფართო ხელით დაიჭირე, მკერდი წინ", "ჩამოწიე გულმკერდამდე, ჩაკუმშე ბეჭები"], en: ["Wide grip, chest up", "Pull to the chest, squeeze the lats"] } },
+    { id: "row", cat: "back", scheme: "4×8", name: { ka: "ნიჩბისებრი წევა", en: "Bent-over row" }, target: { ka: "შუა ზურგი", en: "Mid-back" },
+      steps: { ka: ["მუხლები ოდნავ მოხრილი, ზურგი სწორი", "მიწიე მუცელთან, ჩაკუმშე ბეჭები"], en: ["Knees soft, back flat", "Row to the belly, squeeze the shoulder blades"] } },
+    { id: "deadlift", cat: "back", scheme: "3×5", name: { ka: "წოლითი წევა (Deadlift)", en: "Deadlift" }, target: { ka: "ზურგი, დუნდულები", en: "Back, glutes" },
+      steps: { ka: ["შტანგა წვივთან, ზურგი სწორი", "ასწი თეძოს ბიძგით, ჩაკუმშე დუნდულები"], en: ["Bar over mid-foot, flat back", "Drive with the hips, lock out the glutes"] } },
+    { id: "squat", cat: "legs", scheme: "4×10", rep: "squat", name: { ka: "ჩაჯდომები", en: "Squats" }, target: { ka: "ბარძაყი, დუნდულები", en: "Quads, glutes" },
+      steps: { ka: ["ფეხები მხრების სიგანეზე", "ჩაჯექი თეძო მუხლის ქვემოთ, ასწი"], en: ["Feet shoulder-width", "Sit hips below knees, drive up"] } },
+    { id: "lunge", cat: "legs", scheme: "3×10", rep: "lunge", name: { ka: "ნახტომები (Lunges)", en: "Lunges" }, target: { ka: "ბარძაყი, დუნდულები", en: "Quads, glutes" },
+      steps: { ka: ["ნაბიჯი წინ, ორივე მუხლი 90°", "ასწი და გაიმეორე მეორე ფეხით"], en: ["Step forward, both knees to 90°", "Push up, alternate legs"] } },
+    { id: "legpress", cat: "legs", scheme: "3×12", name: { ka: "ფეხის პრესი", en: "Leg press" }, target: { ka: "ბარძაყი", en: "Quads" },
+      steps: { ka: ["ფეხები პლატფორმაზე მხრის სიგანეზე", "ჩაუშვი 90°-მდე, ასწი (მუხლი არ ჩაკეტო)"], en: ["Feet on the platform shoulder-width", "Lower to 90°, press (don't lock knees)"] } },
+    { id: "ohp", cat: "shoulders", scheme: "4×8", name: { ka: "ზედა პრესი", en: "Overhead press" }, target: { ka: "მხრები", en: "Shoulders" },
+      steps: { ka: ["შტანგა მხართან, კორი დაჭიმე", "ასწი თავზე ზემოთ, ჩამოუშვი"], en: ["Bar at shoulders, brace the core", "Press overhead, lower under control"] } },
+    { id: "lateral", cat: "shoulders", scheme: "3×12", name: { ka: "გვერდითი აწევა", en: "Lateral raise" }, target: { ka: "გვერდითი დელტა", en: "Side delts" },
+      steps: { ka: ["დამბელები გვერდით, იდაყვი ოდნავ მოხრილი", "ასწი მხრის სიმაღლემდე, ნელა ჩამოუშვი"], en: ["Dumbbells at sides, slight elbow bend", "Raise to shoulder height, lower slowly"] } },
+    { id: "facepull", cat: "shoulders", scheme: "3×15", name: { ka: "Face pull", en: "Face pull" }, target: { ka: "უკანა დელტა", en: "Rear delts" },
+      steps: { ka: ["თოკი სახის სიმაღლეზე, მიწიე შუბლისკენ", "ჩაკუმშე ბეჭები, ნელა დააბრუნე"], en: ["Rope at face height, pull to the forehead", "Squeeze the rear delts, return slowly"] } },
+    { id: "curl", cat: "arms", scheme: "3×12", rep: "curl", name: { ka: "ბაიცეფსის მოხრა", en: "Bicep curl" }, target: { ka: "ბაიცეფსი", en: "Biceps" },
+      steps: { ka: ["იდაყვები სხეულთან, მოხარე ზემოთ", "ჩაკუმშე, ნელა ჩამოუშვი"], en: ["Elbows at your sides, curl up", "Squeeze, lower slowly"] } },
+    { id: "dip", cat: "arms", scheme: "3×10", name: { ka: "ტრიცეფსის დიპი", en: "Tricep dip" }, target: { ka: "ტრიცეფსი", en: "Triceps" },
+      steps: { ka: ["ხელები სკამზე, ჩაიწიე იდაყვის მოხრით", "ასწი სხეული ბოლომდე"], en: ["Hands on a bench, lower by bending elbows", "Press back up fully"] } },
+    { id: "hammer", cat: "arms", scheme: "3×12", name: { ka: "ჩაქუჩისებრი მოხრა", en: "Hammer curl" }, target: { ka: "ბაიცეფსი, წინამხარი", en: "Biceps, forearms" },
+      steps: { ka: ["დამბელები ნეიტრალურად (ცერა ზემოთ)", "მოხარე და ჩაკუმშე"], en: ["Dumbbells neutral (thumbs up)", "Curl and squeeze"] } },
+    { id: "plank", cat: "core", scheme: "3×40წმ", name: { ka: "პლანკი", en: "Plank" }, target: { ka: "კორი", en: "Core" },
+      steps: { ka: ["იდაყვები მხრების ქვეშ, სხეული სწორ ხაზზე", "დაჭიმე მუცელი, არ ჩაუშვა მენჯი"], en: ["Elbows under shoulders, body in a line", "Brace the abs, don't drop the hips"] } },
+    { id: "crunch", cat: "core", scheme: "3×15", name: { ka: "მუცლის აწევა", en: "Crunch" }, target: { ka: "მუცელი", en: "Abs" },
+      steps: { ka: ["დაწექი, მუხლები მოხრილი", "ასწი მხრები, ჩაკუმშე მუცელი"], en: ["Lie down, knees bent", "Curl the shoulders up, squeeze the abs"] } },
+    { id: "rtwist", cat: "core", scheme: "3×20", name: { ka: "რუსული ტრიალი", en: "Russian twist" }, target: { ka: "ირიბი მუცელი", en: "Obliques" },
+      steps: { ka: ["იჯექი, ფეხები აწეული, ტანი უკან", "ატრიალე ტანი მარცხნივ-მარჯვნივ"], en: ["Sit with feet up, lean back", "Rotate the torso side to side"] } },
+  ];
+  V.exInPlan = function (id) { return (V.state.exPlan || []).indexOf(id) >= 0; };
+  V.toggleExPlan = function (id) {
+    V.state.exPlan = V.state.exPlan || [];
+    var i = V.state.exPlan.indexOf(id);
+    if (i >= 0) V.state.exPlan.splice(i, 1); else V.state.exPlan.push(id);
+    V.save();
+  };
   // best-effort map a workout exercise name → a trackable move
   V.repMoveForExercise = function (name) {
     var en = ((name && name.en) || "").toLowerCase();

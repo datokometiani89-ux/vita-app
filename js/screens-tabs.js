@@ -1390,6 +1390,7 @@
         group("grpCare", [
           tile("plan", "green", "mPlan", 'data-go="plan"'),
           tile("pill", "crimson", "mMeds", 'data-go="meds"'),
+          tile("bolt", "green", "mExercises", 'data-go="exercises"'),
           tile("heart", "green", "mCare", 'data-go="careplans"'),
           tile("bolt", "blue", "mWorkouts", 'data-go="workouts"'),
           tile("walk", "green", "mSteps", 'data-go="steps"'),
@@ -1502,6 +1503,64 @@
   };
 
   /* ===================== WORKOUTS ===================== */
+  var exCat = "all";   // exercise-library filter, persists across re-renders
+  function coachAvatar(c) {
+    var bg = c === "female" ? "var(--pink)" : "var(--blue)";
+    return '<svg viewBox="0 0 44 44" class="ex-av"><circle cx="22" cy="22" r="22" fill="' + bg + '" opacity=".15"/>' +
+      '<circle cx="22" cy="17" r="7" fill="' + bg + '"/>' +
+      '<path d="M9 41c1-8 7-12 13-12s12 4 13 12Z" fill="' + bg + '"/>' +
+      (c === "female" ? '<path d="M13 17c0-6 4-9 9-9s9 3 9 9c0 3-1 5-1 5l-2-3c0-4-2-6-6-6s-6 2-6 6l-2 3s-1-2-1-5Z" fill="#5a3a1e" opacity=".5"/>' : "") +
+      "</svg>";
+  }
+  V.screens.exercises = function () {
+    var coach = V.state.coach || "female";
+    var list = V.EXERCISE_LIB.filter(function (ex) { return exCat === "all" || ex.cat === exCat; });
+
+    function exCard(ex) {
+      var inPlan = V.exInPlan(ex.id);
+      return '<div class="ex-card">' +
+        '<div class="ex-card__h">' +
+          '<div class="ex-demo">' + V.icon("bolt") + '<span class="ex-soon">' + t("exSoon") + "</span></div>" +
+          '<div class="ex-card__t"><b>' + L(ex.name) + "</b><small>" + L(ex.target) + " · " + ex.scheme + "</small></div>" +
+          '<button class="ex-add ' + (inPlan ? "on" : "") + '" data-explan="' + ex.id + '">' + V.icon(inPlan ? "check" : "plus") + "</button>" +
+        "</div>" +
+        '<details class="ex-how"><summary>' + V.icon("next") + " " + t("exHow") + "</summary><ol>" +
+          L(ex.steps).map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ol>" +
+          (ex.rep ? '<button class="btn btn-ghost ex-cam" data-excam="' + ex.rep + '">' + V.icon("camera") + " " + t("rcLive") + "</button>" : "") +
+        "</details></div>";
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("exTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("exDesc") + "</p>" +
+        '<div class="ex-coach">' + coachAvatar(coach) +
+          '<div class="ex-coach__t"><b>' + t("exCoach") + "</b><small>" + t(coach === "female" ? "exCoachF" : "exCoachM") + "</small></div>" +
+          '<div class="seg"><button data-coach="female" class="' + (coach === "female" ? "on" : "") + '">' + t("exFemale") + "</button>" +
+            '<button data-coach="male" class="' + (coach === "male" ? "on" : "") + '">' + t("exMale") + "</button></div>" +
+        "</div>" +
+        '<p class="ex-vnote">' + V.icon("sparkle") + " " + t("exVideoNote") + "</p>" +
+        '<div class="chips ex-cats"><button class="chip ' + (exCat === "all" ? "on" : "") + '" data-cat="all">' + t("exAll") + "</button>" +
+          V.EX_CATS.map(function (c) { return '<button class="chip ' + (exCat === c.id ? "on" : "") + '" data-cat="' + c.id + '">' + L(c.label) + "</button>"; }).join("") + "</div>" +
+        list.map(exCard).join("") +
+      "</div>" + V.tabbar("plan") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("workouts"); });
+        each("[data-coach]", function (b) { b.addEventListener("click", function () { V.state.coach = b.getAttribute("data-coach"); V.save(); V.render(); }); });
+        each("[data-cat]", function (b) { b.addEventListener("click", function () { exCat = b.getAttribute("data-cat"); V.render(); }); });
+        each("[data-explan]", function (b) { b.addEventListener("click", function () { V.toggleExPlan(b.getAttribute("data-explan")); V.render(); }); });
+        each("[data-excam]", function (b) {
+          b.addEventListener("click", function () {
+            var mv = V.repMove(b.getAttribute("data-excam"));
+            if (mv && V.openRepCounter) V.openRepCounter({ move: mv, onDone: function () {} });
+          });
+        });
+      } }
+    );
+  };
+
   V.screens.workouts = function () {
     var week = V.workoutWeek();
     var done = V.state.doneWorkouts || {};
@@ -1537,6 +1596,8 @@
         '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("woTitle") + "</h1></div>" +
           '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
         '<p class="s-sub">' + t("woDesc") + "</p>" +
+        '<button class="ex-libcta" data-go="exercises">' + V.iconBox("bolt", "green") +
+          '<div><b>' + t("exTitle") + "</b><small>" + t("exCtaSub") + "</small></div>" + V.icon("next") + "</button>" +
         '<div class="section-head"><h3>' + t("woThisWeek") + '</h3><small>' + t("woWeekDone", { n: doneCount }) + "</small></div>" +
         '<div class="track"><span style="width:' + Math.round(doneCount / 3 * 100) + '%"></span></div>' +
         week.map(dayCard).join("") +
@@ -1545,6 +1606,7 @@
       "</div>",
       { onMount: function () {
         $("[data-x]").addEventListener("click", function () { V.go("plan"); });
+        each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
         each("[data-wo]", function (b) {
           b.addEventListener("click", function () {
             var k = b.getAttribute("data-wo");
