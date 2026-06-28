@@ -200,7 +200,7 @@
         "</div>" +
         '<div class="plan-hero"><div class="plan-hero__top">' +
           "<h2>" + (pct >= 100 ? t("plDone") : pct >= 50 ? t("plAlmost") : pct > 0 ? t("plKeepGoing") : t("plStart")) + '</h2><div class="plan-hero__pct">' + pct + "<span>%</span></div></div>" +
-          '<div class="day-row">' + dayChips(day) + "</div>" +
+          weekStrip() +
           '<div class="daysleft"><span>' + ((tasks.length - done.length) > 0 ? t("plTasksLeft", { n: tasks.length - done.length }) : t("plAllDoneToday")) + "</span></div>" +
         "</div>" +
 
@@ -365,6 +365,28 @@
       }}
     );
   };
+
+  // current week (Mon–Sun) with per-day task-completion rings — replaces the cryptic DAY1/DAY2 chips
+  function weekStrip() {
+    var todayIso = V.todayISO(), now = new Date(todayIso);
+    var dow = (now.getDay() + 6) % 7;            // Mon = 0
+    var monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow);
+    var total = (V.dailyTasks() || []).length || 1;
+    var names = V.lang() === "ka" ? ["ორ", "სა", "ოთ", "ხუ", "პა", "შა", "კვ"] : ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+    var cells = "";
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      var iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      var done = ((V.state.doneTasks || {})[iso] || []).length;
+      var pct = Math.min(100, Math.round(done / total * 100));
+      var isToday = iso === todayIso, isFuture = iso > todayIso;
+      var cls = isToday ? "today" : isFuture ? "future" : pct >= 100 ? "full" : pct > 0 ? "partial" : "";
+      var inner = (!isFuture && pct >= 100) ? V.icon("check") : d.getDate();
+      cells += '<div class="wk-day ' + cls + '"><span class="wk-day__n">' + names[i] + "</span>" +
+        '<span class="wk-day__r" style="background:conic-gradient(var(--green) ' + (pct * 3.6) + 'deg, rgba(0,0,0,.06) 0)"><i>' + inner + "</i></span></div>";
+    }
+    return '<div class="wk-strip">' + cells + "</div>";
+  }
 
   function dayChips(day) {
     // show pairs DAY1/DAY2 done, current, upcoming
