@@ -3566,48 +3566,49 @@
   // Built-in food database (Georgian staples + common items) so manual logging
   // works well even when the AI-vision quota is exhausted. pop = show in the
   // shortlist before the user has typed anything. kcal = typical single serving.
+  // m: [protein, carbs, fat] grams per serving (approximate, for macro tracking)
   var FOOD_DB = [
-    { ka: "ვაშლი", en: "Apple", kcal: 95, pop: 1 },
-    { ka: "ბანანი", en: "Banana", kcal: 105, pop: 1 },
-    { ka: "ფორთოხალი", en: "Orange", kcal: 62 },
-    { ka: "მსხალი", en: "Pear", kcal: 100 },
-    { ka: "ყურძენი (მტევანი)", en: "Grapes (bunch)", kcal: 110 },
-    { ka: "კვერცხი მოხარშული", en: "Egg (boiled)", kcal: 78 },
-    { ka: "ომლეტი", en: "Omelette", kcal: 220 },
-    { ka: "შვრიის ფაფა", en: "Oatmeal", kcal: 150 },
-    { ka: "იოგურტი", en: "Yogurt", kcal: 150 },
-    { ka: "ხაჭო", en: "Cottage cheese", kcal: 120 },
-    { ka: "ყველი (30გ)", en: "Cheese (30g)", kcal: 110 },
-    { ka: "პური (ნაჭერი)", en: "Bread (slice)", kcal: 80 },
-    { ka: "ბრინჯი (ჭიქა)", en: "Rice (cup)", kcal: 200 },
-    { ka: "მაკარონი", en: "Pasta", kcal: 220 },
-    { ka: "კარტოფილი", en: "Potato", kcal: 160 },
-    { ka: "სალათი", en: "Salad", kcal: 180, pop: 1 },
-    { ka: "ბერძნული სალათი", en: "Greek salad", kcal: 230 },
-    { ka: "ქათამი გრილზე (100გ)", en: "Grilled chicken (100g)", kcal: 165, pop: 1 },
-    { ka: "საქონლის ხორცი (100გ)", en: "Beef (100g)", kcal: 250 },
-    { ka: "თევზი (100გ)", en: "Fish (100g)", kcal: 200 },
-    { ka: "სუპი", en: "Soup", kcal: 150 },
-    { ka: "ხაჭაპური (ნაჭერი)", en: "Khachapuri (slice)", kcal: 380, pop: 1 },
-    { ka: "ხინკალი (1 ც)", en: "Khinkali (1 pc)", kcal: 80, pop: 1 },
-    { ka: "ლობიო", en: "Lobio (beans)", kcal: 250 },
-    { ka: "მწვადი (შამფური)", en: "Mtsvadi (skewer)", kcal: 300 },
-    { ka: "ბადრიჯანი ნიგვზით", en: "Eggplant with walnut", kcal: 250 },
-    { ka: "ფხალი", en: "Pkhali", kcal: 150 },
-    { ka: "სენდვიჩი", en: "Sandwich", kcal: 350, pop: 1 },
-    { ka: "ჰამბურგერი", en: "Hamburger", kcal: 550 },
-    { ka: "პიცა (ნაჭერი)", en: "Pizza (slice)", kcal: 285 },
-    { ka: "ჩიფსი", en: "Chips", kcal: 150 },
-    { ka: "თხილეული (მუჭა)", en: "Nuts (handful)", kcal: 170 },
-    { ka: "შოკოლადი (ბატონი)", en: "Chocolate bar", kcal: 230 },
-    { ka: "ნაყინი", en: "Ice cream", kcal: 200 },
-    { ka: "ნამცხვარი (ნაჭერი)", en: "Cake (slice)", kcal: 350 },
-    { ka: "ყავა რძით", en: "Latte", kcal: 120, pop: 1 },
-    { ka: "ყავა შავი", en: "Black coffee", kcal: 5 },
-    { ka: "ჩაი", en: "Tea", kcal: 2 },
-    { ka: "ფორთოხლის წვენი", en: "Orange juice", kcal: 110 },
-    { ka: "რძე (ჭიქა)", en: "Milk (cup)", kcal: 120 },
-    { ka: "წყალი", en: "Water", kcal: 0 },
+    { ka: "ვაშლი", en: "Apple", kcal: 95, m: [0, 25, 0], pop: 1 },
+    { ka: "ბანანი", en: "Banana", kcal: 105, m: [1, 27, 0], pop: 1 },
+    { ka: "ფორთოხალი", en: "Orange", kcal: 62, m: [1, 15, 0] },
+    { ka: "მსხალი", en: "Pear", kcal: 100, m: [1, 27, 0] },
+    { ka: "ყურძენი (მტევანი)", en: "Grapes (bunch)", kcal: 110, m: [1, 29, 0] },
+    { ka: "კვერცხი მოხარშული", en: "Egg (boiled)", kcal: 78, m: [6, 1, 5] },
+    { ka: "ომლეტი", en: "Omelette", kcal: 220, m: [14, 2, 16] },
+    { ka: "შვრიის ფაფა", en: "Oatmeal", kcal: 150, m: [5, 27, 3] },
+    { ka: "იოგურტი", en: "Yogurt", kcal: 150, m: [9, 12, 8] },
+    { ka: "ხაჭო", en: "Cottage cheese", kcal: 120, m: [14, 5, 5] },
+    { ka: "ყველი (30გ)", en: "Cheese (30g)", kcal: 110, m: [7, 1, 9] },
+    { ka: "პური (ნაჭერი)", en: "Bread (slice)", kcal: 80, m: [3, 14, 1] },
+    { ka: "ბრინჯი (ჭიქა)", en: "Rice (cup)", kcal: 200, m: [4, 45, 0] },
+    { ka: "მაკარონი", en: "Pasta", kcal: 220, m: [8, 43, 1] },
+    { ka: "კარტოფილი", en: "Potato", kcal: 160, m: [4, 37, 0] },
+    { ka: "სალათი", en: "Salad", kcal: 180, m: [3, 12, 13], pop: 1 },
+    { ka: "ბერძნული სალათი", en: "Greek salad", kcal: 230, m: [6, 10, 18] },
+    { ka: "ქათამი გრილზე (100გ)", en: "Grilled chicken (100g)", kcal: 165, m: [31, 0, 4], pop: 1 },
+    { ka: "საქონლის ხორცი (100გ)", en: "Beef (100g)", kcal: 250, m: [26, 0, 17] },
+    { ka: "თევზი (100გ)", en: "Fish (100g)", kcal: 200, m: [22, 0, 12] },
+    { ka: "სუპი", en: "Soup", kcal: 150, m: [6, 18, 5] },
+    { ka: "ხაჭაპური (ნაჭერი)", en: "Khachapuri (slice)", kcal: 380, m: [14, 40, 18], pop: 1 },
+    { ka: "ხინკალი (1 ც)", en: "Khinkali (1 pc)", kcal: 80, m: [4, 10, 3], pop: 1 },
+    { ka: "ლობიო", en: "Lobio (beans)", kcal: 250, m: [13, 38, 4] },
+    { ka: "მწვადი (შამფური)", en: "Mtsvadi (skewer)", kcal: 300, m: [28, 2, 20] },
+    { ka: "ბადრიჯანი ნიგვზით", en: "Eggplant with walnut", kcal: 250, m: [6, 12, 20] },
+    { ka: "ფხალი", en: "Pkhali", kcal: 150, m: [5, 10, 10] },
+    { ka: "სენდვიჩი", en: "Sandwich", kcal: 350, m: [15, 38, 15], pop: 1 },
+    { ka: "ჰამბურგერი", en: "Hamburger", kcal: 550, m: [25, 40, 30] },
+    { ka: "პიცა (ნაჭერი)", en: "Pizza (slice)", kcal: 285, m: [12, 36, 10] },
+    { ka: "ჩიფსი", en: "Chips", kcal: 150, m: [2, 15, 10] },
+    { ka: "თხილეული (მუჭა)", en: "Nuts (handful)", kcal: 170, m: [6, 6, 15] },
+    { ka: "შოკოლადი (ბატონი)", en: "Chocolate bar", kcal: 230, m: [3, 26, 13] },
+    { ka: "ნაყინი", en: "Ice cream", kcal: 200, m: [4, 24, 11] },
+    { ka: "ნამცხვარი (ნაჭერი)", en: "Cake (slice)", kcal: 350, m: [4, 50, 15] },
+    { ka: "ყავა რძით", en: "Latte", kcal: 120, m: [8, 12, 5], pop: 1 },
+    { ka: "ყავა შავი", en: "Black coffee", kcal: 5, m: [0, 0, 0] },
+    { ka: "ჩაი", en: "Tea", kcal: 2, m: [0, 0, 0] },
+    { ka: "ფორთოხლის წვენი", en: "Orange juice", kcal: 110, m: [2, 26, 0] },
+    { ka: "რძე (ჭიქა)", en: "Milk (cup)", kcal: 120, m: [8, 12, 5] },
+    { ka: "წყალი", en: "Water", kcal: 0, m: [0, 0, 0] },
   ];
   function foodName(f) { return V.lang() === "ka" ? f.ka : f.en; }
   function multLabel(m) { return m === 0.5 ? "½" : m === 1.5 ? "1½" : String(m); }
@@ -3615,14 +3616,20 @@
     var f = (W().food || []).filter(function (x) { return x.date === today(); });
     return f.reduce(function (a, x) { return a + (x.kcal || 0); }, 0);
   };
+  V.foodMacrosToday = function () {
+    var f = (W().food || []).filter(function (x) { return x.date === today() && x.m; });
+    return f.reduce(function (a, x) { return { p: a.p + (x.m[0] || 0), c: a.c + (x.m[1] || 0), f: a.f + (x.m[2] || 0) }; }, { p: 0, c: 0, f: 0 });
+  };
   V.screens.food = function () {
     var w = W(); w.food = w.food || [];
     var dataUrl = null, est = null, query = "", mult = 1;   // query/mult drive the manual add UI
 
     function todayList() { return w.food.filter(function (x) { return x.date === today(); }); }
     function total() { return V.foodToday(); }
-    function add(name, kcal) {
-      w.food.push({ date: today(), name: name || t("fdMeal"), kcal: Math.max(0, Math.round(kcal) || 0) });
+    function add(name, kcal, m) {
+      var e = { date: today(), name: name || t("fdMeal"), kcal: Math.max(0, Math.round(kcal) || 0) };
+      if (m && m.length === 3) e.m = [Math.round(m[0]) || 0, Math.round(m[1]) || 0, Math.round(m[2]) || 0];
+      w.food.push(e);
       if (w.food.length > 200) w.food = w.food.slice(-200);
       V.awardOnce && V.awardOnce("food:" + today(), V.POINTS.task, "task");
       V.save(); V.toast && V.toast(t("fdAdded")); render();
@@ -3676,7 +3683,7 @@
       if (!items.length) return '<p class="fd-empty">' + t("fdNoMatch") + "</p>";
       return items.slice(0, 12).map(function (f) {
         var k = Math.round(f.kcal * mult);
-        return '<button class="fd-row" data-base="' + f.kcal + '" data-name="' + esc(foodName(f)) + '">' +
+        return '<button class="fd-row" data-base="' + f.kcal + '" data-name="' + esc(foodName(f)) + '" data-macro="' + (f.m ? f.m.join(",") : "") + '">' +
           '<span class="fd-row__n">' + esc(foodName(f)) + "</span>" +
           '<span class="fd-row__k">' + k + " " + t("fdKcal") + "</span>" +
           '<i class="fd-row__p">' + V.icon("plus") + "</i></button>";
@@ -3687,7 +3694,9 @@
       each("[data-base]", function (b) {
         b.addEventListener("click", function () {
           var base = +b.getAttribute("data-base"), nm = b.getAttribute("data-name");
-          add(nm + (mult !== 1 ? " ×" + multLabel(mult) : ""), Math.round(base * mult));
+          var mc = b.getAttribute("data-macro");
+          var m = mc ? mc.split(",").map(function (x) { return Math.round((+x || 0) * mult); }) : null;
+          add(nm + (mult !== 1 ? " ×" + multLabel(mult) : ""), Math.round(base * mult), m);
         });
       });
     }
@@ -3710,8 +3719,18 @@
       wireRows();
     }
 
+    function macroBars(mac, g) {
+      var rows = [["fdProtein", "p", "#E8536B"], ["fdCarbs", "c", "#E0A92E"], ["fdFat", "f", "#4169E8"]];
+      return '<div class="fd-macros">' + rows.map(function (r) {
+        var val = mac[r[1]], gl = g[r[1]] || 1, pc = Math.min(100, Math.round(val / gl * 100));
+        return '<div class="fd-macro"><div class="fd-macro__h"><span>' + t(r[0]) + "</span><b>" + val + "/" + g[r[1]] + t("fdGram") + "</b></div>" +
+          '<div class="fd-macro__bar"><span style="width:' + pc + "%;background:" + r[2] + '"></span></div></div>';
+      }).join("") + "</div>";
+    }
     function render() {
-      var c = total(), pct = Math.min(100, Math.round(c / FOOD_GOAL * 100)), list = todayList();
+      var goal = V.calorieGoal ? V.calorieGoal() : FOOD_GOAL;
+      var c = total(), pct = Math.min(100, Math.round(c / goal * 100)), list = todayList();
+      var macros = V.foodMacrosToday(), mg = V.macroGoals();
       var portions = [0.5, 1, 1.5, 2].map(function (m) {
         return '<button class="fd-pbtn' + (m === mult ? " on" : "") + '" data-m="' + m + '">' + multLabel(m) + "</button>";
       }).join("");
@@ -3721,7 +3740,8 @@
           head("food", "yellow", "fdTitle") +
           '<p class="s-sub">' + t("fdSub") + "</p>" +
           '<div class="card-soft fd-total"><div class="fd-total__bar"><span style="width:' + pct + '%"></span></div>' +
-            '<div class="fd-total__t"><b>' + c.toLocaleString() + "</b> / " + FOOD_GOAL.toLocaleString() + " " + t("fdKcal") + " · " + t("fdToday") + "</div></div>" +
+            '<div class="fd-total__t"><b>' + c.toLocaleString() + "</b> / " + goal.toLocaleString() + " " + t("fdKcal") + " · " + t("fdToday") + "</div>" +
+            macroBars(macros, mg) + "</div>" +
           '<div class="card-soft fd-cap">' +
             '<label class="fd-photo" for="fdFile">' + (dataUrl ? '<img src="' + dataUrl + '" alt="">' : V.icon("camera") + "<span>" + t("fdPhoto") + "</span>") + "</label>" +
             '<input id="fdFile" type="file" accept="image/*" capture="environment" style="display:none">' +
@@ -3751,9 +3771,10 @@
     render();
   };
   V.foodHomeCard = function () {
-    var c = V.foodToday(), pct = Math.min(100, Math.round(c / FOOD_GOAL * 100));
+    var goal = V.calorieGoal ? V.calorieGoal() : FOOD_GOAL;
+    var c = V.foodToday(), pct = Math.min(100, Math.round(c / goal * 100));
     return '<button class="card-soft stp-home" id="foodHome"><span class="stp-home__ring" style="background:conic-gradient(#e0a92e ' + (pct * 3.6) + 'deg, var(--field) 0)"><i>' + V.icon("food") + "</i></span>" +
-      '<span class="stp-home__t"><b>' + c.toLocaleString() + " " + t("fdKcal") + '</b><small>' + pct + "% / " + FOOD_GOAL.toLocaleString() + " · " + t("fdToday") + "</small></span>" + V.icon("next") + "</button>";
+      '<span class="stp-home__t"><b>' + c.toLocaleString() + " " + t("fdKcal") + '</b><small>' + pct + "% / " + goal.toLocaleString() + " · " + t("fdToday") + "</small></span>" + V.icon("next") + "</button>";
   };
   V.wireFoodHome = function () { var c = document.getElementById("foodHome"); if (c) c.addEventListener("click", function () { V.go("food"); }); };
 

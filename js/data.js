@@ -781,6 +781,20 @@ window.VITA = window.VITA || {};
   };
 
   /* ---------- Water tracker ---------- */
+  // daily calorie target (Mifflin-St Jeor × activity), else 2000
+  V.calorieGoal = function () {
+    var p = V.state.profile || {};
+    if (!p.weight || !p.height || !p.age) return 2000;
+    var bmr = 10 * p.weight + 6.25 * p.height - 5 * p.age + (p.sex === "woman" ? -161 : 5);
+    var act = { sitting: 1.2, light: 1.375, active: 1.55, very: 1.725 }[p.activity] || 1.375;
+    return Math.max(1200, Math.round(bmr * act / 50) * 50);
+  };
+  // macro gram targets from the calorie goal (30% protein / 40% carb / 30% fat)
+  V.macroGoals = function () {
+    var k = V.calorieGoal();
+    return { p: Math.round(k * 0.3 / 4), c: Math.round(k * 0.4 / 4), f: Math.round(k * 0.3 / 9) };
+  };
+
   V.WATER_GLASS = 250;            // ml per glass
   // personalized: ~35 ml per kg of body weight (clamped), else a 2.5 L default
   V.waterGoal = function () {
