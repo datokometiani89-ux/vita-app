@@ -53,6 +53,7 @@ window.VITA = window.VITA || {};
     medLog: {},            // taken log { "2026-06-27": { "umId|morning": true } }
     coach: "female",       // workout coach persona: female | male
     exPlan: [],            // exercise ids added to "my plan" from the library
+    homeCards: null,       // home widget prefs { order:[ids], hidden:{id:true} }; null = defaults
     bookings: [],          // [{checkupId, clinicId, date, time, status}]
     calendar: [],         // checkup ids added to calendar
     labResults: [],       // [{id, date, values:{glucose:..}, summary}]

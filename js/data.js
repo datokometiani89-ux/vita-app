@@ -272,6 +272,28 @@ window.VITA = window.VITA || {};
   };
 
   /* ---------- Daily plan tasks (depend on selected goals) ---------- */
+  /* ---------- Home widgets (customizable cards) ---------- */
+  // each widget renders via V[card]() and wires via V[wire](); kicker = optional label above
+  V.HOME_WIDGETS = [
+    { id: "scan", key: "hwScan", card: "scanHomeCard", wire: "wireScanHome", kicker: "scnTitle" },
+    { id: "today", key: "hwToday", card: "todayMini", wire: "wireTodayMini", kicker: "todayK" },
+    { id: "readiness", key: "hwReadiness", card: "readinessHomeCard", wire: "wireReadinessHome" },
+    { id: "mood", key: "hwMood", card: "moodHomeCard", wire: "wireMoodHome" },
+    { id: "steps", key: "hwSteps", card: "stepsHomeCard", wire: "wireStepsHome" },
+    { id: "food", key: "hwFood", card: "foodHomeCard", wire: "wireFoodHome" },
+    { id: "garden", key: "hwGarden", card: "gardenHomeCard", wire: "wireGardenHome" },
+  ];
+  V.homeWidget = function (id) { return V.HOME_WIDGETS.filter(function (w) { return w.id === id; })[0]; };
+  V.homeCardsDefault = function () { return { order: ["scan", "today", "readiness", "mood", "steps", "food", "garden"], hidden: { garden: true } }; };
+  // merge saved prefs with the registry so newly-added widgets always appear
+  V.homeCardsPrefs = function () {
+    var d = V.homeCardsDefault(), p = V.state.homeCards || {};
+    var order = (p.order || d.order).slice().filter(function (id) { return V.homeWidget(id); });
+    V.HOME_WIDGETS.forEach(function (w) { if (order.indexOf(w.id) < 0) order.push(w.id); });
+    return { order: order, hidden: p.hidden || d.hidden };
+  };
+  V.setHomeCards = function (prefs) { V.state.homeCards = prefs; V.save(); };
+
   // today's plan completion 0-100 (done tasks / total) — real progress for the home
   V.dayProgress = function () {
     var tasks = V.dailyTasks();

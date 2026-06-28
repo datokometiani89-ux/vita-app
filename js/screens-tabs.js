@@ -54,11 +54,14 @@
             '<div class="metric__lbl">' + t("bmi") + '</div>' +
             '<div class="metric__sub">' + (bmiSt === "good" ? t("normal") : t("caution")) + "</div></div>" +
         "</div>" +
-        (V.scanHomeCard ? '<div class="kicker" style="margin:22px 0 10px">' + t("scnTitle") + "</div>" + V.scanHomeCard() : "") +
-        (V.todayMini ? '<div class="kicker" style="margin:22px 0 10px">' + t("todayK") + "</div>" + V.todayMini() : "") +
-        (V.moodHomeCard ? V.moodHomeCard() : "") +
-        (V.stepsHomeCard ? V.stepsHomeCard() : "") +
-        (V.foodHomeCard ? V.foodHomeCard() : "") +
+        V.homeCardsPrefs().order.map(function (id) {
+          if (V.homeCardsPrefs().hidden[id]) return "";
+          var w = V.homeWidget(id);
+          if (!w || typeof V[w.card] !== "function") return "";
+          var html = V[w.card](); if (!html) return "";
+          return (w.kicker ? '<div class="kicker" style="margin:22px 0 10px">' + t(w.kicker) + "</div>" : "") + html;
+        }).join("") +
+        '<button class="hc-cta" data-go="customize">' + V.icon("cog") + " " + t("customizeHome") + "</button>" +
         nextScreeningCard() +
         '<div class="kicker" style="margin:22px 0 10px">' + t("areas") + "</div>" +
         '<div class="list-card">' +
@@ -81,11 +84,12 @@
         if (rw) rw.addEventListener("click", function () { V.go("rewards"); });
         var ns = $("[data-next-screening]");
         if (ns) ns.addEventListener("click", function () { V.go("annual"); });
-        if (V.wireScanHome) V.wireScanHome();
-        if (V.wireTodayMini) V.wireTodayMini();
-        if (V.wireMoodHome) V.wireMoodHome();
-        if (V.wireStepsHome) V.wireStepsHome();
-        if (V.wireFoodHome) V.wireFoodHome();
+        var pr = V.homeCardsPrefs();
+        pr.order.forEach(function (id) {
+          if (pr.hidden[id]) return;
+          var w = V.homeWidget(id);
+          if (w && typeof V[w.wire] === "function") V[w.wire]();
+        });
       }}
     );
 
@@ -102,6 +106,46 @@
           "<b>" + L(s.name) + "</b><small style='display:block;color:var(--muted)'>" + V.monthName(pick.month) + " · " + L(V.freqLabel(s.freq)) + "</small></div>" +
         '<span class="next-sc__cta">' + t("dashNextCta") + " " + V.icon("next") + "</span></button>";
     }
+  };
+
+  /* ===================== HOME CUSTOMIZATION ===================== */
+  V.screens.customize = function () {
+    var pr = V.homeCardsPrefs();
+    function rows() {
+      return pr.order.map(function (id, i) {
+        var w = V.homeWidget(id); if (!w) return "";
+        var on = !pr.hidden[id];
+        return '<div class="hc-row' + (on ? "" : " off") + '">' +
+          '<div class="hc-move">' +
+            '<button class="hc-mv hc-up" data-up="' + id + '"' + (i === 0 ? " disabled" : "") + ' aria-label="up">' + V.icon("next") + "</button>" +
+            '<button class="hc-mv hc-down" data-down="' + id + '"' + (i === pr.order.length - 1 ? " disabled" : "") + ' aria-label="down">' + V.icon("next") + "</button>" +
+          "</div>" +
+          '<span class="hc-name">' + t(w.key) + "</span>" +
+          '<div class="toggle ' + (on ? "on" : "") + '" data-tg="' + id + '"></div>' +
+        "</div>";
+      }).join("");
+    }
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("hcTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("hcDesc") + "</p>" +
+        '<div class="card-soft hc-list" id="hcList">' + rows() + "</div>" +
+        '<button class="btn btn-primary" id="hcDone" style="width:100%;margin-top:16px">' + V.icon("check") + " " + t("hcDone") + "</button>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("#hcDone").addEventListener("click", function () { V.go("home"); });
+        function save() { V.setHomeCards(pr); $("#hcList").innerHTML = rows(); wire(); }
+        function wire() {
+          each("[data-tg]", function (b) { b.addEventListener("click", function () { var id = b.getAttribute("data-tg"); if (pr.hidden[id]) delete pr.hidden[id]; else pr.hidden[id] = true; save(); }); });
+          each("[data-up]", function (b) { b.addEventListener("click", function () { var id = b.getAttribute("data-up"), i = pr.order.indexOf(id); if (i > 0) { pr.order.splice(i, 1); pr.order.splice(i - 1, 0, id); save(); } }); });
+          each("[data-down]", function (b) { b.addEventListener("click", function () { var id = b.getAttribute("data-down"), i = pr.order.indexOf(id); if (i < pr.order.length - 1) { pr.order.splice(i, 1); pr.order.splice(i + 1, 0, id); save(); } }); });
+        }
+        wire();
+      } }
+    );
   };
 
   /* ===================== PLAN ===================== */
