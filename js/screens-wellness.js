@@ -3799,6 +3799,35 @@
   };
   V.wireFoodHome = function () { var c = document.getElementById("foodHome"); if (c) c.addEventListener("click", function () { V.go("food"); }); };
 
+  // ---- extra home widgets (water / meds-due / bio-age) — registry-driven ----
+  V.waterHomeCard = function () {
+    var goal = V.waterGoal(), w = V.waterToday(), pct = Math.min(100, Math.round(w / goal * 100));
+    return '<button class="card-soft stp-home" id="waterHome"><span class="stp-home__ring" style="background:conic-gradient(#36A0D8 ' + (pct * 3.6) + 'deg, var(--field) 0)"><i>' + V.icon("drop") + "</i></span>" +
+      '<span class="stp-home__t"><b>' + (w / 1000).toFixed(2).replace(/\.?0+$/, "") + " / " + (goal / 1000) + ' ' + t("waterUnitL") + '</b><small>' + pct + "% · " + t("waterWidget") + "</small></span>" +
+      '<span class="stp-home__add" id="waterHomeAdd">' + V.icon("plus") + "</span></button>";
+  };
+  V.wireWaterHome = function () {
+    var c = document.getElementById("waterHome");
+    if (c) c.addEventListener("click", function () { V.go("water"); });
+    var a = document.getElementById("waterHomeAdd");
+    if (a) a.addEventListener("click", function (e) { e.stopPropagation(); V.waterAdd(250); V.toast && V.toast(t("qaWaterDone")); V.render(); });
+  };
+  V.medsHomeCard = function () {
+    if (!V.userMeds || !V.userMeds().length) return "";   // nothing to show without meds
+    var due = (V.medsDueToday ? V.medsDueToday() : []).length;
+    var pct = due ? 30 : 100;
+    return '<button class="card-soft stp-home" id="medsHome"><span class="stp-home__ring" style="background:conic-gradient(#e8536b ' + (pct * 3.6) + 'deg, var(--field) 0)"><i>' + V.icon("pill") + "</i></span>" +
+      '<span class="stp-home__t"><b>' + (due ? t("mdDueToday", { n: due }) : t("mdAllTaken")) + '</b><small>' + t("mdTitle") + "</small></span>" + V.icon("next") + "</button>";
+  };
+  V.wireMedsHome = function () { var c = document.getElementById("medsHome"); if (c) c.addEventListener("click", function () { V.go("meds"); }); };
+  V.bioAgeHomeCard = function () {
+    var h = V.healthAge && V.healthAge(); if (!h) return "";
+    var tone = h.delta <= 0 ? "#2BA94C" : h.delta <= 3 ? "#e0a92e" : "#e8536b";
+    return '<button class="card-soft stp-home" id="bioHome"><span class="stp-home__ring" style="background:conic-gradient(' + tone + ' 200deg, var(--field) 0)"><i>' + V.icon("sparkle") + "</i></span>" +
+      '<span class="stp-home__t"><b>' + h.bio + " " + t("haYears") + '</b><small>' + t("haBioAge") + " · " + (h.delta > 0 ? "+" : "") + h.delta + "</small></span>" + V.icon("next") + "</button>";
+  };
+  V.wireBioHome = function () { var c = document.getElementById("bioHome"); if (c) c.addEventListener("click", function () { V.go("fullscan"); }); };
+
   /* ---------- small shared helpers for the new screens ---------- */
   function head(icon, tone, titleKey) {
     return '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' +

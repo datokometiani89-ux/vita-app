@@ -1861,6 +1861,8 @@
 .stp-home__t b { display: block; font-size: 15.5px; }
 .stp-home__t small { color: var(--muted); font-size: 12.5px; }
 .stp-home > svg:last-child { color: var(--muted); width: 18px; transform: rotate(180deg); flex: none; }
+.stp-home__add { width: 34px; height: 34px; border-radius: 50%; background: var(--blue-tint); color: var(--blue); display: grid; place-content: center; flex: none; }
+.stp-home__add svg { width: 18px; }
 
 /* ---- food / calories ---- */
 .fd-total { padding: 14px 16px; }

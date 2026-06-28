@@ -277,14 +277,17 @@ window.VITA = window.VITA || {};
   V.HOME_WIDGETS = [
     { id: "scan", key: "hwScan", card: "scanHomeCard", wire: "wireScanHome", kicker: "scnTitle" },
     { id: "today", key: "hwToday", card: "todayMini", wire: "wireTodayMini", kicker: "todayK" },
-    { id: "readiness", key: "hwReadiness", card: "readinessHomeCard", wire: "wireReadinessHome" },
-    { id: "mood", key: "hwMood", card: "moodHomeCard", wire: "wireMoodHome" },
+    { id: "meds", key: "hwMeds", card: "medsHomeCard", wire: "wireMedsHome" },
+    { id: "water", key: "hwWater", card: "waterHomeCard", wire: "wireWaterHome" },
     { id: "steps", key: "hwSteps", card: "stepsHomeCard", wire: "wireStepsHome" },
     { id: "food", key: "hwFood", card: "foodHomeCard", wire: "wireFoodHome" },
+    { id: "mood", key: "hwMood", card: "moodHomeCard", wire: "wireMoodHome" },
+    { id: "readiness", key: "hwReadiness", card: "readinessHomeCard", wire: "wireReadinessHome" },
+    { id: "bio", key: "hwBio", card: "bioAgeHomeCard", wire: "wireBioHome" },
     { id: "garden", key: "hwGarden", card: "gardenHomeCard", wire: "wireGardenHome" },
   ];
   V.homeWidget = function (id) { return V.HOME_WIDGETS.filter(function (w) { return w.id === id; })[0]; };
-  V.homeCardsDefault = function () { return { order: ["scan", "today", "readiness", "mood", "steps", "food", "garden"], hidden: { garden: true } }; };
+  V.homeCardsDefault = function () { return { order: ["scan", "today", "meds", "water", "steps", "food", "mood", "readiness", "bio", "garden"], hidden: { bio: true, garden: true } }; };
   // merge saved prefs with the registry so newly-added widgets always appear
   V.homeCardsPrefs = function () {
     var d = V.homeCardsDefault(), p = V.state.homeCards || {};
