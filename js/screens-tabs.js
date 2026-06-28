@@ -9,6 +9,13 @@
   function L(o) { return o[V.lang()] || o.en; }
 
   /* ===================== HOME / DASHBOARD ===================== */
+  // time-of-day greeting + first name (replaces the one-time 'profile created' line)
+  function homeGreeting() {
+    var hour = new Date().getHours();
+    var greet = hour < 12 ? t("goodMorning") : hour < 18 ? t("goodDay") : t("goodEvening");
+    var nm = (V.state.profile && V.state.profile.name) ? V.state.profile.name.split(" ")[0] : "";
+    return nm ? greet + ", " + nm : greet;
+  }
   V.screens.home = function () {
     var p = V.state.profile;
     var score = V.healthScore();
@@ -26,7 +33,7 @@
       '<div class="screen"><div class="pad-lg fade-in">' +
         '<div class="dash-head">' +
           '<div><div class="s-head">' + V.logoBadge(34) + "<h1>" + t("homepage") + "</h1></div>" +
-            '<p class="s-sub" style="max-width:210px;margin-bottom:0">' + t("hpCreated") + "</p></div>" +
+            '<p class="s-sub" style="max-width:210px;margin-bottom:0">' + esc(homeGreeting()) + "</p></div>" +
           '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">' +
             '<div style="display:flex;gap:8px;align-items:center">' +
               '<button class="pts-chip" data-rewards aria-label="' + t("rwTitle") + '">' + V.icon("sparkle") + (V.state.points || 0) + "</button>" +
