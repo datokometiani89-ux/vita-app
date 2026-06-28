@@ -31,6 +31,7 @@
             '<div style="display:flex;gap:8px;align-items:center">' +
               '<button class="pts-chip" data-rewards aria-label="' + t("rwTitle") + '">' + V.icon("sparkle") + (V.state.points || 0) + "</button>" +
               '<button class="icon-box gray" data-go="reminders" aria-label="' + t("rmTitle") + '">' + V.icon("bell") + "</button>" +
+              '<button class="icon-box gray" data-go="customize" aria-label="' + t("customizeHome") + '">' + V.icon("sliders") + "</button>" +
               '<button class="icon-box gray" data-menu aria-label="' + t("menuTitle") + '">' + V.icon("grid") + "</button>" +
             "</div>" +
             '<button class="score-bubble" data-go="plan" aria-label="' + t("nPlan") + '"><b>' + V.dayProgress() + '%</b><i>' + t("hpToday") + "</i></button>" +
