@@ -743,6 +743,7 @@ window.VITA = window.VITA || {};
     homepage: { ka: "მთავარი", en: "Homepage" },
     hpCreated: { ka: "შენი ჯანმრთელობის პროფილი წარმატებით შეიქმნა", en: "Your health profile was successfully created" },
     hpToday: { ka: "დღეს", en: "today" },
+    hpDayPlan: { ka: "დღევანდელი გეგმა", en: "Today's plan" },
     customizeHome: { ka: "მთავარის მორგება", en: "Customize home" },
     hcTitle: { ka: "მთავარის მორგება", en: "Customize home" },
     hcDesc: { ka: "ჩართე/გამორთე ვიჯეტები და დაალაგე სასურველი თანმიმდევრობით.", en: "Turn widgets on/off and arrange them in your preferred order." },

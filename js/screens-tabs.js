@@ -32,18 +32,21 @@
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
         '<div class="dash-head">' +
-          '<div><div class="s-head">' + V.logoBadge(34) + "<h1>" + t("homepage") + "</h1></div>" +
-            '<p class="s-sub" style="max-width:210px;margin-bottom:0">' + esc(homeGreeting()) + "</p></div>" +
-          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">' +
-            '<div style="display:flex;gap:8px;align-items:center">' +
-              '<button class="pts-chip" data-rewards aria-label="' + t("rwTitle") + '">' + V.icon("sparkle") + (V.state.points || 0) + "</button>" +
-              '<button class="icon-box gray" data-go="reminders" aria-label="' + t("rmTitle") + '">' + V.icon("bell") + "</button>" +
-              '<button class="icon-box gray" data-go="customize" aria-label="' + t("customizeHome") + '">' + V.icon("sliders") + "</button>" +
-              '<button class="icon-box gray" data-menu aria-label="' + t("menuTitle") + '">' + V.icon("grid") + "</button>" +
-            "</div>" +
-            '<button class="score-bubble" data-go="plan" aria-label="' + t("nPlan") + '"><b>' + V.dayProgress() + '%</b><i>' + t("hpToday") + "</i></button>" +
+          '<span class="dash-logo">' + V.logoBadge(34) + "</span>" +
+          '<div class="dash-icons">' +
+            '<button class="pts-chip" data-rewards aria-label="' + t("rwTitle") + '">' + V.icon("sparkle") + (V.state.points || 0) + "</button>" +
+            '<button class="icon-box gray" data-go="reminders" aria-label="' + t("rmTitle") + '">' + V.icon("bell") + "</button>" +
+            '<button class="icon-box gray" data-go="customize" aria-label="' + t("customizeHome") + '">' + V.icon("sliders") + "</button>" +
+            '<button class="icon-box gray" data-menu aria-label="' + t("menuTitle") + '">' + V.icon("grid") + "</button>" +
           "</div>" +
         "</div>" +
+        '<h1 class="dash-greet">' + esc(homeGreeting()) + "</h1>" +
+        '<button class="day-prog" data-go="plan">' +
+          '<span class="day-prog__ic">' + V.icon("plan") + "</span>" +
+          '<span class="day-prog__t"><b>' + t("hpDayPlan") + "</b>" +
+            '<span class="day-prog__bar"><i style="width:' + V.dayProgress() + '%"></i></span></span>' +
+          '<span class="day-prog__pct">' + V.dayProgress() + "%</span>" +
+        "</button>" +
         '<div class="kicker" style="margin:20px 0 10px">' + t("yourData") + "</div>" +
         '<div class="score-card"><div class="score-card__top">' +
           '<div class="score-card__num">' + score + '<span>/100</span></div>' +
