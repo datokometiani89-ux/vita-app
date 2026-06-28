@@ -321,6 +321,41 @@ window.VITA = window.VITA || {};
     return meds;
   };
 
+  /* ---------- User medication tracker ---------- */
+  V.MED_SLOTS = ["morning", "noon", "evening", "bed"];
+  V.userMeds = function () { return V.state.userMeds || (V.state.userMeds = []); };
+  V.addMed = function (m) {
+    var meds = V.userMeds();
+    meds.push({
+      id: "um" + Date.now(), name: (m.name || "").trim(), dose: (m.dose || "").trim(),
+      when: (m.when && m.when.length ? m.when : ["morning"]), food: m.food || "any", note: (m.note || "").trim(),
+    });
+    V.save();
+  };
+  V.removeMed = function (id) { V.state.userMeds = V.userMeds().filter(function (x) { return x.id !== id; }); V.save(); };
+  V.medTakenToday = function (id, slot) {
+    var d = (V.state.medLog || {})[V.todayISO()] || {};
+    return !!d[id + "|" + slot];
+  };
+  V.toggleMedTaken = function (id, slot) {
+    V.state.medLog = V.state.medLog || {};
+    var day = V.state.medLog[V.todayISO()] = V.state.medLog[V.todayISO()] || {};
+    var k = id + "|" + slot;
+    if (day[k]) delete day[k];
+    else { day[k] = true; if (V.awardOnce) V.awardOnce("med:" + k, V.POINTS.med, "med"); }
+    V.save();
+  };
+  // today's outstanding med doses (not yet taken) — for reminders + the "to take" list
+  V.medsDueToday = function () {
+    var out = [];
+    V.userMeds().forEach(function (m) {
+      m.when.forEach(function (slot) {
+        if (!V.medTakenToday(m.id, slot)) out.push({ med: m, slot: slot });
+      });
+    });
+    return out;
+  };
+
   /* ---------- Food plan (from doc) ---------- */
   V.foodPlan = function () {
     return [

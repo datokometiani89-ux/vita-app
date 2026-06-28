@@ -1079,6 +1079,87 @@
     );
   };
 
+  V.screens.meds = function () {
+    var slotKey = { morning: "mdMorning", noon: "mdNoon", evening: "mdEvening", bed: "mdBed" };
+    var foodKey = { any: "mdFoodAny", before: "mdFoodBefore", with: "mdFoodWith", after: "mdFoodAfter" };
+    var foods = ["any", "before", "with", "after"];
+    var formWhen = [], formFood = "any";
+    var due = V.medsDueToday(), mine = V.userMeds(), suggested = V.medications() || [];
+
+    function medCard(m) {
+      return '<div class="md-card"><div class="md-card__h"><div class="md-card__t">' +
+        "<b>" + esc(m.name) + "</b>" + (m.dose ? ' <span class="md-dose">' + esc(m.dose) + "</span>" : "") +
+        "<small>" + m.when.map(function (s) { return t(slotKey[s]); }).join(" · ") +
+          (m.food !== "any" ? " · " + t(foodKey[m.food]) : "") + (m.note ? " · " + esc(m.note) : "") + "</small></div>" +
+        '<button class="md-del" data-del="' + m.id + '">' + V.icon("x") + "</button></div>" +
+        '<div class="md-slots">' + m.when.map(function (s) {
+          var on = V.medTakenToday(m.id, s);
+          return '<button class="md-slot ' + (on ? "on" : "") + '" data-take="' + m.id + "|" + s + '">' + (on ? V.icon("check") + " " : "") + t(slotKey[s]) + "</button>";
+        }).join("") + "</div></div>";
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("mdTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("mdDesc") + "</p>" +
+        (due.length
+          ? '<div class="md-due"><b>' + t("mdDueToday", { n: due.length }) + "</b>" + due.map(function (d) { return "<span>" + esc(d.med.name) + " · " + t(slotKey[d.slot]) + "</span>"; }).join("") + "</div>"
+          : (mine.length ? '<div class="md-done">' + V.icon("check") + " " + t("mdAllTaken") + "</div>" : "")) +
+        '<div class="section-head"><h3>' + t("mdMine") + "</h3></div>" +
+        (mine.length ? mine.map(medCard).join("") : '<p class="md-empty">' + t("mdNoMeds") + "</p>") +
+        '<div class="section-head"><h3>' + t("mdAdd") + "</h3></div>" +
+        '<div class="card-soft md-form">' +
+          '<input id="mdName" class="field" placeholder="' + esc(t("mdNamePh")) + '">' +
+          '<input id="mdDose" class="field" placeholder="' + esc(t("mdDosePh")) + '" style="margin-top:8px">' +
+          '<p class="cy-sub2">' + t("mdWhen") + "</p>" +
+          '<div class="chips">' + V.MED_SLOTS.map(function (s) { return '<button class="chip" data-when="' + s + '">' + t(slotKey[s]) + "</button>"; }).join("") + "</div>" +
+          '<p class="cy-sub2">' + t("mdFood") + "</p>" +
+          '<div class="chips">' + foods.map(function (f) { return '<button class="chip ' + (f === "any" ? "on" : "") + '" data-food="' + f + '">' + t(foodKey[f]) + "</button>"; }).join("") + "</div>" +
+          '<input id="mdNote" class="field" placeholder="' + esc(t("mdNotePh")) + '" style="margin-top:10px">' +
+          '<button class="btn btn-primary" id="mdAddBtn" style="width:100%;margin-top:12px">' + V.icon("plus") + " " + t("mdAddBtn") + "</button>" +
+        "</div>" +
+        (suggested.length ? '<div class="section-head"><h3>' + t("mdSuggested") + "</h3></div>" +
+          suggested.map(function (s, i) {
+            return '<div class="md-sug"><div class="md-sug__l">' + V.iconBox("pill", "green") + "<div><b>" + L(s.name) + "</b><small>" + (s.dose || "") + " · " + L(s.purpose) + "</small></div></div>" +
+              '<button class="md-sugadd" data-sug="' + i + '">' + V.icon("plus") + "</button></div>";
+          }).join("") : "") +
+        '<p class="hr-multi-note">' + t("mdDisc") + "</p>" +
+      "</div>" + V.tabbar("plan") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        each("[data-del]", function (b) { b.addEventListener("click", function () { V.removeMed(b.getAttribute("data-del")); V.render(); }); });
+        each("[data-take]", function (b) {
+          b.addEventListener("click", function () { var p = b.getAttribute("data-take").split("|"); V.toggleMedTaken(p[0], p[1]); V.render(); });
+        });
+        each("[data-when]", function (b) {
+          b.addEventListener("click", function () {
+            var s = b.getAttribute("data-when"), i = formWhen.indexOf(s);
+            if (i >= 0) formWhen.splice(i, 1); else formWhen.push(s);
+            b.classList.toggle("on");
+          });
+        });
+        each("[data-food]", function (b) {
+          b.addEventListener("click", function () { formFood = b.getAttribute("data-food"); each("[data-food]", function (x) { x.classList.toggle("on", x === b); }); });
+        });
+        $("#mdAddBtn").addEventListener("click", function () {
+          var name = ($("#mdName").value || "").trim();
+          if (!name) { $("#mdName").focus(); return; }
+          V.addMed({ name: name, dose: $("#mdDose").value, when: formWhen, food: formFood, note: $("#mdNote").value });
+          V.toast && V.toast(t("mdAdded")); V.render();
+        });
+        each("[data-sug]", function (b) {
+          b.addEventListener("click", function () {
+            var s = suggested[+b.getAttribute("data-sug")];
+            V.addMed({ name: L(s.name), dose: s.dose, when: [s.when], food: "any" });
+            V.toast && V.toast(t("mdAdded")); V.render();
+          });
+        });
+      } }
+    );
+  };
+
   V.screens.sexhealth = function () {
     var topics = V.sexHealthTopics();
     var sexLabel = (V.state.profile.sex === "woman") ? { ka: "ქალის", en: "Women's" } : { ka: "მამაკაცის", en: "Men's" };
@@ -1267,6 +1348,7 @@
         ].concat(V.state.profile.sex === "woman" ? [tile("heart", "pink", "mCycle", 'data-go="cycle"')] : [])) +
         group("grpCare", [
           tile("plan", "green", "mPlan", 'data-go="plan"'),
+          tile("pill", "crimson", "mMeds", 'data-go="meds"'),
           tile("heart", "green", "mCare", 'data-go="careplans"'),
           tile("bolt", "blue", "mWorkouts", 'data-go="workouts"'),
           tile("walk", "green", "mSteps", 'data-go="steps"'),
