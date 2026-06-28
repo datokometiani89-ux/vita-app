@@ -19,11 +19,12 @@
   V.screens.home = function () {
     var p = V.state.profile;
     var score = V.healthScore();
-    var bmi = V.bmi() || 28.4;
-    var bmiSt = V.bmiStatus() || "medium";
+    var bmiVal = V.bmi();
+    var bmiSt = V.bmiStatus();
     var concerns = V.concerns();
-    var weight = p.weight || 85;
-    var target = p.weight ? Math.max(60, Math.round(p.weight - 8)) : 77;
+    var hasW = p.weight != null;
+    var weight = hasW ? p.weight : null;
+    var target = hasW ? Math.max(60, Math.round(p.weight - 8)) : null;
     var facePos = score; // 0..100
 
     var scoreStatus = score >= 71 ? t("hsGood") : score >= 41 ? t("hsModerate") : t("hsRisk");
@@ -56,14 +57,14 @@
           "<h3>" + t("healthScore") + "</h3><p>" + scoreStatus + "</p>" +
         "</div>" +
         '<div class="metric-row">' +
-          '<div class="metric p"><div class="metric__tag">' + V.icon("scale") + "</div>" +
-            '<div class="metric__num">' + weight + '<span>' + t("kg") + '</span></div>' +
-            '<div class="metric__lbl">' + t("weight") + '</div>' +
-            '<div class="metric__sub">' + t("target") + ": " + target + t("kg") + "</div></div>" +
-          '<div class="metric y"><div class="metric__tag">' + V.icon("ruler") + "</div>" +
-            '<div class="metric__num">' + bmi + "</div>" +
-            '<div class="metric__lbl">' + t("bmi") + '</div>' +
-            '<div class="metric__sub">' + (bmiSt === "good" ? t("normal") : t("caution")) + "</div></div>" +
+          '<div class="metric p"' + (hasW ? "" : ' data-go="profile" style="cursor:pointer"') + '><div class="metric__tag">' + V.icon("scale") + "</div>" +
+            '<div class="metric__num">' + (hasW ? weight + '<span>' + t("kg") + "</span>" : "—") + "</div>" +
+            '<div class="metric__lbl">' + t("weight") + "</div>" +
+            '<div class="metric__sub">' + (hasW ? t("target") + ": " + target + t("kg") : t("hpSetProfile")) + "</div></div>" +
+          '<div class="metric y"' + (bmiVal != null ? "" : ' data-go="profile" style="cursor:pointer"') + '><div class="metric__tag">' + V.icon("ruler") + "</div>" +
+            '<div class="metric__num">' + (bmiVal != null ? bmiVal : "—") + "</div>" +
+            '<div class="metric__lbl">' + t("bmi") + "</div>" +
+            '<div class="metric__sub">' + (bmiVal != null ? (bmiSt === "good" ? t("normal") : t("caution")) : t("hpSetProfile")) + "</div></div>" +
         "</div>" +
         V.homeCardsPrefs().order.map(function (id) {
           if (V.homeCardsPrefs().hidden[id]) return "";
@@ -167,7 +168,7 @@
     var done = V.state.doneTasks[today] || [];
     var pct = tasks.length ? Math.round((done.length / tasks.length) * 100) : 0;
     var day = V.planDay();
-    var name = p.name ? p.name.split(" ")[0].toUpperCase() : "GIORGI K";
+    var name = p.name ? p.name.split(" ")[0] : "";
     var hour = new Date().getHours();
     var greet = hour < 12 ? t("goodMorning") : hour < 18 ? t("goodDay") : t("goodEvening");
 
@@ -193,14 +194,14 @@
       '<div class="screen"><div class="pad-lg fade-in">' +
         '<div style="display:flex;align-items:center;gap:12px;margin:4px 0 18px">' +
           V.avatar(48) +
-          '<div style="flex:1"><span style="color:var(--muted)">' + greet + ' , </span><b>' + esc(name) + "</b></div>" +
+          '<div style="flex:1">' + (name ? '<span style="color:var(--muted)">' + greet + ", </span><b>" + esc(name) + "</b>" : "<b>" + greet + "</b>") + "</div>" +
           '<button class="icon-box gray" data-go="reminders" style="margin-right:8px">' + V.icon("bell") + "</button>" +
           '<button class="icon-box gray" data-open-settings>' + V.icon("cog") + "</button>" +
         "</div>" +
         '<div class="plan-hero"><div class="plan-hero__top">' +
           "<h2>" + (pct >= 100 ? t("plDone") : pct >= 50 ? t("plAlmost") : pct > 0 ? t("plKeepGoing") : t("plStart")) + '</h2><div class="plan-hero__pct">' + pct + "<span>%</span></div></div>" +
           '<div class="day-row">' + dayChips(day) + "</div>" +
-          '<div class="daysleft"><span>' + t("plDaysLeft", { n: Math.max(0, 4 - ((day - 1) % 4)) }) + "</span></div>" +
+          '<div class="daysleft"><span>' + ((tasks.length - done.length) > 0 ? t("plTasksLeft", { n: tasks.length - done.length }) : t("plAllDoneToday")) + "</span></div>" +
         "</div>" +
 
         waterWidget() +
