@@ -1379,6 +1379,14 @@
 .lg-disc { font-size: 11px; color: var(--muted); margin-top: 12px; line-height: 1.45; }
 
 /* AI health intelligence hub */
+.ai-top { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--green); color: #fff; border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 12px; }
+.ai-top__l { flex: 1; min-width: 0; }
+.ai-top__l small { display: block; font-size: 11.5px; opacity: .85; margin-bottom: 2px; }
+.ai-top__l b { font-size: 15.5px; }
+.ai-top__cta { flex: none; width: 30px; height: 30px; border-radius: 99px; background: rgba(255,255,255,.2); display: grid; place-content: center; }
+.ai-top__cta svg { width: 17px; }
+.ai-tr { font-style: normal; font-size: 12px; font-weight: 800; margin-left: 3px; }
+.ai-tr--good { color: var(--green); } .ai-tr--bad { color: #e8536b; }
 .ai-headline { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; margin-bottom: 12px; }
 .ai-headline b { display: block; font-size: 15px; margin-bottom: 3px; }
 .ai-headline small { color: var(--muted); font-size: 12px; line-height: 1.5; }

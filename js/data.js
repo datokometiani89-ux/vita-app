@@ -382,7 +382,15 @@ window.VITA = window.VITA || {};
     if (s.water < s.waterGoal * 0.5 && new Date().getHours() >= 14)
       add("low", "drop", { ka: "დღეს ცოტა წყალი დალიე", en: "Low on water today" },
         { ka: Math.round(s.water / 100) / 10 + "ლ " + s.waterGoal / 1000 + "ლ-დან.", en: (Math.round(s.water / 100) / 10) + "L of " + s.waterGoal / 1000 + "L." }, { ka: "დაამატე", en: "Add" }, "water");
-    // 9) positive reinforcement
+    // 9) blood pressure high
+    var bpArr = (V.state.wellness && V.state.wellness.bp) || [], lastBp = bpArr[bpArr.length - 1];
+    if (lastBp && V.daysSince(lastBp.date) <= 45 && (lastBp.sys >= 140 || lastBp.dia >= 90))
+      add(lastBp.sys >= 160 || lastBp.dia >= 100 ? "high" : "med", "heart",
+        { ka: "არტერიული წნევა მაღალია", en: "Blood pressure is elevated" },
+        { ka: "ბოლო გაზომვა " + lastBp.sys + "/" + lastBp.dia + ". თუ მეორდება — ესაუბრე კარდიოლოგს.", en: "Last reading " + lastBp.sys + "/" + lastBp.dia + ". If it recurs, see a cardiologist." },
+        { ka: "ნახე წნევა", en: "View BP log" }, "bplog");
+
+    // 10) positive reinforcement
     var streak = V.taskStreak ? V.taskStreak() : 0;
     if (streak >= 3)
       add("good", "sparkle", { ka: streak + " დღე ზედიზედ აქტიური ხარ! 🔥", en: streak + "-day active streak! 🔥" },
@@ -417,6 +425,26 @@ window.VITA = window.VITA || {};
       projected: Math.round(proj), projectedImproved: Math.round(projImp),
       yearsGained: Math.round((proj - projImp) * 10) / 10,
       fixable: fixable,
+    };
+  };
+
+  // momentum per signal: recent vs prior window → {dir:+1/-1/0, good:bool}
+  V.signalTrends = function () {
+    var w = V.state.wellness || {};
+    function avg(a) { a = (a || []).filter(function (x) { return typeof x === "number" && isFinite(x); }); return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : null; }
+    function mk(recent, prior, higherBetter, eps) { if (recent == null || prior == null) return null; var d = recent - prior; if (Math.abs(d) < (eps || 0.01)) return { dir: 0, good: true }; var up = d > 0; return { dir: up ? 1 : -1, good: higherBetter ? up : !up }; }
+    function diso(off) { var d = new Date(V.todayISO()); d.setDate(d.getDate() - off); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+    function weekAvg(wk) { var sum = 0, n = 0; for (var i = 0; i < 7; i++) { var v = (w.steps || {})[diso(i + wk * 7)]; if (v != null) { sum += v; n++; } } return n ? sum / n : null; }
+    var sl = (w.sleep || []).map(function (s) { return s.hours; });
+    var mood = Object.keys(w.mood || {}).sort().map(function (k) { return (w.mood[k] || {}).score; });
+    var sc = (w.scan || []).map(function (s) { return s.score; });
+    var wl = (V.state.weightLog || []).map(function (x) { return x.kg; });
+    return {
+      sleep: mk(avg(sl.slice(-3)), avg(sl.slice(-6, -3)), true, 0.2),
+      mood: mk(avg(mood.slice(-3)), avg(mood.slice(-6, -3)), true, 0.1),
+      scan: mk(sc[sc.length - 1], sc[sc.length - 2], true, 0.5),
+      steps: mk(weekAvg(0), weekAvg(1), true, 300),
+      weight: mk(wl[wl.length - 1], wl[wl.length - 2], false, 0.3),
     };
   };
 

@@ -453,18 +453,23 @@
         "</div>";
     }
     function overview() {
+      var tr = V.signalTrends ? V.signalTrends() : {};
+      function arrow(k) {
+        var d = tr[k]; if (!d || d.dir === 0) return "";
+        return '<i class="ai-tr ai-tr--' + (d.good ? "good" : "bad") + '">' + (d.dir > 0 ? "↑" : "↓") + "</i>";
+      }
       var rows = [
-        ["bolt", t("ovReadiness"), s.readiness != null ? s.readiness + "/100" : "—"],
-        ["heart", t("ovScan"), s.scanScore != null ? s.scanScore + (s.scanDays != null ? " · " + s.scanDays + "d" : "") : "—"],
-        ["moon", t("ovSleep"), s.sleepAvg != null ? s.sleepAvg.toFixed(1) + (V.lang() === "ka" ? "სთ" : "h") : "—"],
-        ["brain", t("ovMood"), s.moodAvg != null ? s.moodAvg.toFixed(1) + "/5" : "—"],
-        ["pill", t("ovMeds"), s.meds ? s.meds + (s.medsDue ? " · " + s.medsDue : "") : "—"],
-        ["walk", t("ovActive"), s.inactiveDays < 9000 ? s.inactiveDays + "d" : "—"],
-        ["flask", t("ovLabs"), s.labDays != null ? Math.round(s.labDays / 30) + (V.lang() === "ka" ? "თვე" : "mo") : "—"],
-        ["sparkle", t("ovBio"), s.bio ? s.bio.bio : "—"],
+        ["bolt", t("ovReadiness"), s.readiness != null ? s.readiness + "/100" : "—", null],
+        ["heart", t("ovScan"), s.scanScore != null ? s.scanScore + (s.scanDays != null ? " · " + s.scanDays + "d" : "") : "—", "scan"],
+        ["moon", t("ovSleep"), s.sleepAvg != null ? s.sleepAvg.toFixed(1) + (V.lang() === "ka" ? "სთ" : "h") : "—", "sleep"],
+        ["brain", t("ovMood"), s.moodAvg != null ? s.moodAvg.toFixed(1) + "/5" : "—", "mood"],
+        ["pill", t("ovMeds"), s.meds ? s.meds + (s.medsDue ? " · " + s.medsDue : "") : "—", null],
+        ["walk", t("ovActive"), s.inactiveDays < 9000 ? s.inactiveDays + "d" : "—", "steps"],
+        ["flask", t("ovLabs"), s.labDays != null ? Math.round(s.labDays / 30) + (V.lang() === "ka" ? "თვე" : "mo") : "—", null],
+        ["sparkle", t("ovBio"), s.bio ? s.bio.bio : "—", null],
       ];
       return '<div class="ai-ov">' + rows.map(function (r) {
-        return '<div class="ai-ov__c">' + V.icon(r[0]) + "<b>" + r[2] + "</b><small>" + r[1] + "</small></div>";
+        return '<div class="ai-ov__c">' + V.icon(r[0]) + "<b>" + r[2] + (r[3] ? arrow(r[3]) : "") + "</b><small>" + r[1] + "</small></div>";
       }).join("") + "</div>";
     }
     function coachOffline() {
@@ -499,6 +504,10 @@
         '<p class="s-sub">' + t("coSub") + "</p>" +
         '<div class="card-soft ai-headline">' + V.iconBox("sparkle", "green") +
           "<div><b>" + (actionable.length ? t("coHeadline", { n: actionable.length }) : t("coHeadlineGood")) + "</b><small>" + esc(V.coachSummaryText()) + "</small></div></div>" +
+        (actionable.length && actionable[0].route
+          ? '<button class="ai-top" data-go="' + actionable[0].route + '"><span class="ai-top__l"><small>' + t("coTopAction") + "</small><b>" + L(actionable[0].title) + "</b></span>" +
+            (actionable[0].cta ? '<span class="ai-top__cta">' + V.icon("next") + "</span>" : "") + "</button>"
+          : "") +
         '<div id="coFcWrap"></div>' +
         '<button class="btn btn-primary" id="coAi" style="width:100%;margin:4px 0 16px">' + V.icon("sparkle") + " " + t("coAiCta") + "</button>" +
         '<div id="coAiOut"></div>' +

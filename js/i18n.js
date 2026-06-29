@@ -768,6 +768,7 @@ window.VITA = window.VITA || {};
     coHomeTitle: { ka: "AI ანალიზი", en: "AI analysis" },
     coHomeN: { ka: "{n} ინსაიტი", en: "{n} insights" },
     coHomeReady: { ka: "ნახე შენი სრული სურათი", en: "See your full picture" },
+    coTopAction: { ka: "შენი #1 ნაბიჯი დღეს", en: "Your #1 step today" },
     ovReadiness: { ka: "მზაობა", en: "Readiness" },
     ovScan: { ka: "სკანი", en: "Scan" },
     ovSleep: { ka: "ძილი", en: "Sleep" },
