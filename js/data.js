@@ -613,15 +613,40 @@ window.VITA = window.VITA || {};
     { id: "other", icon: "user", label: { ka: "სხვა", en: "Other" } },
   ];
   V.relationById = function (id) { return V.RELATIONS.filter(function (r) { return r.id === id; })[0] || V.RELATIONS[3]; };
+  // data categories a linked member chooses to share (member-controlled = privacy)
+  V.SHARE_CATS = [
+    { id: "activity", icon: "walk", label: { ka: "აქტივობა", en: "Activity" } },
+    { id: "vitals", icon: "heart", label: { ka: "ვიტალები (სკანი)", en: "Vitals (scan)" } },
+    { id: "meds", icon: "pill", label: { ka: "წამლები", en: "Meds" } },
+    { id: "mood", icon: "brain", label: { ka: "განწყობა", en: "Mood" } },
+  ];
   V.circle = function () { return V.state.circle || (V.state.circle = []); };
+  // status: "manual" (you track for them) | "pending" (invited, not accepted) | "linked" (own account, sharing)
   V.addMember = function (m) {
-    V.circle().push({ id: "fm" + Date.now(), name: (m.name || "").trim(), relation: m.relation || "other", age: m.age || null, meds: m.meds || [], checkup: m.checkup || null });
+    var mem = { id: "fm" + Date.now(), name: (m.name || "").trim(), relation: m.relation || "other", age: m.age || null, meds: m.meds || [], checkup: m.checkup || null, status: "manual", invite: null, shares: null, snap: null };
+    if (m.linked) { mem.status = "pending"; mem.invite = "VITA-" + String(Date.now()).slice(-5); }
+    V.circle().push(mem);
     V.save();
+    return mem;
   };
   V.removeMember = function (id) { V.state.circle = V.circle().filter(function (x) { return x.id !== id; }); V.save(); };
   V.memberById = function (id) { return V.circle().filter(function (x) { return x.id === id; })[0]; };
   V.memberAddMed = function (id, med) { var m = V.memberById(id); if (m) { m.meds = m.meds || []; m.meds.push(med); V.save(); } };
   V.memberRemoveMed = function (id, i) { var m = V.memberById(id); if (m && m.meds) { m.meds.splice(i, 1); V.save(); } };
+  // demo shared snapshot — what would flow from the member's own VITA app
+  V.demoMemberSnap = function (m) {
+    var a = m.age || 40;
+    return { steps: 3500 + (a % 6) * 850, scanScore: 64 + (a % 22), mood: 3 + (a % 3 === 0 ? 1 : 0), medsAdherence: 78 + (a % 16), updated: V.todayISO() };
+  };
+  // simulate the member accepting the invite from their own app (real flow = backend + consent)
+  V.linkMember = function (id) {
+    var m = V.memberById(id); if (!m) return;
+    m.status = "linked"; m.invite = null;
+    m.shares = m.shares || { activity: true, vitals: true, meds: true, mood: true };
+    m.snap = V.demoMemberSnap(m); V.save();
+  };
+  V.unlinkMember = function (id) { var m = V.memberById(id); if (m) { m.status = "manual"; m.snap = null; m.shares = null; V.save(); } };
+  V.memberToggleShare = function (id, cat) { var m = V.memberById(id); if (m) { m.shares = m.shares || {}; m.shares[cat] = !m.shares[cat]; V.save(); } };
 
   /* ---------- User medication tracker ---------- */
   V.MED_SLOTS = ["morning", "noon", "evening", "bed"];

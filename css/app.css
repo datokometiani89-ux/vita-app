@@ -1433,6 +1433,26 @@
 .ch-lb__n { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ch-lb__p { flex: none; font-weight: 800; color: var(--green); font-size: 14px; }
 
+/* family / care circle — linking, sharing, consent */
+.fm-privacy { display: flex; align-items: flex-start; gap: 9px; background: var(--blue-tint); color: var(--blue); border-radius: var(--r-md); padding: 11px 13px; margin-bottom: 14px; font-size: 12px; line-height: 1.45; }
+.fm-privacy svg { width: 17px; flex: none; margin-top: 1px; }
+.fm-badge--ok { color: var(--green); background: var(--green-tint); }
+.fm-badge--wait { color: #c9881a; background: var(--yellow-tint, #faecd2); }
+.fm-linktog { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 0.5px solid var(--line); }
+.fm-linktog__t b { font-size: 14px; display: block; } .fm-linktog__t small { color: var(--muted); font-size: 12px; }
+.fm-invite { padding: 16px; }
+.fm-invite__h { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+.fm-invite__h b { font-size: 15px; display: block; } .fm-invite__h small { color: var(--muted); font-size: 12.5px; }
+.fm-code { font-family: var(--font-mono, monospace); font-size: 22px; font-weight: 800; letter-spacing: 2px; color: var(--green); background: var(--green-tint); border-radius: var(--r-md); padding: 14px; margin-bottom: 12px; text-align: center; }
+.fm-snap { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.fm-metric { background: var(--field); border-radius: var(--r-md); padding: 14px; text-align: center; }
+.fm-metric svg { width: 19px; color: var(--muted); }
+.fm-metric b { display: block; font-size: 20px; font-weight: 800; margin: 4px 0 2px; }
+.fm-metric small { font-size: 11.5px; color: var(--muted); }
+.fm-share { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 0.5px solid var(--line); font-size: 14px; }
+.fm-share:last-child { border-bottom: none; }
+.fm-share span { display: inline-flex; align-items: center; gap: 9px; } .fm-share svg { width: 17px; color: var(--muted); }
+
 /* family / care circle */
 .fm-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 12px 14px; margin-bottom: 9px; }
 .fm-card > svg:last-child { margin-left: auto; width: 18px; color: var(--muted); flex: none; }

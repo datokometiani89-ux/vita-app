@@ -1248,13 +1248,20 @@
   var familyMemberId = null;
   V.screens.family = function () {
     var members = V.circle();
-    var formRel = "parent";
-    function memberCard(m) {
+    var formRel = "parent", formLinked = false;
+    function statusChip(m) {
+      if (m.status === "linked") return '<span class="fm-badge fm-badge--ok">' + V.icon("check") + " " + t("fmLinked") + "</span>";
+      if (m.status === "pending") return '<span class="fm-badge fm-badge--wait">' + t("fmPending") + "</span>";
       var due = (m.meds || []).length;
+      return due ? '<span class="fm-badge">' + V.icon("pill") + " " + due + "</span>" : "";
+    }
+    function memberCard(m) {
+      var sub = L(V.relationById(m.relation).label) + (m.age ? " · " + m.age : "");
+      if (m.status === "linked" && m.snap && m.shares && m.shares.activity) sub = (m.snap.steps).toLocaleString() + " " + t("stpSteps") + " · " + L(V.relationById(m.relation).label);
       return '<button class="fm-card" data-member="' + m.id + '">' +
         '<span class="fm-av">' + V.initials(m.name || "?") + "</span>" +
-        '<span class="fm-card__t"><b>' + esc(m.name) + "</b><small>" + L(V.relationById(m.relation).label) + (m.age ? " · " + m.age : "") + "</small></span>" +
-        (due ? '<span class="fm-badge">' + V.icon("pill") + " " + due + "</span>" : "") + V.icon("next") + "</button>";
+        '<span class="fm-card__t"><b>' + esc(m.name) + "</b><small>" + sub + "</small></span>" +
+        statusChip(m) + V.icon("next") + "</button>";
     }
     V.mount(
       V.statusbar() +
@@ -1262,6 +1269,7 @@
         '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("fmTitle") + "</h1></div>" +
           '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
         '<p class="s-sub">' + t("fmSub") + "</p>" +
+        '<div class="fm-privacy">' + V.icon("shield") + "<span>" + t("fmPrivacy") + "</span></div>" +
         (members.length
           ? '<div class="section-head"><h3>' + t("fmMembers") + "</h3></div>" + members.map(memberCard).join("")
           : '<div class="fm-empty">' + V.iconBox("heart", "pink") + "<p>" + t("fmEmpty") + "</p></div>") +
@@ -1271,6 +1279,7 @@
           '<p class="cy-sub2">' + t("fmRelation") + "</p>" +
           '<div class="chips">' + V.RELATIONS.map(function (r) { return '<button class="chip ' + (r.id === "parent" ? "on" : "") + '" data-rel="' + r.id + '">' + L(r.label) + "</button>"; }).join("") + "</div>" +
           '<input id="fmAge" class="field" type="number" inputmode="numeric" placeholder="' + esc(t("fmAge")) + '" style="margin-top:10px">' +
+          '<div class="fm-linktog" id="fmLinkTog"><div class="fm-linktog__t"><b>' + t("fmLinkAcc") + "</b><small>" + t("fmLinkAccSub") + "</small></div><div class=\"toggle\" id=\"fmLinkToggle\"></div></div>" +
           '<button class="btn btn-primary" id="fmAddBtn" style="width:100%;margin-top:12px">' + V.icon("plus") + " " + t("fmAddBtn") + "</button>" +
         "</div>" +
         '<p class="hr-multi-note">' + t("fmCareNote") + "</p>" +
@@ -1279,10 +1288,12 @@
         $("[data-x]").addEventListener("click", function () { V.go("home"); });
         each("[data-member]", function (b) { b.addEventListener("click", function () { familyMemberId = b.getAttribute("data-member"); V.go("familyMember"); }); });
         each("[data-rel]", function (b) { b.addEventListener("click", function () { formRel = b.getAttribute("data-rel"); each("[data-rel]", function (x) { x.classList.toggle("on", x === b); }); }); });
+        $("#fmLinkToggle").addEventListener("click", function () { formLinked = !formLinked; this.classList.toggle("on", formLinked); });
         $("#fmAddBtn").addEventListener("click", function () {
           var n = ($("#fmName").value || "").trim(); if (!n) { $("#fmName").focus(); return; }
-          V.addMember({ name: n, relation: formRel, age: parseInt($("#fmAge").value, 10) || null });
-          V.toast && V.toast(t("fmAdded")); V.render();
+          var mem = V.addMember({ name: n, relation: formRel, age: parseInt($("#fmAge").value, 10) || null, linked: formLinked });
+          V.toast && V.toast(t("fmAdded"));
+          if (formLinked) { familyMemberId = mem.id; V.go("familyMember"); } else V.render();
         });
       } }
     );
@@ -1292,17 +1303,41 @@
     var m = V.memberById(familyMemberId);
     if (!m) { V.go("family"); return; }
     var slotKey = { morning: "mdMorning", noon: "mdNoon", evening: "mdEvening", bed: "mdBed" };
-    var medWhen = [];
-    V.mount(
-      V.statusbar() +
-      '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + esc(m.name) + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
-        '<div class="fm-hero"><span class="fm-av fm-av--lg">' + V.initials(m.name || "?") + "</span>" +
-          "<div><b>" + esc(m.name) + "</b><small>" + L(V.relationById(m.relation).label) + (m.age ? " · " + m.age + " " + t("years") : "") + "</small></div></div>" +
-        '<div class="fm-actions">' +
+    var fname = (m.name || "?").split(" ")[0];
+    var status = m.status || "manual";
+
+    function pendingBody() {
+      return '<div class="card-soft fm-invite">' +
+        '<div class="fm-invite__h">' + V.iconBox("send", "blue") + "<div><b>" + t("fmInviteTitle") + "</b><small>" + t("fmInviteSub", { name: fname }) + "</small></div></div>" +
+        '<div class="fm-code">' + esc(m.invite) + "</div>" +
+        '<button class="btn btn-ghost" id="fmCopy" style="width:100%">' + V.icon("file") + " " + t("fmCopyCode") + "</button>" +
+        '<button class="btn btn-primary" id="fmSimAccept" style="width:100%;margin-top:8px">' + V.icon("check") + " " + t("fmSimAccept") + "</button>" +
+        '<p class="lg-disc">' + t("fmInviteNote") + "</p></div>";
+    }
+    function sharedBody() {
+      var snap = m.snap || {}, sh = m.shares || {};
+      function metric(cat, icon, label, val) { return sh[cat] ? '<div class="fm-metric">' + V.icon(icon) + "<b>" + val + "</b><small>" + label + "</small></div>" : ""; }
+      var anyShared = V.SHARE_CATS.some(function (c) { return sh[c.id]; });
+      return '<div class="section-head"><h3>' + t("fmShared") + "</h3><small>" + t("fmUpdated") + " " + esc(snap.updated || "") + "</small></div>" +
+        (anyShared
+          ? '<div class="fm-snap">' +
+            metric("activity", "walk", t("ovActive"), (snap.steps || 0).toLocaleString()) +
+            metric("vitals", "heart", t("ovScan"), (snap.scanScore != null ? snap.scanScore : "—")) +
+            metric("mood", "brain", t("ovMood"), (snap.mood ? snap.mood + "/5" : "—")) +
+            metric("meds", "pill", t("fmAdherence"), (snap.medsAdherence != null ? snap.medsAdherence + "%" : "—")) +
+            "</div>"
+          : '<p class="md-empty">' + t("fmNothingShared") + "</p>") +
+        '<div class="section-head"><h3>' + t("fmConsent") + "</h3></div>" +
+        '<div class="card-soft">' + V.SHARE_CATS.map(function (c) {
+          return '<div class="fm-share"><span>' + V.icon(c.icon) + " " + L(c.label) + '</span><div class="toggle ' + (sh[c.id] ? "on" : "") + '" data-share="' + c.id + '"></div></div>';
+        }).join("") + "</div>" +
+        '<p class="lg-disc">' + t("fmConsentNote", { name: fname }) + "</p>" +
+        '<button class="set-reset" id="fmUnlink" style="margin-top:14px">' + t("fmUnlink") + "</button>";
+    }
+    function manualBody() {
+      return '<div class="fm-actions">' +
           '<button class="fm-act" id="fmRemind">' + V.iconBox("bell", "blue") + "<span>" + t("fmRemind") + "</span></button>" +
-          '<button class="fm-act" id="fmCall">' + V.iconBox("chat", "green") + "<span>" + t("fmMessage") + "</span></button>" +
+          '<button class="fm-act" id="fmInvite">' + V.iconBox("send", "green") + "<span>" + t("fmInviteBtn") + "</span></button>" +
         "</div>" +
         '<div class="section-head"><h3>' + t("fmMeds") + "</h3></div>" +
         ((m.meds && m.meds.length)
@@ -1315,20 +1350,35 @@
           '<div class="fd-mrow"><input id="fmMedName" class="field" placeholder="' + esc(t("fmMedName")) + '">' +
             '<select id="fmMedWhen" class="field" style="max-width:120px">' + ["morning", "noon", "evening", "bed"].map(function (sl) { return '<option value="' + sl + '">' + t(slotKey[sl]) + "</option>"; }).join("") + "</select></div>" +
           '<button class="btn btn-ghost" id="fmAddMed" style="width:100%;margin-top:8px">' + V.icon("plus") + " " + t("fmAddMed") + "</button>" +
-        "</div>" +
+        "</div>";
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + esc(m.name) + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<div class="fm-hero"><span class="fm-av fm-av--lg">' + V.initials(m.name || "?") + "</span>" +
+          "<div><b>" + esc(m.name) + "</b><small>" + L(V.relationById(m.relation).label) + (m.age ? " · " + m.age + " " + t("years") : "") +
+            (status === "linked" ? ' · <span style="color:var(--green)">' + t("fmLinked") + "</span>" : status === "pending" ? ' · <span style="color:#c9881a">' + t("fmPending") + "</span>" : "") + "</small></div></div>" +
+        (status === "pending" ? pendingBody() : status === "linked" ? sharedBody() : manualBody()) +
         '<button class="set-reset" id="fmRemove" style="margin-top:18px">' + t("fmRemove") + "</button>" +
         '<p class="hr-multi-note">' + t("fmCareNote") + "</p>" +
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
         $("[data-x]").addEventListener("click", function () { V.go("family"); });
-        $("#fmRemind").addEventListener("click", function () { V.toast && V.toast(t("fmReminded", { name: m.name.split(" ")[0] })); });
-        $("#fmCall").addEventListener("click", function () { V.toast && V.toast(t("fmReminded", { name: m.name.split(" ")[0] })); });
-        each("[data-rmmed]", function (b) { b.addEventListener("click", function () { V.memberRemoveMed(m.id, +b.getAttribute("data-rmmed")); V.render(); }); });
-        $("#fmAddMed").addEventListener("click", function () {
-          var n = ($("#fmMedName").value || "").trim(); if (!n) { $("#fmMedName").focus(); return; }
-          V.memberAddMed(m.id, { name: n, when: $("#fmMedWhen").value }); V.render();
-        });
         $("#fmRemove").addEventListener("click", function () { V.removeMember(m.id); V.go("family"); });
+        // pending
+        var sim = $("#fmSimAccept"); if (sim) sim.addEventListener("click", function () { V.linkMember(m.id); V.toast && V.toast(t("fmLinkedNow", { name: fname })); V.render(); });
+        var cp = $("#fmCopy"); if (cp) cp.addEventListener("click", function () { try { navigator.clipboard.writeText(m.invite); } catch (e) {} V.toast && V.toast(t("fmCodeCopied")); });
+        // linked
+        each("[data-share]", function (b) { b.addEventListener("click", function () { V.memberToggleShare(m.id, b.getAttribute("data-share")); V.render(); }); });
+        var un = $("#fmUnlink"); if (un) un.addEventListener("click", function () { V.unlinkMember(m.id); V.render(); });
+        // manual
+        var rm = $("#fmRemind"); if (rm) rm.addEventListener("click", function () { V.toast && V.toast(t("fmReminded", { name: fname })); });
+        var inv = $("#fmInvite"); if (inv) inv.addEventListener("click", function () { var mm = V.memberById(m.id); mm.status = "pending"; mm.invite = "VITA-" + String(Date.now()).slice(-5); V.save(); V.render(); });
+        each("[data-rmmed]", function (b) { b.addEventListener("click", function () { V.memberRemoveMed(m.id, +b.getAttribute("data-rmmed")); V.render(); }); });
+        var am = $("#fmAddMed"); if (am) am.addEventListener("click", function () { var n = ($("#fmMedName").value || "").trim(); if (!n) { $("#fmMedName").focus(); return; } V.memberAddMed(m.id, { name: n, when: $("#fmMedWhen").value }); V.render(); });
       } }
     );
   };
