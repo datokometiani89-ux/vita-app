@@ -54,6 +54,7 @@ window.VITA = window.VITA || {};
     coach: "female",       // workout coach persona: female | male
     exPlan: [],            // exercise ids added to "my plan" from the library
     homeCards: null,       // home widget prefs { order:[ids], hidden:{id:true} }; null = defaults
+    circle: [],            // care circle: [{id, name, relation, age, meds:[{name,when}], checkup}]
     bookings: [],          // [{checkupId, clinicId, date, time, status}]
     calendar: [],         // checkup ids added to calendar
     labResults: [],       // [{id, date, values:{glucose:..}, summary}]

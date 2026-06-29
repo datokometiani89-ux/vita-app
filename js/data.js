@@ -560,6 +560,24 @@ window.VITA = window.VITA || {};
     return meds;
   };
 
+  /* ---------- Family / Care Circle ---------- */
+  V.RELATIONS = [
+    { id: "parent", icon: "heart", label: { ka: "მშობელი", en: "Parent" } },
+    { id: "child", icon: "smile", label: { ka: "შვილი", en: "Child" } },
+    { id: "partner", icon: "heart", label: { ka: "მეუღლე", en: "Partner" } },
+    { id: "other", icon: "user", label: { ka: "სხვა", en: "Other" } },
+  ];
+  V.relationById = function (id) { return V.RELATIONS.filter(function (r) { return r.id === id; })[0] || V.RELATIONS[3]; };
+  V.circle = function () { return V.state.circle || (V.state.circle = []); };
+  V.addMember = function (m) {
+    V.circle().push({ id: "fm" + Date.now(), name: (m.name || "").trim(), relation: m.relation || "other", age: m.age || null, meds: m.meds || [], checkup: m.checkup || null });
+    V.save();
+  };
+  V.removeMember = function (id) { V.state.circle = V.circle().filter(function (x) { return x.id !== id; }); V.save(); };
+  V.memberById = function (id) { return V.circle().filter(function (x) { return x.id === id; })[0]; };
+  V.memberAddMed = function (id, med) { var m = V.memberById(id); if (m) { m.meds = m.meds || []; m.meds.push(med); V.save(); } };
+  V.memberRemoveMed = function (id, i) { var m = V.memberById(id); if (m && m.meds) { m.meds.splice(i, 1); V.save(); } };
+
   /* ---------- User medication tracker ---------- */
   V.MED_SLOTS = ["morning", "noon", "evening", "bed"];
   V.userMeds = function () { return V.state.userMeds || (V.state.userMeds = []); };

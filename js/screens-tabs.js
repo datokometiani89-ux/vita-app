@@ -1192,6 +1192,95 @@
     );
   };
 
+  /* ===================== FAMILY / CARE CIRCLE ===================== */
+  var familyMemberId = null;
+  V.screens.family = function () {
+    var members = V.circle();
+    var formRel = "parent";
+    function memberCard(m) {
+      var due = (m.meds || []).length;
+      return '<button class="fm-card" data-member="' + m.id + '">' +
+        '<span class="fm-av">' + V.initials(m.name || "?") + "</span>" +
+        '<span class="fm-card__t"><b>' + esc(m.name) + "</b><small>" + L(V.relationById(m.relation).label) + (m.age ? " · " + m.age : "") + "</small></span>" +
+        (due ? '<span class="fm-badge">' + V.icon("pill") + " " + due + "</span>" : "") + V.icon("next") + "</button>";
+    }
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("fmTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("fmSub") + "</p>" +
+        (members.length
+          ? '<div class="section-head"><h3>' + t("fmMembers") + "</h3></div>" + members.map(memberCard).join("")
+          : '<div class="fm-empty">' + V.iconBox("heart", "pink") + "<p>" + t("fmEmpty") + "</p></div>") +
+        '<div class="section-head"><h3>' + t("fmAdd") + "</h3></div>" +
+        '<div class="card-soft md-form">' +
+          '<input id="fmName" class="field" placeholder="' + esc(t("fmName")) + '">' +
+          '<p class="cy-sub2">' + t("fmRelation") + "</p>" +
+          '<div class="chips">' + V.RELATIONS.map(function (r) { return '<button class="chip ' + (r.id === "parent" ? "on" : "") + '" data-rel="' + r.id + '">' + L(r.label) + "</button>"; }).join("") + "</div>" +
+          '<input id="fmAge" class="field" type="number" inputmode="numeric" placeholder="' + esc(t("fmAge")) + '" style="margin-top:10px">' +
+          '<button class="btn btn-primary" id="fmAddBtn" style="width:100%;margin-top:12px">' + V.icon("plus") + " " + t("fmAddBtn") + "</button>" +
+        "</div>" +
+        '<p class="hr-multi-note">' + t("fmCareNote") + "</p>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        each("[data-member]", function (b) { b.addEventListener("click", function () { familyMemberId = b.getAttribute("data-member"); V.go("familyMember"); }); });
+        each("[data-rel]", function (b) { b.addEventListener("click", function () { formRel = b.getAttribute("data-rel"); each("[data-rel]", function (x) { x.classList.toggle("on", x === b); }); }); });
+        $("#fmAddBtn").addEventListener("click", function () {
+          var n = ($("#fmName").value || "").trim(); if (!n) { $("#fmName").focus(); return; }
+          V.addMember({ name: n, relation: formRel, age: parseInt($("#fmAge").value, 10) || null });
+          V.toast && V.toast(t("fmAdded")); V.render();
+        });
+      } }
+    );
+  };
+
+  V.screens.familyMember = function () {
+    var m = V.memberById(familyMemberId);
+    if (!m) { V.go("family"); return; }
+    var slotKey = { morning: "mdMorning", noon: "mdNoon", evening: "mdEvening", bed: "mdBed" };
+    var medWhen = [];
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + esc(m.name) + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<div class="fm-hero"><span class="fm-av fm-av--lg">' + V.initials(m.name || "?") + "</span>" +
+          "<div><b>" + esc(m.name) + "</b><small>" + L(V.relationById(m.relation).label) + (m.age ? " · " + m.age + " " + t("years") : "") + "</small></div></div>" +
+        '<div class="fm-actions">' +
+          '<button class="fm-act" id="fmRemind">' + V.iconBox("bell", "blue") + "<span>" + t("fmRemind") + "</span></button>" +
+          '<button class="fm-act" id="fmCall">' + V.iconBox("chat", "green") + "<span>" + t("fmMessage") + "</span></button>" +
+        "</div>" +
+        '<div class="section-head"><h3>' + t("fmMeds") + "</h3></div>" +
+        ((m.meds && m.meds.length)
+          ? m.meds.map(function (md, i) {
+            return '<div class="task"><span class="task__t" style="margin-left:4px">' + V.iconBox("pill", "crimson") + " " + esc(md.name) + (md.when ? " · " + t(slotKey[md.when] || "mdMorning") : "") + "</span>" +
+              '<button class="fd-del" data-rmmed="' + i + '">' + V.icon("x") + "</button></div>";
+          }).join("")
+          : '<p class="md-empty">' + t("fmNoMeds") + "</p>") +
+        '<div class="card-soft md-form" style="margin-top:8px">' +
+          '<div class="fd-mrow"><input id="fmMedName" class="field" placeholder="' + esc(t("fmMedName")) + '">' +
+            '<select id="fmMedWhen" class="field" style="max-width:120px">' + ["morning", "noon", "evening", "bed"].map(function (sl) { return '<option value="' + sl + '">' + t(slotKey[sl]) + "</option>"; }).join("") + "</select></div>" +
+          '<button class="btn btn-ghost" id="fmAddMed" style="width:100%;margin-top:8px">' + V.icon("plus") + " " + t("fmAddMed") + "</button>" +
+        "</div>" +
+        '<button class="set-reset" id="fmRemove" style="margin-top:18px">' + t("fmRemove") + "</button>" +
+        '<p class="hr-multi-note">' + t("fmCareNote") + "</p>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("family"); });
+        $("#fmRemind").addEventListener("click", function () { V.toast && V.toast(t("fmReminded", { name: m.name.split(" ")[0] })); });
+        $("#fmCall").addEventListener("click", function () { V.toast && V.toast(t("fmReminded", { name: m.name.split(" ")[0] })); });
+        each("[data-rmmed]", function (b) { b.addEventListener("click", function () { V.memberRemoveMed(m.id, +b.getAttribute("data-rmmed")); V.render(); }); });
+        $("#fmAddMed").addEventListener("click", function () {
+          var n = ($("#fmMedName").value || "").trim(); if (!n) { $("#fmMedName").focus(); return; }
+          V.memberAddMed(m.id, { name: n, when: $("#fmMedWhen").value }); V.render();
+        });
+        $("#fmRemove").addEventListener("click", function () { V.removeMember(m.id); V.go("family"); });
+      } }
+    );
+  };
+
   V.screens.reminders = function () {
     var F = V.features || {};
     function pad(n) { return (n < 10 ? "0" : "") + n; }
@@ -1499,6 +1588,7 @@
         group("grpCare", [
           tile("plan", "green", "mPlan", 'data-go="plan"'),
           tile("pill", "crimson", "mMeds", 'data-go="meds"'),
+          tile("heart", "pink", "mFamily", 'data-go="family"'),
           tile("bolt", "green", "mExercises", 'data-go="exercises"'),
           tile("heart", "green", "mCare", 'data-go="careplans"'),
           tile("bolt", "blue", "mWorkouts", 'data-go="workouts"'),
