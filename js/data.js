@@ -454,15 +454,64 @@ window.VITA = window.VITA || {};
         reason: { ka: s.meds + " აქტიური წამალი გაქვს პროფილში", en: "You have " + s.meds + " active meds on file" },
         action: "refill", route: "market", points: 8 });
 
-    // 2) low energy (poor sleep OR low readiness) → coffee discount
-    if ((s.sleepAvg != null && s.sleepAvg < 6.2) || (s.readiness != null && s.readiness < 55))
-      add({ id: "coffee", partner: "cafe", icon: "bolt", tone: "yellow", prio: 2,
-        title: { ka: "ენერგია დაბალია — ყავა -20%", en: "Low on energy — coffee -20%" },
+    // 2) low energy (poor sleep OR low readiness) → coffee discount [viz: battery]
+    if ((s.sleepAvg != null && s.sleepAvg < 6.2) || (s.readiness != null && s.readiness < 55)) {
+      var energyPct = s.readiness != null ? Math.max(8, Math.min(45, s.readiness)) : 22;
+      add({ id: "coffee", partner: "cafe", icon: "bolt", tone: "yellow", prio: 2, viz: "battery", vizPct: energyPct,
+        title: { ka: "ენერგია დაბალია — ყავა -25%", en: "Low on energy — coffee -25%" },
         sub: { ka: "Coffee LAB · დღეს მოქმედებს", en: "Coffee LAB · valid today" },
         reason: s.readiness != null && s.readiness < 55
           ? { ka: "მზაობა " + s.readiness + "/100 — ენერგია დაბალია", en: "Readiness " + s.readiness + "/100 — energy is low" }
           : { ka: "ბოლო ღამეებში ცოტა გეძინა", en: "You've been sleeping short lately" },
-        discount: "-20%", action: "redeem", points: 4 });
+        discount: "-25%", action: "redeem", points: 4 });
+    }
+
+    // 2b) 3+ short nights → sleep kit (magnesium + blue-light glasses) [viz: moons]
+    var sleepArr = (V.state.wellness && V.state.wellness.sleep) || [];
+    var badNights = sleepArr.slice(-5).filter(function (x) { return (x.hours || 0) < 6.2; }).length;
+    if (badNights >= 3)
+      add({ id: "sleepkit", partner: "supp", icon: "moon", tone: "blue", prio: 2, courier: true, viz: "moons", vizN: badNights,
+        title: { ka: "ძილის ნაკრები -20%", en: "Sleep kit -20%" },
+        sub: { ka: "მაგნიუმი + blue-light სათვალე · მიტანით", en: "Magnesium + blue-light glasses · delivered" },
+        reason: { ka: "ბოლო 5 ღამიდან " + badNights + "-ჯერ ცოტა გეძინა", en: badNights + " of your last 5 nights were short" },
+        discount: "-20%", action: "shop", points: 6 });
+
+    // 2c) high stress (low HRV from latest scan) → massage / meditation [viz: wave]
+    if (s.hrv != null && s.hrv < 40)
+      add({ id: "calm", partner: "therapy", icon: "brain", tone: "pink", prio: 2, viz: "wave",
+        title: { ka: "მასაჟი / მედიტაცია -30%", en: "Massage / meditation -30%" },
+        sub: { ka: "Mindful ცენტრი · სტრესის შემცირება", en: "Mindful Center · de-stress" },
+        reason: { ka: "სკანში HRV " + s.hrv + "ms — სტრესის ნიშანი", en: "Scan HRV " + s.hrv + "ms — a stress signal" },
+        discount: "-30%", action: "book", points: 8 });
+
+    // 2d) age milestone → discounted screening package [viz: timeline]
+    var ageY = (V.state.profile || {}).age;
+    if (ageY && ageY >= 40)
+      add({ id: "screen", partner: "lab", icon: "shield", tone: "blue", prio: 2, viz: "timeline", vizAge: ageY,
+        title: { ka: ageY + "+ screening პაკეტი -25%", en: ageY + "+ screening package -25%" },
+        sub: { ka: "Synevo · ასაკის სრული შემოწმება", en: "Synevo · full age-appropriate check" },
+        reason: { ka: ageY + " წლის ასაკში ეს screening რეკომენდებულია", en: "At " + ageY + ", this screening is recommended" },
+        discount: "-25%", action: "book", points: 12 });
+
+    // 2e) women, luteal/PMS phase → PMS products [viz: cyclephase]
+    if ((V.state.profile || {}).sex === "woman" && V.state.cycle && V.state.cycle.lastPeriod && V.cycleInfo) {
+      var ci = V.cycleInfo();
+      if (ci && (ci.phase === "luteal" || ci.nextIn <= 6))
+        add({ id: "pms", partner: "pharma", icon: "heart", tone: "pink", prio: 2, courier: true, viz: "cyclephase", vizPhase: ci.phase,
+          title: { ka: "PMS ნაკრები -20%", en: "PMS kit -20%" },
+          sub: { ka: "მაგნიუმი, ჩაი, თბილი ბალიში · მიტანით", en: "Magnesium, tea, heat pad · delivered" },
+          reason: { ka: "ციკლის ფაზა — მენსტრუაციამდე " + ci.nextIn + " დღე", en: ci.nextIn + " days to your period (luteal phase)" },
+          discount: "-20%", action: "shop", points: 6 });
+    }
+
+    // 2f) active streak ≥7 → cashback / partner perk (reward loop) [viz: flame]
+    var stk = V.taskStreak ? V.taskStreak() : 0;
+    if (stk >= 7)
+      add({ id: "perk", partner: "gym", icon: "sparkle", tone: "yellow", prio: 3, viz: "flame", vizN: stk,
+        title: { ka: stk + " დღის streak — partner perk", en: stk + "-day streak — partner perk" },
+        sub: { ka: "Sport+ უფასო კვირა + ყავა cashback", en: "Sport+ free week + coffee cashback" },
+        reason: { ka: stk + " დღეა ზედიზედ აქტიური ხარ", en: stk + " days active in a row" },
+        discount: { ka: "გასახსნელად", en: "Unlock" }, action: "redeem", points: 10 });
 
     // 3) inactivity → gym discount
     if (s.inactiveDays >= 5 && s.inactiveDays < 9000)

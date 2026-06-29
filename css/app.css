@@ -2213,3 +2213,7 @@
 .dl-adopt { height: 6px; background: var(--field); border-radius: 99px; margin-bottom: 5px; overflow: hidden; }
 .dl-adopt span { display: block; height: 100%; background: linear-gradient(90deg, #1D9E75, var(--green)); border-radius: 99px; }
 .dl-proven small { font-size: 11.5px; color: var(--muted); }
+
+/* ---- Per-offer mini-visualizations ---- */
+.mk-offer__viz { margin: 10px 0 4px; background: var(--field); border-radius: 12px; padding: 5px 12px; }
+.mk-offer__viz svg { display: block; width: 100%; height: 44px; }

@@ -3959,11 +3959,57 @@
     var plus = V.isPlus && V.isPlus();
     if (o.id === "water") return { id: "prod-water", name: { ka: "წყალი 19ლ", en: "Water 19L" }, price: 12 };
     if (o.id === "supp") return { id: "prod-supp", name: { ka: "D ვიტ + ომეგა-3", en: "Vit D + Omega-3" }, price: plus ? 24 : 30 };
+    if (o.id === "sleepkit") return { id: "prod-sleepkit", name: { ka: "ძილის ნაკრები", en: "Sleep kit" }, price: plus ? 39 : 49 };
+    if (o.id === "pms") return { id: "prod-pms", name: { ka: "PMS ნაკრები", en: "PMS kit" }, price: plus ? 22 : 28 };
     return null;
   }
   function mkAllProducts() {
     return (V.refillItems ? V.refillItems() : []).concat(V.pharmacyAddOns ? V.pharmacyAddOns() : [])
       .concat([mkShopProduct({ id: "water" }), mkShopProduct({ id: "supp" })]);
+  }
+
+  // Per-offer mini-visualization — each offer type gets its own distinct viz (no uniform cards).
+  function offerViz(o) {
+    if (!o || !o.viz) return "";
+    var inner = "";
+    if (o.viz === "battery") {
+      var w = Math.round(150 * (o.vizPct || 22) / 100);
+      inner = '<rect x="18" y="11" width="158" height="22" rx="6" fill="none" stroke="var(--ink-2)" stroke-width="2.5"/>' +
+        '<rect x="178" y="17" width="8" height="10" rx="2" fill="var(--ink-2)"/>' +
+        '<rect x="21" y="14" width="' + w + '" height="16" rx="3" fill="#e8536b"/>' +
+        '<path d="M120 5 l-12 19 h12 l-9 15 26-22 h-13 l11-12 z" fill="var(--yellow)" stroke="#caa11a" stroke-width="1.2" stroke-linejoin="round"/>';
+    } else if (o.viz === "moons") {
+      var mx = [48, 110, 172];
+      inner = '<g>' + mx.map(function (x, i) {
+        var dim = i < (o.vizN || 3) ? 1 : 0.3;
+        return '<g opacity="' + dim + '"><circle cx="' + x + '" cy="22" r="13" fill="#5b6bb0"/><circle cx="' + (x + 6) + '" cy="18" r="11" fill="var(--card)"/></g>';
+      }).join("") + '<text x="196" y="18" font-size="13" fill="var(--muted)">z</text><text x="203" y="13" font-size="10" fill="var(--muted)">z</text></g>';
+    } else if (o.viz === "wave") {
+      inner = '<polyline points="8,22 38,22 48,8 58,37 70,13 82,22 110,22 120,5 132,39 144,11 156,22 212,22" fill="none" stroke="var(--pink)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>';
+    } else if (o.viz === "timeline") {
+      var age = o.vizAge || 40, ax = Math.max(22, Math.min(198, 20 + (age - 25) / 45 * 180));
+      var ticks = [30, 40, 50, 60].map(function (a) {
+        var x = 20 + (a - 25) / 45 * 180;
+        return '<line x1="' + x + '" y1="24" x2="' + x + '" y2="32" stroke="var(--line)" stroke-width="2"/><text x="' + x + '" y="42" font-size="9" text-anchor="middle" fill="var(--muted)">' + a + "</text>";
+      }).join("");
+      inner = '<line x1="18" y1="28" x2="202" y2="28" stroke="var(--line)" stroke-width="2.5"/>' + ticks +
+        '<circle cx="' + ax + '" cy="28" r="8" fill="var(--blue)"/><circle cx="' + ax + '" cy="28" r="8" fill="none" stroke="var(--blue)" stroke-width="2" opacity="0.35" transform="scale(1)"><animate attributeName="r" values="8;13;8" dur="1.8s" repeatCount="indefinite"/></circle>' +
+        '<text x="' + ax + '" y="14" font-size="11" font-weight="700" text-anchor="middle" fill="var(--blue)">' + age + "</text>";
+    } else if (o.viz === "cyclephase") {
+      var phases = [["menstruation", "var(--pink)"], ["follicular", "var(--green)"], ["ovulation", "var(--blue)"], ["luteal", "var(--yellow)"]];
+      var px = [40, 90, 140, 190];
+      inner = phases.map(function (ph, i) {
+        var cur = ph[0] === (o.vizPhase || "luteal");
+        return '<circle cx="' + px[i] + '" cy="22" r="' + (cur ? 13 : 9) + '" fill="' + ph[1] + '" opacity="' + (cur ? 1 : 0.5) + '"/>' +
+          (cur ? '<circle cx="' + px[i] + '" cy="22" r="17" fill="none" stroke="' + ph[1] + '" stroke-width="2"/>' : "");
+      }).join("") + '<line x1="49" y1="22" x2="81" y2="22" stroke="var(--line)" stroke-width="2"/><line x1="99" y1="22" x2="131" y2="22" stroke="var(--line)" stroke-width="2"/><line x1="153" y1="22" x2="177" y2="22" stroke="var(--line)" stroke-width="2"/>';
+    } else if (o.viz === "flame") {
+      inner = '<path d="M40 6 c10 9 4 16 8 20 c3 -3 3 -7 2 -10 c7 6 10 13 6 21 c-3 6 -10 9 -16 9 c-9 0 -17 -6 -17 -16 c0 -10 9 -14 9 -22 c4 2 5 6 4 10 c2 -5 3 -14 -9 -22 z" fill="#ff7a18"/>' +
+        '<path d="M34 22 c5 5 2 9 4 12 c5 -1 8 -6 7 -12 c4 4 5 9 3 13 c-2 4 -6 6 -10 6 c-6 0 -10 -4 -10 -10 c0 -5 5 -7 6 -11 z" fill="#ffd23f"/>' +
+        '<text x="66" y="32" font-size="24" font-weight="800" fill="var(--ink)">' + (o.vizN || 7) + '</text>' +
+        '<text x="' + (66 + String(o.vizN || 7).length * 15 + 4) + '" y="32" font-size="13" fill="var(--muted)">' + t("dlDayShort") + "</text>";
+    } else return "";
+    return '<div class="mk-offer__viz"><svg viewBox="0 0 220 44" preserveAspectRatio="xMidYMid meet">' + inner + "</svg></div>";
   }
 
   V.screens.market = function () {
@@ -3979,6 +4025,7 @@
         '<div class="mk-offer__h">' + V.iconBox(o.icon, o.tone) +
           '<div class="mk-offer__t"><b>' + L(o.title) + (o.sponsored ? ' <i class="mk-spon">' + t("mkSponsored") + "</i>" : "") + "</b><small>" + L(o.sub) + "</small></div>" +
           (disc ? '<span class="mk-offer__disc">' + disc + "</span>" : "") + "</div>" +
+        offerViz(o) +
         '<div class="mk-why">' + V.icon("info") + "<span><i>" + t("mkWhy") + ":</i> " + L(o.reason) + "</span></div>" +
         '<button class="btn btn-primary mk-act" data-offer="' + o.id + '">' + actLabel + "</button></div>";
     }

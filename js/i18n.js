@@ -988,6 +988,7 @@ window.VITA = window.VITA || {};
     dlOpen: { ka: "ნახე სრული ანალიზი", en: "See full insights" },
     dlBandTitle: { ka: "{n} ადამიანი შენნაირი", en: "{n} people like you" },
     dlBandSub: { ka: "ნახე როგორ ადარებ და რა მუშაობს", en: "See how you compare & what works" },
+    dlDayShort: { ka: "დღე", en: "d" },
     /* challenges & social */
     clgTitle: { ka: "გამოწვევები", en: "Challenges" },
     clgSub: { ka: "შეუერთდი გამოწვევებს, შეაგროვე ქულები და შეეჯიბრე მეგობრებს.", en: "Join challenges, earn points and compete with friends." },
