@@ -1199,6 +1199,9 @@
       if (V.isChallengeJoined(ch.id) && !V.isChallengeDone(ch.id) && V.challengeProgress(ch).pct >= 100) V.completeChallenge(ch.id, ch.points);
     });
     var streak = V.taskStreak ? V.taskStreak() : 0, board = V.leaderboard();
+    var mine = V.CHALLENGES.filter(function (c) { return V.isChallengeJoined(c.id) || V.isChallengeDone(c.id); });
+    var discover = V.CHALLENGES.filter(function (c) { return !V.isChallengeJoined(c.id) && !V.isChallengeDone(c.id); });
+    var trophies = V.CHALLENGES.filter(function (c) { return V.isChallengeDone(c.id); });
 
     function chCard(ch) {
       var pr = V.challengeProgress(ch), joined = V.isChallengeJoined(ch.id), done = V.isChallengeDone(ch.id);
@@ -1226,20 +1229,24 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("chTitle") + "</h1></div>" +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("clgTitle") + "</h1></div>" +
           '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
-        '<p class="s-sub">' + t("chSub") + "</p>" +
+        '<p class="s-sub">' + t("clgSub") + "</p>" +
         '<div class="ch-streak">' + V.icon("bolt") + "<b>" + streak + "</b><span>" + t("chStreak") + "</span></div>" +
-        '<div class="section-head"><h3>' + t("chChallenges") + "</h3></div>" +
-        V.CHALLENGES.map(chCard).join("") +
-        '<div class="section-head"><h3>' + t("chLeaderboard") + "</h3></div>" +
+        (trophies.length ? '<div class="ch-trophies">' + trophies.map(function (c) { return '<span class="ch-trophy" title="' + esc(L(c.title)) + '">' + V.iconBox(c.icon, "green") + "</span>"; }).join("") + '<span class="ch-trophy__n">' + t("chTrophies", { n: trophies.length }) + "</span></div>" : "") +
+        (mine.length ? '<div class="section-head"><h3>' + t("chMine") + "</h3></div>" + mine.map(chCard).join("") : "") +
+        '<div class="section-head"><h3>' + (mine.length ? t("chDiscover") : t("chChallenges")) + "</h3></div>" +
+        (discover.length ? discover.map(chCard).join("") : '<p class="md-empty">' + t("chAllJoined") + "</p>") +
+        '<div class="section-head"><h3>' + t("chLeaderboard") + '</h3><small>' + t("chWeekly") + "</small></div>" +
         '<div class="ch-lb">' + board.map(lbRow).join("") + "</div>" +
+        '<button class="btn btn-ghost" id="chFriend" style="width:100%;margin-top:10px">' + V.icon("plus") + " " + t("chInviteFriend") + "</button>" +
         '<p class="hr-multi-note">' + t("chNote") + "</p>" +
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
         $("[data-x]").addEventListener("click", function () { V.go("home"); });
         each("[data-join]", function (b) { b.addEventListener("click", function () { V.joinChallenge(b.getAttribute("data-join")); V.toast && V.toast(t("chJoined")); V.render(); }); });
         each("[data-leave]", function (b) { b.addEventListener("click", function () { V.leaveChallenge(b.getAttribute("data-leave")); V.render(); }); });
+        var fr = $("#chFriend"); if (fr) fr.addEventListener("click", function () { V.toast && V.toast(t("chFriendSent")); });
       } }
     );
   };

@@ -567,6 +567,8 @@ window.VITA = window.VITA || {};
     { id: "move7", icon: "bolt", days: 7, points: 70, metric: "active", title: { ka: "მოძრაობა ყოველდღე", en: "Move every day" }, desc: { ka: "იყავი აქტიური 7 დღე ზედიზედ", en: "Be active 7 days running" } },
     { id: "mood7", icon: "brain", days: 7, points: 40, metric: "mood", title: { ka: "განწყობა 7 დღე", en: "Mood check, 7 days" }, desc: { ka: "ჩაინიშნე განწყობა 7 დღე", en: "Log your mood for 7 days" } },
     { id: "scan3", icon: "heart", days: 3, points: 45, metric: "scan", title: { ka: "3 AI სკანი კვირაში", en: "3 AI scans this week" }, desc: { ka: "გაიკეთე AI სკანი 3-ჯერ", en: "Run an AI scan 3 times" } },
+    { id: "sleep7", icon: "moon", days: 7, points: 65, metric: "sleep", title: { ka: "7 ღამე ხარისხიანი ძილი", en: "7 nights of good sleep" }, desc: { ka: "დაიძინე 7+ საათი 7 ღამე", en: "Sleep 7+ hours on 7 nights" } },
+    { id: "perfect5", icon: "check", days: 5, points: 80, metric: "fulltasks", title: { ka: "სრულყოფილი დღე × 5", en: "Perfect day × 5" }, desc: { ka: "შეასრულე დღის ყველა დავალება 5 დღე", en: "Finish all daily tasks on 5 days" } },
   ];
   V.challengeById = function (id) { return V.CHALLENGES.filter(function (c) { return c.id === id; })[0]; };
   function chQualifies(metric, iso) {
@@ -576,6 +578,8 @@ window.VITA = window.VITA || {};
     if (metric === "active") return ((w.steps || {})[iso] || 0) >= 2000 || (((V.state.doneTasks || {})[iso] || []).length > 0);
     if (metric === "mood") return !!(w.mood || {})[iso];
     if (metric === "scan") return (w.scan || []).some(function (s) { return s.date === iso; });
+    if (metric === "sleep") return (w.sleep || []).some(function (s) { return s.date === iso && (s.hours || 0) >= 7; });
+    if (metric === "fulltasks") { var dt = (V.state.doneTasks || {})[iso] || [], tot = (V.dailyTasks ? V.dailyTasks().length : 0); return tot > 0 && dt.length >= tot; }
     return false;
   }
   V.challengeProgress = function (ch) {

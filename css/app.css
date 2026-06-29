@@ -1412,6 +1412,9 @@
 .co-home__t small { color: var(--muted); font-size: 12.5px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* challenges & social */
+.ch-trophies { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 12px 14px; margin-bottom: 10px; }
+.ch-trophy .icon-box { width: 38px; height: 38px; }
+.ch-trophy__n { font-size: 13px; font-weight: 700; color: var(--green); margin-left: auto; }
 .ch-streak { display: flex; align-items: center; gap: 8px; background: var(--green-tint); color: var(--green); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 8px; }
 .ch-streak svg { width: 20px; } .ch-streak b { font-size: 20px; font-weight: 800; } .ch-streak span { font-size: 13px; font-weight: 600; }
 .ch-card { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 14px 16px; margin-bottom: 10px; }
