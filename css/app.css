@@ -1411,6 +1411,28 @@
 .co-home__t { flex: 1; min-width: 0; } .co-home__t b { display: block; font-size: 15px; }
 .co-home__t small { color: var(--muted); font-size: 12.5px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* challenges & social */
+.ch-streak { display: flex; align-items: center; gap: 8px; background: var(--green-tint); color: var(--green); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 8px; }
+.ch-streak svg { width: 20px; } .ch-streak b { font-size: 20px; font-weight: 800; } .ch-streak span { font-size: 13px; font-weight: 600; }
+.ch-card { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 14px 16px; margin-bottom: 10px; }
+.ch-card.done { background: var(--green-tint); }
+.ch-card__h { display: flex; align-items: flex-start; gap: 12px; }
+.ch-card__t { flex: 1; min-width: 0; } .ch-card__t b { display: block; font-size: 14.5px; } .ch-card__t small { color: var(--muted); font-size: 12.5px; }
+.ch-pts { flex: none; font-size: 13px; font-weight: 800; color: var(--green); }
+.ch-prog { height: 8px; border-radius: 99px; background: var(--field); overflow: hidden; margin: 12px 0 6px; }
+.ch-prog span { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--green), #5BD08A); }
+.ch-prog__l { font-size: 12px; color: var(--muted); font-weight: 600; }
+.ch-leave { margin-top: 8px; display: inline-block; }
+.ch-lb { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 6px 14px; }
+.ch-lb__row { display: flex; align-items: center; gap: 11px; padding: 10px 0; border-bottom: 0.5px solid var(--line); }
+.ch-lb__row:last-child { border-bottom: none; }
+.ch-lb__row.me { margin: 0 -14px; padding: 10px 14px; background: var(--green-tint); border-radius: var(--r-md); border-bottom: none; }
+.ch-rank { width: 22px; text-align: center; font-weight: 800; color: var(--muted); flex: none; font-size: 14px; }
+.ch-rank.top { color: var(--green); }
+.ch-lb__av { width: 34px; height: 34px; font-size: 13px; background: var(--blue-tint); color: var(--blue); }
+.ch-lb__n { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-lb__p { flex: none; font-weight: 800; color: var(--green); font-size: 14px; }
+
 /* family / care circle */
 .fm-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 12px 14px; margin-bottom: 9px; }
 .fm-card > svg:last-child { margin-left: auto; width: 18px; color: var(--muted); flex: none; }

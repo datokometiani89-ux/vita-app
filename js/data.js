@@ -560,6 +560,51 @@ window.VITA = window.VITA || {};
     return meds;
   };
 
+  /* ---------- Challenges & social ---------- */
+  V.CHALLENGES = [
+    { id: "water7", icon: "drop", days: 7, points: 50, metric: "water", title: { ka: "7 დღე წყლის მიზანი", en: "7-day water goal" }, desc: { ka: "მიაღწიე დღიურ წყლის მიზანს 7 დღე", en: "Hit your daily water goal for 7 days" } },
+    { id: "steps5", icon: "walk", days: 5, points: 60, metric: "steps", title: { ka: "8000 ნაბიჯი × 5 დღე", en: "8k steps × 5 days" }, desc: { ka: "გადააბიჯე 8000 ნაბიჯს 5 დღე", en: "Pass 8,000 steps on 5 days" } },
+    { id: "move7", icon: "bolt", days: 7, points: 70, metric: "active", title: { ka: "მოძრაობა ყოველდღე", en: "Move every day" }, desc: { ka: "იყავი აქტიური 7 დღე ზედიზედ", en: "Be active 7 days running" } },
+    { id: "mood7", icon: "brain", days: 7, points: 40, metric: "mood", title: { ka: "განწყობა 7 დღე", en: "Mood check, 7 days" }, desc: { ka: "ჩაინიშნე განწყობა 7 დღე", en: "Log your mood for 7 days" } },
+    { id: "scan3", icon: "heart", days: 3, points: 45, metric: "scan", title: { ka: "3 AI სკანი კვირაში", en: "3 AI scans this week" }, desc: { ka: "გაიკეთე AI სკანი 3-ჯერ", en: "Run an AI scan 3 times" } },
+  ];
+  V.challengeById = function (id) { return V.CHALLENGES.filter(function (c) { return c.id === id; })[0]; };
+  function chQualifies(metric, iso) {
+    var w = V.state.wellness || {};
+    if (metric === "water") return (V.state.waterLog[iso] || 0) >= V.waterGoal();
+    if (metric === "steps") return ((w.steps || {})[iso] || 0) >= 8000;
+    if (metric === "active") return ((w.steps || {})[iso] || 0) >= 2000 || (((V.state.doneTasks || {})[iso] || []).length > 0);
+    if (metric === "mood") return !!(w.mood || {})[iso];
+    if (metric === "scan") return (w.scan || []).some(function (s) { return s.date === iso; });
+    return false;
+  }
+  V.challengeProgress = function (ch) {
+    var n = 0, win = Math.max(14, ch.days);
+    for (var i = 0; i < win; i++) {
+      var d = new Date(V.todayISO()); d.setDate(d.getDate() - i);
+      var iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      if (chQualifies(ch.metric, iso)) n++;
+    }
+    n = Math.min(n, ch.days);
+    return { done: n, target: ch.days, pct: Math.min(100, Math.round(n / ch.days * 100)) };
+  };
+  function chState() { return V.state.challenges || (V.state.challenges = { joined: {}, done: {} }); }
+  V.isChallengeJoined = function (id) { return !!chState().joined[id]; };
+  V.isChallengeDone = function (id) { return !!chState().done[id]; };
+  V.joinChallenge = function (id) { chState().joined[id] = { start: V.todayISO() }; V.save(); };
+  V.leaveChallenge = function (id) { delete chState().joined[id]; V.save(); };
+  V.completeChallenge = function (id, pts) { var c = chState(); if (c.done[id]) return; c.done[id] = true; if (V.award) V.award(pts, "challenge"); V.save(); };
+  // leaderboard — demo friends + the real user, ranked by points (no real social backend)
+  V.leaderboard = function () {
+    var nm = (V.state.profile && V.state.profile.name) ? V.state.profile.name.split(" ")[0] : null;
+    var me = { name: nm, you: true, pts: V.state.points || 0 };
+    var friends = [
+      { name: "ანა", pts: 285 }, { name: "დათო", pts: 240 }, { name: "მარიამ", pts: 175 },
+      { name: "ლევანი", pts: 120 }, { name: "სალომე", pts: 80 },
+    ];
+    return friends.concat([me]).sort(function (a, b) { return b.pts - a.pts; });
+  };
+
   /* ---------- Family / Care Circle ---------- */
   V.RELATIONS = [
     { id: "parent", icon: "heart", label: { ka: "მშობელი", en: "Parent" } },

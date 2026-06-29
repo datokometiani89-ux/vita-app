@@ -1192,6 +1192,58 @@
     );
   };
 
+  /* ===================== CHALLENGES & SOCIAL ===================== */
+  V.screens.challenges = function () {
+    // settle any completed challenges first (award + mark done) so the render is correct
+    V.CHALLENGES.forEach(function (ch) {
+      if (V.isChallengeJoined(ch.id) && !V.isChallengeDone(ch.id) && V.challengeProgress(ch).pct >= 100) V.completeChallenge(ch.id, ch.points);
+    });
+    var streak = V.taskStreak ? V.taskStreak() : 0, board = V.leaderboard();
+
+    function chCard(ch) {
+      var pr = V.challengeProgress(ch), joined = V.isChallengeJoined(ch.id), done = V.isChallengeDone(ch.id);
+      return '<div class="ch-card' + (done ? " done" : "") + '">' +
+        '<div class="ch-card__h">' + V.iconBox(ch.icon, done ? "green" : "blue") +
+          '<div class="ch-card__t"><b>' + L(ch.title) + "</b><small>" + L(ch.desc) + "</small></div>" +
+          '<span class="ch-pts">+' + ch.points + "</span></div>" +
+        (joined || done
+          ? '<div class="ch-prog"><span style="width:' + pr.pct + '%"></span></div><div class="ch-prog__l">' + pr.done + "/" + pr.target + " " + t("chDaysWord") + (done ? " · " + t("chDoneBadge") : "") + "</div>"
+          : "") +
+        (done ? "" : joined
+          ? '<button class="link-btn ch-leave" data-leave="' + ch.id + '">' + t("chLeave") + "</button>"
+          : '<button class="btn btn-primary" data-join="' + ch.id + '" style="width:100%;margin-top:10px">' + V.icon("plus") + " " + t("chJoin") + "</button>") +
+        "</div>";
+    }
+    function lbRow(p, i) {
+      var rank = i + 1, nm = p.name || t("chYou");
+      return '<div class="ch-lb__row' + (p.you ? " me" : "") + '">' +
+        '<span class="ch-rank' + (rank <= 3 ? " top" : "") + '">' + rank + "</span>" +
+        '<span class="fm-av ch-lb__av">' + V.initials(nm) + "</span>" +
+        '<b class="ch-lb__n">' + esc(nm) + (p.you ? " · " + t("chYouTag") : "") + "</b>" +
+        '<span class="ch-lb__p">' + p.pts + "</span></div>";
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("chTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("chSub") + "</p>" +
+        '<div class="ch-streak">' + V.icon("bolt") + "<b>" + streak + "</b><span>" + t("chStreak") + "</span></div>" +
+        '<div class="section-head"><h3>' + t("chChallenges") + "</h3></div>" +
+        V.CHALLENGES.map(chCard).join("") +
+        '<div class="section-head"><h3>' + t("chLeaderboard") + "</h3></div>" +
+        '<div class="ch-lb">' + board.map(lbRow).join("") + "</div>" +
+        '<p class="hr-multi-note">' + t("chNote") + "</p>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        each("[data-join]", function (b) { b.addEventListener("click", function () { V.joinChallenge(b.getAttribute("data-join")); V.toast && V.toast(t("chJoined")); V.render(); }); });
+        each("[data-leave]", function (b) { b.addEventListener("click", function () { V.leaveChallenge(b.getAttribute("data-leave")); V.render(); }); });
+      } }
+    );
+  };
+
   /* ===================== FAMILY / CARE CIRCLE ===================== */
   var familyMemberId = null;
   V.screens.family = function () {
@@ -1589,6 +1641,7 @@
           tile("plan", "green", "mPlan", 'data-go="plan"'),
           tile("pill", "crimson", "mMeds", 'data-go="meds"'),
           tile("heart", "pink", "mFamily", 'data-go="family"'),
+          tile("sparkle", "yellow", "mChallenges", 'data-go="challenges"'),
           tile("bolt", "green", "mExercises", 'data-go="exercises"'),
           tile("heart", "green", "mCare", 'data-go="careplans"'),
           tile("bolt", "blue", "mWorkouts", 'data-go="workouts"'),

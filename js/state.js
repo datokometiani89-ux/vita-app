@@ -55,6 +55,7 @@ window.VITA = window.VITA || {};
     exPlan: [],            // exercise ids added to "my plan" from the library
     homeCards: null,       // home widget prefs { order:[ids], hidden:{id:true} }; null = defaults
     circle: [],            // care circle: [{id, name, relation, age, meds:[{name,when}], checkup}]
+    challenges: null,      // { joined:{id:{start}}, done:{id:true} }
     bookings: [],          // [{checkupId, clinicId, date, time, status}]
     calendar: [],         // checkup ids added to calendar
     labResults: [],       // [{id, date, values:{glucose:..}, summary}]
