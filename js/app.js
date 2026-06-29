@@ -215,7 +215,17 @@
     var S = V.screens;
     var fn = S[r];
     if (!fn) { go(V.state.onboarded ? "home" : "splash"); return; }
-    fn();
+    // Resilient render: a screen that throws must never freeze navigation (it would look
+    // like "tapping does nothing"). Log it and fall back home so the app stays usable.
+    try {
+      fn();
+    } catch (e) {
+      try { console.error("[VITA] screen '" + r + "' failed to render:", e); } catch (_) {}
+      if (r !== "home" && V.state.onboarded && S.home) {
+        current = "home";
+        try { S.home(); V.toast && V.toast(V.t("errScreen")); } catch (e2) {}
+      }
+    }
     var sc = root.querySelector(".screen");
     if (sc) sc.scrollTop = 0;
   }

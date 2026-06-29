@@ -3973,11 +3973,12 @@
     if (!o || !o.viz) return "";
     var inner = "";
     if (o.viz === "battery") {
-      var w = Math.round(150 * (o.vizPct || 22) / 100);
-      inner = '<rect x="18" y="11" width="158" height="22" rx="6" fill="none" stroke="var(--ink-2)" stroke-width="2.5"/>' +
-        '<rect x="178" y="17" width="8" height="10" rx="2" fill="var(--ink-2)"/>' +
-        '<rect x="21" y="14" width="' + w + '" height="16" rx="3" fill="#e8536b"/>' +
-        '<path d="M120 5 l-12 19 h12 l-9 15 26-22 h-13 l11-12 z" fill="var(--yellow)" stroke="#caa11a" stroke-width="1.2" stroke-linejoin="round"/>';
+      var w = Math.round(150 * (o.vizPct || 22) / 100), fill = (o.vizPct || 22) < 30 ? "#e8536b" : "#e0a92e";
+      inner = '<rect x="16" y="8" width="162" height="28" rx="9" fill="var(--card)" stroke="var(--ink-2)" stroke-width="2.5"/>' +
+        '<rect x="180" y="15" width="9" height="14" rx="3" fill="var(--ink-2)"/>' +
+        '<rect x="20" y="12" width="' + w + '" height="20" rx="6" fill="' + fill + '"/>' +
+        '<path d="M118 3 l-14 22 h13 l-9 17 28 -25 h-14 l11 -14 z" fill="var(--yellow)" stroke="var(--card)" stroke-width="2.4" stroke-linejoin="round"/>' +
+        '<path d="M118 3 l-14 22 h13 l-9 17 28 -25 h-14 l11 -14 z" fill="var(--yellow)" stroke="#c9971a" stroke-width="0.8" stroke-linejoin="round"/>';
     } else if (o.viz === "moons") {
       var mx = [48, 110, 172];
       inner = '<g>' + mx.map(function (x, i) {
@@ -4009,7 +4010,7 @@
         '<text x="66" y="32" font-size="24" font-weight="800" fill="var(--ink)">' + (o.vizN || 7) + '</text>' +
         '<text x="' + (66 + String(o.vizN || 7).length * 15 + 4) + '" y="32" font-size="13" fill="var(--muted)">' + t("dlDayShort") + "</text>";
     } else return "";
-    return '<div class="mk-offer__viz"><svg viewBox="0 0 220 44" preserveAspectRatio="xMidYMid meet">' + inner + "</svg></div>";
+    return '<div class="mk-offer__viz t-' + (o.tone || "green") + '"><svg viewBox="0 0 220 44" preserveAspectRatio="xMidYMid meet">' + inner + "</svg></div>";
   }
 
   V.screens.market = function () {
@@ -4031,8 +4032,9 @@
     }
     function codeRow(r) {
       var p = V.partnerById(r.partner) || {}, booked = r.action === "book";
+      var ttl = r.title ? L(r.title) : (p.name ? L(p.name) : (r.id || "—"));   // defensive: old/partial records lack title
       return '<div class="mk-code">' + V.iconBox(p.icon || "sparkle", p.tone || "green") +
-        '<div class="mk-code__t"><b>' + L(r.title) + "</b><small>" + (booked ? t("mkBooked") : t("mkShowAtPartner")) + "</small></div>" +
+        '<div class="mk-code__t"><b>' + ttl + "</b><small>" + (booked ? t("mkBooked") : t("mkShowAtPartner")) + "</small></div>" +
         (booked ? '<span class="mk-code__c ok">' + t("mkBooked") + "</span>" : '<span class="mk-code__c">' + r.code + "</span>") + "</div>";
     }
     function orderRow(o) {

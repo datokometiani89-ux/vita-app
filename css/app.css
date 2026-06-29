@@ -2215,8 +2215,13 @@
 .dl-proven small { font-size: 11.5px; color: var(--muted); }
 
 /* ---- Per-offer mini-visualizations ---- */
-.mk-offer__viz { margin: 10px 0 4px; background: var(--field); border-radius: 12px; padding: 5px 12px; }
-.mk-offer__viz svg { display: block; width: 100%; height: 44px; }
+.mk-offer__viz { margin: 11px 0 5px; background: var(--field); border-radius: 14px; padding: 8px 14px; border: 1px solid transparent; }
+.mk-offer__viz svg { display: block; width: 100%; height: 46px; }
+.mk-offer__viz.t-yellow { background: #fdf4e0; border-color: #f4e3bd; }
+.mk-offer__viz.t-blue { background: #e9f3fc; border-color: #cee3f6; }
+.mk-offer__viz.t-pink { background: #fdecf2; border-color: #f6d6e2; }
+.mk-offer__viz.t-green { background: var(--green-tint); border-color: #c7e6cf; }
+.mk-offer__viz.t-crimson { background: #fdecef; border-color: #f6d4da; }
 
 /* ---- Insurance marketplace (bidding) ---- */
 .iq-risk { padding: 16px; }
