@@ -3942,7 +3942,7 @@
   V.wireBioHome = function () { var c = document.getElementById("bioHome"); if (c) c.addEventListener("click", function () { V.go("fullscan"); }); };
 
   /* ===================== SMART MARKETPLACE (offers → commerce) ===================== */
-  var marketView = "home", marketTrackId = null, marketCourier = "wolt";
+  var marketView = "home", marketTrackId = null, marketCourier = "wolt", marketCat = "all";
   function discText(d) { return d ? (typeof d === "string" ? d : L(d)) : ""; }
 
   V.offersHomeCard = function () {
@@ -4013,22 +4013,63 @@
     return '<div class="mk-offer__viz t-' + (o.tone || "green") + '"><svg viewBox="0 0 220 44" preserveAspectRatio="xMidYMid meet">' + inner + "</svg></div>";
   }
 
+  // Product illustrations — give the marketplace a real "store" feel (one recognizable
+  // picture per offer) instead of uniform abstract cards. viewBox 0 0 40 40.
+  var OFFER_ART = {
+    coffee: '<ellipse cx="19" cy="33" rx="13" ry="2.4" fill="#e7caa0"/><rect x="9" y="15" width="20" height="16" rx="5" fill="#fff" stroke="#7a4a1e" stroke-width="2.2"/><rect x="12" y="18" width="14" height="6" rx="3" fill="#a9743d"/><path d="M29 18 h3.5 a4 4 0 0 1 0 8 H29" fill="none" stroke="#7a4a1e" stroke-width="2.2"/><path d="M15 12 q-2.5 -3 0.5 -6" stroke="#c9a26a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M21 12 q-2.5 -3 0.5 -6" stroke="#c9a26a" stroke-width="2" fill="none" stroke-linecap="round"/>',
+    pillbottle: '<rect x="14" y="6" width="12" height="5" rx="1.5" fill="#c0392b"/><rect x="12" y="11" width="16" height="22" rx="4" fill="#fff" stroke="#c0392b" stroke-width="2.2"/><path d="M12 23 h16 v6 a4 4 0 0 1 -4 4 H16 a4 4 0 0 1 -4 -4 z" fill="#f7c9cd"/><rect x="17" y="15" width="6" height="2.2" rx="1" fill="#c0392b"/><rect x="19" y="13" width="2" height="6" rx="1" fill="#c0392b"/>',
+    moon: '<path d="M25 8 a12 12 0 1 0 4 18 A10 10 0 0 1 25 8 z" fill="#5b6bb0"/><circle cx="12" cy="11" r="1.4" fill="#8a97cb"/><circle cx="9" cy="18" r="1" fill="#8a97cb"/><circle cx="14" cy="24" r="1.1" fill="#8a97cb"/>',
+    lotus: '<ellipse cx="20" cy="29" rx="12" ry="2.4" fill="#f4c0d1"/><path d="M20 12 c3.5 4 3.5 9 0 13.5 c-3.5 -4.5 -3.5 -9.5 0 -13.5z" fill="#D4537E"/><path d="M20 26 c-5 -1.5 -9 -6 -10.5 -11 c5.5 -0.5 9.5 3 10.5 8z" fill="#e892b1"/><path d="M20 26 c5 -1.5 9 -6 10.5 -11 c-5.5 -0.5 -9.5 3 -10.5 8z" fill="#e892b1"/>',
+    clipboard: '<rect x="10" y="8" width="20" height="26" rx="3" fill="#fff" stroke="#185FA5" stroke-width="2.2"/><rect x="15" y="6" width="10" height="5" rx="2" fill="#185FA5"/><path d="M13 18 l2 2 l3.5 -3.5" stroke="#1d9e75" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="21" y1="18" x2="27" y2="18" stroke="#9cc1e8" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="25" x2="27" y2="25" stroke="#9cc1e8" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="30" x2="23" y2="30" stroke="#9cc1e8" stroke-width="2" stroke-linecap="round"/>',
+    heart: '<path d="M20 31 C7 22 9 11 16 11 c2.6 0 4 1.6 4 3.2 c0 -1.6 1.4 -3.2 4 -3.2 c7 0 9 11 -4 20z" fill="#D4537E"/>',
+    heartpulse: '<path d="M20 31 C7 22 9 11 16 11 c2.6 0 4 1.6 4 3.2 c0 -1.6 1.4 -3.2 4 -3.2 c7 0 9 11 -4 20z" fill="#e8536b"/><path d="M10 21 h4 l2 -4 l3 8 l2 -4 h5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linejoin="round" stroke-linecap="round"/>',
+    gift: '<rect x="8" y="17" width="24" height="15" rx="2.5" fill="#f0b53a"/><rect x="8" y="17" width="24" height="5" fill="#e0a92e"/><rect x="18" y="13" width="4" height="19" fill="#fff7e6"/><path d="M20 13 c-2 -5 -8 -4 -6 0 z M20 13 c2 -5 8 -4 6 0 z" fill="#fff7e6"/>',
+    dumbbell: '<rect x="5" y="16" width="5" height="8" rx="2" fill="#3B6D11"/><rect x="30" y="16" width="5" height="8" rx="2" fill="#3B6D11"/><rect x="10" y="17.5" width="4" height="5" rx="1" fill="#3B6D11"/><rect x="26" y="17.5" width="4" height="5" rx="1" fill="#3B6D11"/><rect x="13" y="18.7" width="14" height="2.6" rx="1.3" fill="#639922"/>',
+    flask: '<path d="M17 7 v8.5 l-6 12.5 a3 3 0 0 0 3 4.5 h12 a3 3 0 0 0 3 -4.5 l-6 -12.5 v-8.5z" fill="#fff" stroke="#185FA5" stroke-width="2"/><path d="M14.5 22 h11 l3 6.5 a2 2 0 0 1 -2 3 H13.5 a2 2 0 0 1 -2 -3z" fill="#9cd0f5"/><line x1="15" y1="7" x2="25" y2="7" stroke="#185FA5" stroke-width="2.6" stroke-linecap="round"/>',
+    drop: '<path d="M20 7 c6 8 9 12 9 16.5 a9 9 0 0 1 -18 0 C11 19 14 15 20 7z" fill="#36A0D8"/><path d="M15.5 24 a4.5 4.5 0 0 0 4.5 4.5" stroke="#bfe3f5" stroke-width="2" fill="none" stroke-linecap="round"/>',
+    suppbottle: '<rect x="14" y="6" width="12" height="4.5" rx="1.5" fill="#3B6D11"/><rect x="11" y="10" width="18" height="23" rx="4" fill="#fff" stroke="#3B6D11" stroke-width="2.2"/><rect x="18.3" y="17" width="3.4" height="10" rx="1" fill="#639922"/><rect x="15" y="20.3" width="10" height="3.4" rx="1" fill="#639922"/>',
+    shield: '<path d="M20 6 l11 4 v8 c0 8 -5 13.5 -11 16 c-6 -2.5 -11 -8 -11 -16 v-8z" fill="#185FA5"/><path d="M15 19.5 l3.5 3.5 l7 -7.5" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  };
+  function offerArtKey(o) {
+    return { rx: "pillbottle", coffee: "coffee", sleepkit: "moon", calm: "lotus", therapy: "lotus", screen: "clipboard",
+      pms: "heart", perk: "gift", gym: "dumbbell", cardio: "heartpulse", lab: "flask", water: "drop", supp: "suppbottle", insure: "shield" }[o.id] || null;
+  }
+  function offerArt(o, big) {
+    var inner = OFFER_ART[offerArtKey(o)], cls = "mk-art t-" + (o.tone || "green") + (big ? " big" : "");
+    if (!inner) return '<span class="' + cls + ' mk-art--ic">' + V.icon(o.icon) + "</span>";
+    return '<span class="' + cls + '"><svg viewBox="0 0 40 40">' + inner + "</svg></span>";
+  }
+  function offerCatLabel(c) {
+    var M = { all: { ka: "ყველა", en: "All" }, cafe: { ka: "კაფე", en: "Café" }, pharmacy: { ka: "აფთიაქი", en: "Pharmacy" },
+      gym: { ka: "ფიტნესი", en: "Fitness" }, lab: { ka: "ლაბი", en: "Lab" }, clinic: { ka: "კლინიკა", en: "Clinic" }, therapy: { ka: "თერაპია", en: "Therapy" },
+      grocery: { ka: "მაღაზია", en: "Grocery" }, supplements: { ka: "დანამატები", en: "Supplements" }, insurance: { ka: "დაზღვევა", en: "Insurance" }, mealkit: { ka: "კვება", en: "Meals" } };
+    return (M[c] || { ka: c, en: c })[V.lang()] || c;
+  }
+
   V.screens.market = function () {
     var m = V.marketState();
     function money(n) { return "₾" + n; }
     function nm(x) { return typeof x === "string" ? x : L(x); }
     var stageKeys = ["mkStageConfirmed", "mkStagePreparing", "mkStageDispatched", "mkStageOntheway", "mkStageDelivered"];
 
-    function offerCard(o) {
+    function actLabelOf(o) { return o.action === "refill" ? t("mkActRefill") : o.action === "book" ? t("mkActBook") : o.action === "redeem" ? t("mkActRedeem") : t("mkActShop"); }
+    // featured = big hero card with the product illustration
+    function featuredCard(o) {
       var disc = discText(o.discount);
-      var actLabel = o.action === "refill" ? t("mkActRefill") : o.action === "book" ? t("mkActBook") : o.action === "redeem" ? t("mkActRedeem") : t("mkActShop");
-      return '<div class="mk-offer' + (o.sponsored ? " spon" : "") + '">' +
-        '<div class="mk-offer__h">' + V.iconBox(o.icon, o.tone) +
-          '<div class="mk-offer__t"><b>' + L(o.title) + (o.sponsored ? ' <i class="mk-spon">' + t("mkSponsored") + "</i>" : "") + "</b><small>" + L(o.sub) + "</small></div>" +
-          (disc ? '<span class="mk-offer__disc">' + disc + "</span>" : "") + "</div>" +
-        offerViz(o) +
-        '<div class="mk-why">' + V.icon("info") + "<span><i>" + t("mkWhy") + ":</i> " + L(o.reason) + "</span></div>" +
-        '<button class="btn btn-primary mk-act" data-offer="' + o.id + '">' + actLabel + "</button></div>";
+      return '<div class="mk-feat t-' + (o.tone || "green") + '">' +
+        (disc ? '<span class="mk-feat__disc">' + disc + "</span>" : "") +
+        '<div class="mk-feat__top">' + offerArt(o, true) +
+          '<div class="mk-feat__t"><b>' + L(o.title) + (o.sponsored ? ' <i class="mk-spon">' + t("mkSponsored") + "</i>" : "") + "</b><small>" + L(o.sub) + "</small>" +
+            '<span class="mk-feat__why">' + V.icon("info") + " " + L(o.reason) + "</span></div></div>" +
+        '<button class="btn btn-primary mk-act" data-offer="' + o.id + '">' + actLabelOf(o) + "</button></div>";
+    }
+    // the rest = compact product rows (whole row tappable)
+    function offerRow(o) {
+      var disc = discText(o.discount);
+      return '<div class="mk-orow" data-offer="' + o.id + '" role="button" tabindex="0">' + offerArt(o) +
+        '<div class="mk-orow__t"><b>' + L(o.title) + (o.sponsored ? ' <i class="mk-spon">' + t("mkSponsored") + "</i>" : "") + "</b><small>" + L(o.sub) + "</small>" +
+          '<span class="mk-orow__why">' + L(o.reason) + "</span></div>" +
+        (disc ? '<span class="mk-orow__disc">' + disc + "</span>" : '<span class="mk-orow__go">' + V.icon("next") + "</span>") + "</div>";
     }
     function codeRow(r) {
       var p = V.partnerById(r.partner) || {}, booked = r.action === "book";
@@ -4065,7 +4106,19 @@
         h += '<div class="mk-optout">' + V.icon("info") + "<p>" + t("mkOptOut") + '</p><button class="btn btn-primary" id="mkOptIn">' + t("mkOptInBtn") + "</button></div>";
       } else {
         h += '<div class="section-head"><h3>' + t("mkForYou") + "</h3></div>";
-        h += offs.length ? offs.map(offerCard).join("") : '<p class="md-empty">' + t("mkNoOffers") + "</p>";
+        if (!offs.length) { h += '<p class="md-empty">' + t("mkNoOffers") + "</p>"; }
+        else {
+          // category chips (only when there's more than one category)
+          var cats = []; offs.forEach(function (o) { var p = V.partnerById(o.partner), c = p && p.cat; if (c && cats.indexOf(c) < 0) cats.push(c); });
+          if (cats.length > 1) {
+            h += '<div class="mk-chips"><button class="mk-chip' + (marketCat === "all" ? " on" : "") + '" data-cat="all">' + offerCatLabel("all") + "</button>" +
+              cats.map(function (c) { return '<button class="mk-chip' + (marketCat === c ? " on" : "") + '" data-cat="' + c + '">' + offerCatLabel(c) + "</button>"; }).join("") + "</div>";
+          }
+          var shown = offs.filter(function (o) { if (marketCat === "all") return true; var p = V.partnerById(o.partner); return p && p.cat === marketCat; });
+          if (!shown.length) { shown = offs; marketCat = "all"; }
+          h += featuredCard(shown[0]);
+          if (shown.length > 1) h += '<div class="mk-orows">' + shown.slice(1).map(offerRow).join("") + "</div>";
+        }
       }
       if ((m.redeemed || []).length) h += '<div class="section-head"><h3>' + t("mkRedeemed") + "</h3></div>" + m.redeemed.slice(0, 5).map(codeRow).join("");
       if ((m.orders || []).length) h += '<div class="section-head"><h3>' + t("mkOrders") + "</h3></div>" + m.orders.slice(0, 5).map(orderRow).join("");
@@ -4121,6 +4174,7 @@
       { onMount: function () {
         var x = $("[data-x]"); if (x) x.addEventListener("click", function () { if (marketView !== "home") { marketView = "home"; V.render(); } else V.go("home"); });
         each("[data-go2]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go2")); }); });
+        each("[data-cat]", function (b) { b.addEventListener("click", function () { marketCat = b.getAttribute("data-cat"); V.render(); }); });
         var oi = $("#mkOptIn"); if (oi) oi.addEventListener("click", function () { V.setOffersOptIn(true); V.render(); });
         var tg = $("#mkOffersTgl"); if (tg) tg.addEventListener("change", function () { V.setOffersOptIn(tg.checked); V.render(); });
         each("[data-offer]", function (b) { b.addEventListener("click", function () {

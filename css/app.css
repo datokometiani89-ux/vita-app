@@ -2223,6 +2223,39 @@
 .mk-offer__viz.t-green { background: var(--green-tint); border-color: #c7e6cf; }
 .mk-offer__viz.t-crimson { background: #fdecef; border-color: #f6d4da; }
 
+/* ---- Marketplace redesign: category chips, product art, featured + rows ---- */
+.mk-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 6px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
+.mk-chips::-webkit-scrollbar { display: none; }
+.mk-chip { white-space: nowrap; flex: none; font-size: 12.5px; font-weight: 600; padding: 7px 15px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink-2); cursor: pointer; }
+.mk-chip.on { background: var(--green-dark); border-color: var(--green-dark); color: #fff; }
+
+.mk-art { width: 56px; height: 56px; flex: none; border-radius: 15px; display: flex; align-items: center; justify-content: center; }
+.mk-art svg { width: 64%; height: 64%; display: block; }
+.mk-art.big { width: 80px; height: 80px; border-radius: 20px; }
+.mk-art.mk-art--ic svg { width: 46%; height: 46%; color: var(--ink); }
+.mk-art.t-yellow { background: #fbeccb; } .mk-art.t-blue { background: #dfeefb; } .mk-art.t-pink { background: #fbe0ea; } .mk-art.t-green { background: #dcefdf; } .mk-art.t-crimson { background: #fbe0e4; }
+
+.mk-feat { position: relative; border-radius: 20px; padding: 16px; margin-bottom: 14px; border: 1px solid transparent; }
+.mk-feat.t-yellow { background: #fdf4e0; border-color: #f1deb4; } .mk-feat.t-blue { background: #ecf4fc; border-color: #cfe2f5; } .mk-feat.t-pink { background: #fdeef3; border-color: #f5d3e1; } .mk-feat.t-green { background: var(--green-tint); border-color: #c4e5cd; } .mk-feat.t-crimson { background: #fdeef0; border-color: #f5d2d8; }
+.mk-feat__disc { position: absolute; top: 14px; right: 14px; background: var(--green-dark); color: #fff; font-size: 14px; font-weight: 800; padding: 4px 13px; border-radius: 999px; }
+.mk-feat__top { display: flex; align-items: center; gap: 15px; }
+.mk-feat__t { min-width: 0; flex: 1; padding-right: 40px; }
+.mk-feat__t b { display: block; font-size: 16px; font-weight: 800; line-height: 1.25; }
+.mk-feat__t small { display: block; color: var(--ink-2); font-size: 12.5px; margin: 3px 0; }
+.mk-feat__why { display: flex; align-items: flex-start; gap: 5px; font-size: 12px; color: var(--muted); line-height: 1.4; }
+.mk-feat__why svg { width: 13px; flex: none; margin-top: 1px; }
+.mk-feat .mk-act { width: 100%; margin-top: 15px; }
+
+.mk-orows { display: flex; flex-direction: column; gap: 10px; }
+.mk-orow { display: flex; align-items: center; gap: 13px; background: var(--card); border: 1px solid var(--line); border-radius: 17px; padding: 11px; cursor: pointer; transition: transform .08s; }
+.mk-orow:active { transform: scale(.99); }
+.mk-orow__t { flex: 1; min-width: 0; }
+.mk-orow__t b { display: block; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mk-orow__t small { display: block; color: var(--ink-2); font-size: 12px; margin: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mk-orow__why { display: block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mk-orow__disc { flex: none; font-size: 13px; font-weight: 800; color: var(--green-dark); background: var(--green-tint); padding: 4px 11px; border-radius: 999px; }
+.mk-orow__go { flex: none; color: var(--muted); } .mk-orow__go svg { width: 16px; transform: rotate(180deg); }
+
 /* ---- Insurance marketplace (bidding) ---- */
 .iq-risk { padding: 16px; }
 .iq-risk__top { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
