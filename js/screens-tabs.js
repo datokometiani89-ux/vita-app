@@ -1699,6 +1699,7 @@
           tile("pill", "crimson", "mMeds", 'data-go="meds"'),
           tile("heart", "pink", "mFamily", 'data-go="family"'),
           tile("sparkle", "yellow", "mChallenges", 'data-go="challenges"'),
+          tile("location", "crimson", "mMarket", 'data-go="market"', V.cartCount && V.cartCount() ? V.cartCount() : null),
           tile("bolt", "green", "mExercises", 'data-go="exercises"'),
           tile("heart", "green", "mCare", 'data-go="careplans"'),
           tile("bolt", "blue", "mWorkouts", 'data-go="workouts"'),

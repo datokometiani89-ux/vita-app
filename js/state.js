@@ -56,6 +56,7 @@ window.VITA = window.VITA || {};
     homeCards: null,       // home widget prefs { order:[ids], hidden:{id:true} }; null = defaults
     circle: [],            // care circle: [{id, name, relation, age, meds:[{name,when}], checkup}]
     challenges: null,      // { joined:{id:{start}}, done:{id:true} }
+    market: { orders: [], redeemed: [], cart: [], offersOptIn: true }, // Smart Marketplace: offers→commerce (demo; courier/payment = integration seam)
     bookings: [],          // [{checkupId, clinicId, date, time, status}]
     calendar: [],         // checkup ids added to calendar
     labResults: [],       // [{id, date, values:{glucose:..}, summary}]

@@ -3940,6 +3940,177 @@
       '<span class="stp-home__t"><b>' + h.bio + " " + t("haYears") + '</b><small>' + t("haBioAge") + " · " + (h.delta > 0 ? "+" : "") + h.delta + "</small></span>" + V.icon("next") + "</button>";
   };
   V.wireBioHome = function () { var c = document.getElementById("bioHome"); if (c) c.addEventListener("click", function () { V.go("fullscan"); }); };
+
+  /* ===================== SMART MARKETPLACE (offers → commerce) ===================== */
+  var marketView = "home", marketTrackId = null, marketCourier = "wolt";
+  function discText(d) { return d ? (typeof d === "string" ? d : L(d)) : ""; }
+
+  V.offersHomeCard = function () {
+    var offs = V.offers ? V.offers() : [];
+    if (!offs.length) return "";
+    var o = offs[0], disc = discText(o.discount);
+    return '<button class="card-soft mk-home" id="offersHome">' + V.iconBox(o.icon, o.tone) +
+      '<span class="mk-home__t"><b>' + L(o.title) + "</b><small>" + L(o.sub) + "</small></span>" +
+      (disc ? '<span class="mk-home__disc">' + disc + "</span>" : V.icon("next")) + "</button>";
+  };
+  V.wireOffersHome = function () { var c = document.getElementById("offersHome"); if (c) c.addEventListener("click", function () { V.go("market"); }); };
+
+  function mkShopProduct(o) {
+    var plus = V.isPlus && V.isPlus();
+    if (o.id === "water") return { id: "prod-water", name: { ka: "წყალი 19ლ", en: "Water 19L" }, price: 12 };
+    if (o.id === "supp") return { id: "prod-supp", name: { ka: "D ვიტ + ომეგა-3", en: "Vit D + Omega-3" }, price: plus ? 24 : 30 };
+    return null;
+  }
+  function mkAllProducts() {
+    return (V.refillItems ? V.refillItems() : []).concat(V.pharmacyAddOns ? V.pharmacyAddOns() : [])
+      .concat([mkShopProduct({ id: "water" }), mkShopProduct({ id: "supp" })]);
+  }
+
+  V.screens.market = function () {
+    var m = V.marketState();
+    function money(n) { return "₾" + n; }
+    function nm(x) { return typeof x === "string" ? x : L(x); }
+    var stageKeys = ["mkStageConfirmed", "mkStagePreparing", "mkStageDispatched", "mkStageOntheway", "mkStageDelivered"];
+
+    function offerCard(o) {
+      var disc = discText(o.discount);
+      var actLabel = o.action === "refill" ? t("mkActRefill") : o.action === "book" ? t("mkActBook") : o.action === "redeem" ? t("mkActRedeem") : t("mkActShop");
+      return '<div class="mk-offer' + (o.sponsored ? " spon" : "") + '">' +
+        '<div class="mk-offer__h">' + V.iconBox(o.icon, o.tone) +
+          '<div class="mk-offer__t"><b>' + L(o.title) + (o.sponsored ? ' <i class="mk-spon">' + t("mkSponsored") + "</i>" : "") + "</b><small>" + L(o.sub) + "</small></div>" +
+          (disc ? '<span class="mk-offer__disc">' + disc + "</span>" : "") + "</div>" +
+        '<div class="mk-why">' + V.icon("info") + "<span><i>" + t("mkWhy") + ":</i> " + L(o.reason) + "</span></div>" +
+        '<button class="btn btn-primary mk-act" data-offer="' + o.id + '">' + actLabel + "</button></div>";
+    }
+    function codeRow(r) {
+      var p = V.partnerById(r.partner) || {}, booked = r.action === "book";
+      return '<div class="mk-code">' + V.iconBox(p.icon || "sparkle", p.tone || "green") +
+        '<div class="mk-code__t"><b>' + L(r.title) + "</b><small>" + (booked ? t("mkBooked") : t("mkShowAtPartner")) + "</small></div>" +
+        (booked ? '<span class="mk-code__c ok">' + t("mkBooked") + "</span>" : '<span class="mk-code__c">' + r.code + "</span>") + "</div>";
+    }
+    function orderRow(o) {
+      var stage = V.orderStage(o), delivered = stage >= 4, qty = o.items.reduce(function (a, c) { return a + c.qty; }, 0);
+      return '<button class="mk-order" data-track="' + o.id + '">' + V.iconBox("pill", "crimson") +
+        '<div class="mk-order__t"><b>' + t("mkItems", { n: qty }) + " · " + money(o.total) + "</b><small>" + (delivered ? t("mkStageDelivered") : t(stageKeys[stage])) + "</small></div>" +
+        (delivered ? '<span class="mk-code__c ok">✓</span>' : V.icon("next")) + "</button>";
+    }
+    function prodRow(p) {
+      var inCart = (m.cart || []).filter(function (c) { return c.id === p.id; })[0];
+      return '<div class="mk-prod"><div class="mk-prod__t"><b>' + nm(p.name) + "</b><small>" + money(p.price) + "</small></div>" +
+        (inCart ? '<span class="mk-prod__q">×' + inCart.qty + "</span>" : "") +
+        '<button class="mk-prod__add" data-add="' + p.id + '">' + V.icon("plus") + "</button></div>";
+    }
+    function cartRow(c) {
+      return '<div class="mk-crow"><div class="mk-crow__t"><b>' + nm(c.name) + "</b><small>" + money(c.price) + "</small></div>" +
+        '<div class="mk-qty"><button data-q="' + c.id + '|-1">−</button><span>' + c.qty + '</span><button data-q="' + c.id + '|1">+</button></div>' +
+        '<button class="mk-crow__x" data-rm="' + c.id + '">' + V.icon("x") + "</button></div>";
+    }
+
+    function homeView() {
+      var offs = V.offers(), optedOut = m.offersOptIn === false;
+      var active = (m.orders || []).filter(function (o) { return V.orderStage(o) < 4; })[0];
+      var h = '<p class="s-sub">' + t("mkSub") + "</p>";
+      if (active) h += '<button class="mk-trackbar" data-track="' + active.id + '">' + V.iconBox("location", "crimson") + '<span class="mk-trackbar__t"><b>' + t("mkTrack") + "</b><small>" + t("mkEtaMin", { n: active.etaMin }) + "</small></span>" + V.icon("next") + "</button>";
+      if (optedOut) {
+        h += '<div class="mk-optout">' + V.icon("info") + "<p>" + t("mkOptOut") + '</p><button class="btn btn-primary" id="mkOptIn">' + t("mkOptInBtn") + "</button></div>";
+      } else {
+        h += '<div class="section-head"><h3>' + t("mkForYou") + "</h3></div>";
+        h += offs.length ? offs.map(offerCard).join("") : '<p class="md-empty">' + t("mkNoOffers") + "</p>";
+      }
+      if ((m.redeemed || []).length) h += '<div class="section-head"><h3>' + t("mkRedeemed") + "</h3></div>" + m.redeemed.slice(0, 5).map(codeRow).join("");
+      if ((m.orders || []).length) h += '<div class="section-head"><h3>' + t("mkOrders") + "</h3></div>" + m.orders.slice(0, 5).map(orderRow).join("");
+      h += '<div class="mk-priv">' + V.icon("shield") + "<span>" + t("mkPrivacy") + "</span></div>";
+      h += '<label class="mk-toggle"><span>' + t("mkOffersOn") + '</span><input type="checkbox" id="mkOffersTgl"' + (optedOut ? "" : " checked") + "></label>";
+      h += '<p class="hr-multi-note">' + t("mkSeam") + "</p>";
+      return h;
+    }
+    function storeView() {
+      var meds = V.refillItems(), addons = V.pharmacyAddOns(), cart = m.cart || [], tot = V.cartTotal();
+      var h = '<p class="s-sub">' + t("mkRefillSub") + "</p>";
+      h += '<div class="note-warn">' + V.icon("info") + " " + t("mkRxNote") + "</div>";
+      h += '<div class="section-head"><h3>' + t("mkYourMeds") + "</h3></div>";
+      h += meds.length ? meds.map(prodRow).join("") : '<div class="mk-nomeds"><p class="md-empty">' + t("mkNoMeds") + '</p><button class="btn btn-ghost" data-go2="meds">' + V.icon("plus") + " " + t("mkAddMeds") + "</button></div>";
+      h += '<div class="section-head"><h3>' + t("mkAddOns") + "</h3></div>" + addons.map(prodRow).join("");
+      h += '<div class="section-head"><h3>' + t("mkCart") + (cart.length ? " · " + V.cartCount() : "") + "</h3></div>";
+      if (!cart.length) { h += '<p class="md-empty">' + t("mkEmpty") + "</p>"; return h; }
+      h += '<div class="mk-cart">' + cart.map(cartRow).join("") + "</div>";
+      h += '<div class="mk-totals"><div><span>' + t("mkSubtotal") + "</span><b>" + money(tot.sub) + "</b></div>" +
+        "<div><span>" + t("mkDelivery") + "</span><b>" + (tot.delivery ? money(tot.delivery) : t("mkFree")) + "</b></div>" +
+        '<div class="mk-totals__g"><span>' + t("mkTotal") + "</span><b>" + money(tot.total) + "</b></div></div>";
+      h += '<div class="mk-couriers"><div class="kicker">' + t("mkChooseCourier") + '</div><div class="mk-courier-row">' +
+        V.COURIERS.map(function (c) { return '<button class="mk-courier' + (marketCourier === c.id ? " sel" : "") + '" data-courier="' + c.id + '">' + nm(c.name) + "<small>~" + c.etaMin + "წთ</small></button>"; }).join("") + "</div></div>";
+      h += '<button class="btn btn-primary" id="mkCheckout" style="width:100%;margin-top:12px">' + t("mkCheckout") + " · " + money(tot.total) + "</button>";
+      h += '<p class="hr-multi-note">' + t("mkPayNote") + "</p>";
+      return h;
+    }
+    function trackView() {
+      var o = (m.orders || []).filter(function (x) { return x.id === marketTrackId; })[0] || (m.orders || [])[0];
+      if (!o) { marketView = "home"; return homeView(); }
+      var stage = V.orderStage(o);
+      var h = '<div class="mk-track" id="mkTrack" data-order="' + o.id + '">';
+      h += '<div class="mk-track__hd">' + V.iconBox("location", "crimson") + "<div><b>" + (stage >= 4 ? t("mkStageDelivered") : t("mkEtaMin", { n: o.etaMin })) + "</b><small>" + t("mkViaCourier", { c: nm(o.courierName) }) + "</small></div></div>";
+      h += '<div class="mk-steps">' + stageKeys.map(function (k, i) {
+        return '<div class="mk-step' + (i < stage ? " done" : i === stage ? " active" : "") + '" data-step="' + i + '"><span class="mk-step__dot">' + (i < stage ? "✓" : (i + 1)) + "</span><b>" + t(k) + "</b></div>";
+      }).join("") + "</div>";
+      h += '<div class="mk-track__items">' + o.items.map(function (c) { return '<div class="mk-trow"><span>' + nm(c.name) + " ×" + c.qty + "</span><b>" + money(c.price * c.qty) + "</b></div>"; }).join("") +
+        '<div class="mk-trow mk-trow__g"><span>' + t("mkTotal") + "</span><b>" + money(o.total) + "</b></div></div>";
+      h += '<p class="hr-multi-note">' + t("mkSeam") + "</p></div>";
+      return h;
+    }
+
+    var body = marketView === "cart" ? storeView() : marketView === "track" ? trackView() : homeView();
+    var title = marketView === "cart" ? t("mkCart") : marketView === "track" ? t("mkTrack") : t("mkTitle");
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + title + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        body +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { if (marketView !== "home") { marketView = "home"; V.render(); } else V.go("home"); });
+        each("[data-go2]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go2")); }); });
+        var oi = $("#mkOptIn"); if (oi) oi.addEventListener("click", function () { V.setOffersOptIn(true); V.render(); });
+        var tg = $("#mkOffersTgl"); if (tg) tg.addEventListener("change", function () { V.setOffersOptIn(tg.checked); V.render(); });
+        each("[data-offer]", function (b) { b.addEventListener("click", function () {
+          var o = V.offers().filter(function (x) { return x.id === b.getAttribute("data-offer"); })[0]; if (!o) return;
+          if (o.action === "refill") { marketView = "cart"; V.render(); return; }
+          if (o.action === "shop") { var p = mkShopProduct(o); if (p) V.cartAdd(p); marketView = "cart"; V.render(); return; }
+          V.redeemOffer(o); V.toast && V.toast(o.action === "book" ? t("mkBooked") : t("mkCodeReady")); V.render();
+        }); });
+        each("[data-track]", function (b) { b.addEventListener("click", function () { marketTrackId = b.getAttribute("data-track"); marketView = "track"; V.render(); }); });
+        each("[data-add]", function (b) { b.addEventListener("click", function () {
+          var item = mkAllProducts().filter(function (p) { return p && p.id === b.getAttribute("data-add"); })[0];
+          if (item) { V.cartAdd(item); V.toast && V.toast(t("mkAdd")); V.render(); }
+        }); });
+        each("[data-q]", function (b) { b.addEventListener("click", function () { var p = b.getAttribute("data-q").split("|"); V.cartQty(p[0], parseInt(p[1], 10)); V.render(); }); });
+        each("[data-rm]", function (b) { b.addEventListener("click", function () { V.cartRemove(b.getAttribute("data-rm")); V.render(); }); });
+        each("[data-courier]", function (b) { b.addEventListener("click", function () { marketCourier = b.getAttribute("data-courier"); V.render(); }); });
+        var co = $("#mkCheckout"); if (co) co.addEventListener("click", function () { var ord = V.placeOrder("pharma", marketCourier); if (ord) { marketTrackId = ord.id; marketView = "track"; V.toast && V.toast(t("mkOrderPlaced")); V.render(); } });
+        if (marketView === "track") {
+          var node = document.getElementById("mkTrack");
+          if (node) {
+            var oid = node.getAttribute("data-order");
+            var iv = setInterval(function () {
+              var n = document.getElementById("mkTrack");
+              if (!alive(n)) { clearInterval(iv); return; }
+              var o = (V.marketState().orders || []).filter(function (x) { return x.id === oid; })[0];
+              if (!o) { clearInterval(iv); return; }
+              var stage = V.orderStage(o);
+              n.querySelectorAll(".mk-step").forEach(function (s) {
+                var i = parseInt(s.getAttribute("data-step"), 10);
+                s.className = "mk-step" + (i < stage ? " done" : i === stage ? " active" : "");
+                var dot = s.querySelector(".mk-step__dot"); if (dot) dot.textContent = i < stage ? "✓" : (i + 1);
+              });
+              if (stage >= 4) { var hd = n.querySelector(".mk-track__hd b"); if (hd) hd.textContent = t("mkStageDelivered"); clearInterval(iv); }
+            }, 1200);
+          }
+        }
+      } }
+    );
+  };
+
   // AI intelligence flagship card — shows the top insight
   V.coachHomeCard = function () {
     var ins = V.insights ? V.insights() : [];

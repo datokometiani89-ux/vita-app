@@ -276,6 +276,7 @@ window.VITA = window.VITA || {};
   // each widget renders via V[card]() and wires via V[wire](); kicker = optional label above
   V.HOME_WIDGETS = [
     { id: "coach", key: "hwCoach", card: "coachHomeCard", wire: "wireCoachHome", kicker: "coTitle" },
+    { id: "offers", key: "hwOffers", card: "offersHomeCard", wire: "wireOffersHome", kicker: "mkForYou" },
     { id: "scan", key: "hwScan", card: "scanHomeCard", wire: "wireScanHome", kicker: "scnTitle" },
     { id: "today", key: "hwToday", card: "todayMini", wire: "wireTodayMini", kicker: "todayK" },
     { id: "meds", key: "hwMeds", card: "medsHomeCard", wire: "wireMedsHome" },
@@ -288,7 +289,7 @@ window.VITA = window.VITA || {};
     { id: "garden", key: "hwGarden", card: "gardenHomeCard", wire: "wireGardenHome" },
   ];
   V.homeWidget = function (id) { return V.HOME_WIDGETS.filter(function (w) { return w.id === id; })[0]; };
-  V.homeCardsDefault = function () { return { order: ["coach", "scan", "today", "meds", "water", "steps", "food", "mood", "readiness", "bio", "garden"], hidden: { bio: true, garden: true } }; };
+  V.homeCardsDefault = function () { return { order: ["coach", "offers", "scan", "today", "meds", "water", "steps", "food", "mood", "readiness", "bio", "garden"], hidden: { bio: true, garden: true } }; };
   // merge saved prefs with the registry so newly-added widgets always appear
   V.homeCardsPrefs = function () {
     var d = V.homeCardsDefault(), p = V.state.homeCards || {};
@@ -401,6 +402,181 @@ window.VITA = window.VITA || {};
 
     var rank = { high: 0, med: 1, low: 2, good: 3 };
     return out.sort(function (a, b) { return rank[a.sev] - rank[b.sev]; });
+  };
+
+  /* ===================== SMART MARKETPLACE (Big-Data commerce) =====================
+     The monetisation flywheel: health signals → contextual partner offers. VITA knows
+     the user's state, so offers are relevant → high conversion → partners pay
+     commission / booking-fee / sponsored placement. Fulfilment (delivery) routes to a
+     real COURIER integration seam (Wolt Drive / Glovo / Bolt / pharmacy fleet) — demo
+     tracking here, real = each courier's dispatch API.
+     ETHICS (hard rules): every offer carries a "why you see this" reason; personalized
+     offers are opt-out (state.market.offersOptIn); pharmacy is REFILL-ONLY of already
+     prescribed meds (never a new Rx); no dark-pattern upsell in low-mood states; no
+     individual health data is ever sold — aggregate only (that's org.html). */
+  V.PARTNERS = [
+    { id: "pharma", cat: "pharmacy", name: { ka: "VITA აფთიაქი", en: "VITA Pharmacy" }, icon: "pill", tone: "crimson", courier: true },
+    { id: "cafe", cat: "cafe", name: { ka: "Coffee LAB", en: "Coffee LAB" }, icon: "bolt", tone: "yellow", courier: true },
+    { id: "gym", cat: "gym", name: { ka: "Sport+ დარბაზი", en: "Sport+ Gym" }, icon: "walk", tone: "green" },
+    { id: "lab", cat: "lab", name: { ka: "Synevo ლაბორატორია", en: "Synevo Lab" }, icon: "flask", tone: "blue" },
+    { id: "clinic", cat: "clinic", name: { ka: "VITA კლინიკა", en: "VITA Clinic" }, icon: "stethoscope", tone: "crimson" },
+    { id: "therapy", cat: "therapy", name: { ka: "Mindful ცენტრი", en: "Mindful Center" }, icon: "brain", tone: "pink" },
+    { id: "water", cat: "grocery", name: { ka: "Aqua მიტანა", en: "Aqua Delivery" }, icon: "drop", tone: "blue", courier: true },
+    { id: "supp", cat: "supplements", name: { ka: "VITA Vitamins", en: "VITA Vitamins" }, icon: "capsule", tone: "green", courier: true },
+    { id: "meal", cat: "mealkit", name: { ka: "FreshBox კვება", en: "FreshBox Meals" }, icon: "food", tone: "yellow", courier: true },
+    { id: "insurer", cat: "insurance", name: { ka: "VITA Insurance", en: "VITA Insurance" }, icon: "shield", tone: "blue" },
+  ];
+  V.partnerById = function (id) { return V.PARTNERS.filter(function (p) { return p.id === id; })[0] || null; };
+
+  // Real fulfilment routes to one of these couriers (integration seam — demo dispatch here).
+  V.COURIERS = [
+    { id: "wolt", name: "Wolt Drive", etaMin: 35 },
+    { id: "glovo", name: "Glovo", etaMin: 40 },
+    { id: "bolt", name: "Bolt Food", etaMin: 30 },
+    { id: "fleet", name: { ka: "აფთიაქის კურიერი", en: "Pharmacy fleet" }, etaMin: 45 },
+  ];
+
+  // The offers engine — health signals → ranked, contextual offers (mirrors V.insights()).
+  // Each offer: { id, partner, icon, tone, prio(1 high..3 low), title, sub, reason("why you see this"),
+  //   discount, action: refill|book|redeem|shop, route?, points, sponsored? }
+  V.offers = function () {
+    var m = V.state.market || {};
+    if (m.offersOptIn === false) return [];           // user opted out of personalized offers
+    var s = V.healthSignals(), out = [], plus = V.isPlus && V.isPlus();
+    function add(o) { out.push(o); }
+
+    // 1) meds on file → pharmacy refill + courier (the flagship commerce path)
+    if (s.meds > 0)
+      add({ id: "rx", partner: "pharma", icon: "pill", tone: "crimson", prio: 1, courier: true,
+        title: { ka: "წამლის შევსება — კურიერით", en: "Refill your meds — by courier" },
+        sub: { ka: "VITA აფთიაქი · " + (plus ? "უფასო მიტანა" : "მიტანა 40 წთ-ში"), en: "VITA Pharmacy · " + (plus ? "free delivery" : "delivered in ~40 min") },
+        reason: { ka: s.meds + " აქტიური წამალი გაქვს პროფილში", en: "You have " + s.meds + " active meds on file" },
+        action: "refill", route: "market", points: 8 });
+
+    // 2) low energy (poor sleep OR low readiness) → coffee discount
+    if ((s.sleepAvg != null && s.sleepAvg < 6.2) || (s.readiness != null && s.readiness < 55))
+      add({ id: "coffee", partner: "cafe", icon: "bolt", tone: "yellow", prio: 2,
+        title: { ka: "ენერგია დაბალია — ყავა -20%", en: "Low on energy — coffee -20%" },
+        sub: { ka: "Coffee LAB · დღეს მოქმედებს", en: "Coffee LAB · valid today" },
+        reason: s.readiness != null && s.readiness < 55
+          ? { ka: "მზაობა " + s.readiness + "/100 — ენერგია დაბალია", en: "Readiness " + s.readiness + "/100 — energy is low" }
+          : { ka: "ბოლო ღამეებში ცოტა გეძინა", en: "You've been sleeping short lately" },
+        discount: "-20%", action: "redeem", points: 4 });
+
+    // 3) inactivity → gym discount
+    if (s.inactiveDays >= 5 && s.inactiveDays < 9000)
+      add({ id: "gym", partner: "gym", icon: "walk", tone: "green", prio: 2,
+        title: { ka: "დაბრუნდი მოძრაობაში — ჯიმი -30%", en: "Get moving — gym -30%" },
+        sub: { ka: "Sport+ · პირველი თვე", en: "Sport+ · first month" },
+        reason: { ka: s.inactiveDays + " დღეა აქტიურად არ ყოფილხარ", en: s.inactiveDays + " days without real activity" },
+        discount: "-30%", action: "book", points: 10 });
+
+    // 4) BP elevated → discounted cardiologist visit
+    var bpArr = (V.state.wellness && V.state.wellness.bp) || [], lastBp = bpArr[bpArr.length - 1];
+    if (lastBp && V.daysSince(lastBp.date) <= 45 && (lastBp.sys >= 140 || lastBp.dia >= 90))
+      add({ id: "cardio", partner: "clinic", icon: "heart", tone: "crimson", prio: 1,
+        title: { ka: "კარდიოლოგთან ვიზიტი -25%", en: "Cardiologist visit -25%" },
+        sub: { ka: "VITA კლინიკა · ონლაინ ან ადგილზე", en: "VITA Clinic · online or in person" },
+        reason: { ka: "ბოლო წნევა " + lastBp.sys + "/" + lastBp.dia + " — მაღალია", en: "Last BP " + lastBp.sys + "/" + lastBp.dia + " — elevated" },
+        discount: "-25%", action: "book", points: 12 });
+
+    // 5) labs overdue → discounted lab panel
+    if (s.labDays == null || s.labDays > 180)
+      add({ id: "lab", partner: "lab", icon: "flask", tone: "blue", prio: 2,
+        title: { ka: "სისხლის ანალიზი -25%", en: "Blood panel -25%" },
+        sub: { ka: "Synevo · სახლში აღება შესაძლებელია", en: "Synevo · home sample available" },
+        reason: s.labDays == null ? { ka: "ჯერ არ გაგიკეთებია ანალიზი", en: "No labs on record yet" } : { ka: "ბოლო ანალიზიდან " + Math.round(s.labDays / 30) + " თვეა", en: Math.round(s.labDays / 30) + " months since your last panel" },
+        discount: "-25%", action: "book", points: 10 });
+
+    // 6) low mood → therapy (gentle, no upsell pressure) — first session free
+    if (s.moodAvg != null && s.moodAvg < 2.6 && s.moodN >= 3)
+      add({ id: "therapy", partner: "therapy", icon: "brain", tone: "pink", prio: 2,
+        title: { ka: "პირველი ფსიქოლოგის სესია უფასოდ", en: "First therapy session free" },
+        sub: { ka: "Mindful ცენტრი · კონფიდენციალური", en: "Mindful Center · confidential" },
+        reason: { ka: "ბოლო დღეებში განწყობა დაბალია", en: "Your mood has been low lately" },
+        discount: { ka: "უფასო", en: "Free" }, action: "book", points: 12 });
+
+    // 7) hydration low → water delivery
+    if (s.water < s.waterGoal * 0.5 && new Date().getHours() >= 14)
+      add({ id: "water", partner: "water", icon: "drop", tone: "blue", prio: 3, courier: true,
+        title: { ka: "წყლის მიტანა -15%", en: "Water delivery -15%" },
+        sub: { ka: "Aqua · 19ლ ბუტილი სახლში", en: "Aqua · 19L bottle to your door" },
+        reason: { ka: "დღეს ნორმაზე ცოტა წყალი დალიე", en: "You're under your water goal today" },
+        discount: "-15%", action: "shop", points: 4 });
+
+    // 8) positive: bio-age improving → insurance cashback (B2B2C reward loop)
+    if (s.bio && s.bio.delta < 0)
+      add({ id: "insure", partner: "insurer", icon: "shield", tone: "blue", prio: 3,
+        title: { ka: "ჯანსაღი ქცევა — დაზღვევის cashback", en: "Healthy behaviour — insurance cashback" },
+        sub: { ka: "VITA Insurance · პრემიის -10%", en: "VITA Insurance · -10% premium" },
+        reason: { ka: "ბიო-ასაკი რეალურზე დაბალია (" + s.bio.delta + ")", en: "Bio-age below your real age (" + s.bio.delta + ")" },
+        discount: "-10%", action: "book", points: 6 });
+
+    // 9) evergreen sponsored — supplements (always last, clearly labelled)
+    add({ id: "supp", partner: "supp", icon: "capsule", tone: "green", prio: 4, sponsored: true, courier: true,
+      title: { ka: "D ვიტამინი და ომეგა-3", en: "Vitamin D & Omega-3" },
+      sub: { ka: "VITA Vitamins · " + (plus ? "-20% VITA+-ით" : "-10%"), en: "VITA Vitamins · " + (plus ? "-20% with VITA+" : "-10%") },
+      reason: { ka: "პოპულარული VITA-ს მომხმარებლებში", en: "Popular with VITA users" },
+      discount: plus ? "-20%" : "-10%", action: "shop", points: 4 });
+
+    out.sort(function (a, b) { return (a.prio - b.prio) || (a.sponsored ? 1 : 0) - (b.sponsored ? 1 : 0); });
+    return out;
+  };
+
+  // ---- Cart + orders + courier tracking (demo) ----
+  V.marketState = function () { var m = V.state.market = V.state.market || {}; m.orders = m.orders || []; m.redeemed = m.redeemed || []; m.cart = m.cart || []; if (m.offersOptIn == null) m.offersOptIn = true; return m; };
+  V.setOffersOptIn = function (on) { V.marketState().offersOptIn = !!on; V.save(); };
+
+  // pharmacy refill catalogue = the user's own meds (refill-only) + a couple of add-ons
+  V.refillItems = function () {
+    var meds = (V.userMeds ? V.userMeds() : []).map(function (mm, i) {
+      return { id: "rx-" + (mm.id || i), name: mm.name + (mm.dose ? " " + mm.dose : ""), price: 8 + (i % 3) * 4, rx: true };
+    });
+    return meds;
+  };
+  V.pharmacyAddOns = function () {
+    var plus = V.isPlus && V.isPlus();
+    return [
+      { id: "ao-vitd", name: { ka: "D ვიტამინი 2000IU", en: "Vitamin D 2000IU" }, price: 14 },
+      { id: "ao-omega", name: { ka: "ომეგა-3", en: "Omega-3" }, price: 22 },
+      { id: "ao-mag", name: { ka: "მაგნიუმი", en: "Magnesium" }, price: 16 },
+      { id: "ao-mask", name: { ka: "სამედიცინო ნიღბები (10)", en: "Medical masks (10)" }, price: 6 },
+    ].map(function (x) { x.plus = plus; return x; });
+  };
+  V.cartAdd = function (item) { var m = V.marketState(); var ex = m.cart.filter(function (c) { return c.id === item.id; })[0]; if (ex) ex.qty++; else m.cart.push({ id: item.id, name: item.name, price: item.price, rx: !!item.rx, qty: 1 }); V.save(); };
+  V.cartRemove = function (id) { var m = V.marketState(); m.cart = m.cart.filter(function (c) { return c.id !== id; }); V.save(); };
+  V.cartQty = function (id, d) { var m = V.marketState(); var c = m.cart.filter(function (x) { return x.id === id; })[0]; if (!c) return; c.qty = Math.max(0, c.qty + d); if (!c.qty) V.cartRemove(id); V.save(); };
+  V.cartCount = function () { return (V.marketState().cart || []).reduce(function (a, c) { return a + c.qty; }, 0); };
+  V.cartTotal = function () { var plus = V.isPlus && V.isPlus(); var sub = (V.marketState().cart || []).reduce(function (a, c) { return a + c.price * c.qty; }, 0); var delivery = plus ? 0 : (sub > 0 ? 3 : 0); return { sub: sub, delivery: delivery, total: sub + delivery, freeDelivery: plus }; };
+
+  // place an order → assigns a courier, timestamps it; status is derived from elapsed time
+  V.placeOrder = function (partnerId, courierId) {
+    var m = V.marketState(), cart = m.cart.slice(); if (!cart.length) return null;
+    var tot = V.cartTotal(), courier = V.COURIERS.filter(function (c) { return c.id === courierId; })[0] || V.COURIERS[0];
+    var order = { id: "ord-" + Date.now(), partner: partnerId || "pharma", items: cart, total: tot.total,
+      courier: courier.id, courierName: typeof courier.name === "string" ? courier.name : courier.name, etaMin: courier.etaMin, placedTs: Date.now(), placedISO: V.todayISO() };
+    m.orders.unshift(order); m.cart = []; V.save();
+    if (V.awardOnce) V.awardOnce("order:" + order.placedISO, V.POINTS.booking || 20, "Marketplace order");
+    return order;
+  };
+  // demo courier stages derived from elapsed seconds (gives a live, ticking feel)
+  V.ORDER_STAGES = ["confirmed", "preparing", "dispatched", "ontheway", "delivered"];
+  V.orderStage = function (order) {
+    if (!order || !order.placedTs) return 4;
+    var el = (Date.now() - order.placedTs) / 1000;        // demo: compress the whole trip into ~36s
+    if (el < 6) return 0; if (el < 14) return 1; if (el < 22) return 2; if (el < 36) return 3; return 4;
+  };
+
+  // Redeem a non-delivery offer (discount code for café/gym/lab/clinic/etc.)
+  V.redeemOffer = function (offer) {
+    var m = V.marketState();
+    var code = "VITA-" + String(Date.now()).slice(-5);
+    var rec = { id: offer.id, partner: offer.partner, code: code, date: V.todayISO(), ts: Date.now(),
+      title: offer.title, discount: offer.discount, action: offer.action };
+    m.redeemed.unshift(rec); if (m.redeemed.length > 40) m.redeemed.length = 40;
+    V.save();
+    if (V.awardOnce && offer.points) V.awardOnce("offer:" + offer.id + ":" + rec.date, offer.points, "Offer: " + (offer.title.en || ""));
+    return rec;
   };
 
   // Longevity forecast — projects bio-age 10y out at the current aging rate, and
