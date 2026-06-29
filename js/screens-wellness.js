@@ -413,6 +413,82 @@
     };
   }
 
+  /* ===================== AI HEALTH INTELLIGENCE HUB (#/coach) ===================== */
+  V.screens.coach = function () {
+    var ins = V.insights(), s = V.healthSignals();
+    var sevTone = { high: "crimson", med: "yellow", low: "blue", good: "green" };
+    var actionable = ins.filter(function (i) { return i.sev !== "good"; });
+
+    function insightCard(it) {
+      return '<div class="ai-ins ai-ins--' + it.sev + '">' +
+        '<div class="ai-ins__h">' + V.iconBox(it.icon, sevTone[it.sev]) +
+          '<div class="ai-ins__t"><b>' + L(it.title) + "</b><p>" + L(it.detail) + "</p></div></div>" +
+        (it.cta && it.route ? '<button class="ai-ins__cta" data-go="' + it.route + '">' + L(it.cta) + " " + V.icon("next") + "</button>" : "") +
+        "</div>";
+    }
+    function overview() {
+      var rows = [
+        ["bolt", t("ovReadiness"), s.readiness != null ? s.readiness + "/100" : "—"],
+        ["heart", t("ovScan"), s.scanScore != null ? s.scanScore + (s.scanDays != null ? " · " + s.scanDays + "d" : "") : "—"],
+        ["moon", t("ovSleep"), s.sleepAvg != null ? s.sleepAvg.toFixed(1) + (V.lang() === "ka" ? "სთ" : "h") : "—"],
+        ["brain", t("ovMood"), s.moodAvg != null ? s.moodAvg.toFixed(1) + "/5" : "—"],
+        ["pill", t("ovMeds"), s.meds ? s.meds + (s.medsDue ? " · " + s.medsDue : "") : "—"],
+        ["walk", t("ovActive"), s.inactiveDays < 9000 ? s.inactiveDays + "d" : "—"],
+        ["flask", t("ovLabs"), s.labDays != null ? Math.round(s.labDays / 30) + (V.lang() === "ka" ? "თვე" : "mo") : "—"],
+        ["sparkle", t("ovBio"), s.bio ? s.bio.bio : "—"],
+      ];
+      return '<div class="ai-ov">' + rows.map(function (r) {
+        return '<div class="ai-ov__c">' + V.icon(r[0]) + "<b>" + r[2] + "</b><small>" + r[1] + "</small></div>";
+      }).join("") + "</div>";
+    }
+    function coachOffline() {
+      var ka = V.lang() === "ka", top = actionable.slice(0, 3);
+      if (!top.length) return ka ? "ყველა სიგნალი კარგ დიაპაზონშია — განაგრძე იგივე რეჟიმი. დაამატე მეტი მონაცემი (სკანი, ძილი, განწყობა) უფრო ზუსტი ანალიზისთვის." : "All signals look good — keep your routine. Add more data (scan, sleep, mood) for sharper analysis.";
+      return (ka ? "მთავარი, რასაც მონაცემები ერთად ამბობს: " : "What your data says together: ") + top.map(function (i) { return L(i.title).toLowerCase(); }).join("; ") + ". " + (ka ? "დაიწყე ზემოთ მონიშნული ნაბიჯებიდან." : "Start with the items above.");
+    }
+    function runCoachAI() {
+      var out = $("#coAiOut"); if (!out) return;
+      out.innerHTML = '<div class="scn-rep-load">' + V.icon("sparkle") + " " + t("coAiRunning") + "</div>";
+      var done = false;
+      function offline() { if (done) return; done = true; out.innerHTML = '<div class="card-soft ai-narr fade-in">' + V.icon("sparkle") + "<p>" + esc(coachOffline()) + "</p></div>"; }
+      if (!V.api || !V.api.chat) { offline(); return; }
+      var ka = V.lang() === "ka";
+      var prompt = (ka
+        ? "ეს ჩემი ჯანმრთელობის მონაცემების შეჯამებაა: " + V.coachSummaryText() + ". დაწერე მოკლე, თბილი, პერსონალური ანალიზი — დააკავშირე მონაცემები ერთმანეთთან (ძილი↔ენერგია↔განწყობა, წამალი↔აქტივობა) და მომეცი 2-3 კონკრეტული რჩევა. არ ხარ ექიმი, დიაგნოზს ნუ დასვამ. ქართულად, მოკლედ."
+        : "Here is my health-data summary: " + V.coachSummaryText() + ". Write a short, warm, personal analysis — connect the dots (sleep↔energy↔mood, meds↔activity) and give 2-3 concrete actions. You are not a doctor; don't diagnose. Be concise.");
+      var acc = "";
+      V.api.ready().then(function (on) {
+        if (!on) { offline(); return; }
+        V.api.chat([{ role: "user", text: prompt }],
+          function (tok, full) { acc = full; if (!done) out.innerHTML = '<div class="card-soft ai-narr fade-in">' + V.icon("sparkle") + "<p>" + esc(full) + "</p></div>"; },
+          function (full) { if (done) return; var r = (full || acc || "").trim(); if (!r) { offline(); return; } done = true; out.innerHTML = '<div class="card-soft ai-narr fade-in">' + V.icon("sparkle") + "<p>" + esc(r) + "</p></div>"; },
+          function () {}).catch(offline);
+      }).catch(offline);
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        head("sparkle", "green", "coTitle") +
+        '<p class="s-sub">' + t("coSub") + "</p>" +
+        '<div class="card-soft ai-headline">' + V.iconBox("sparkle", "green") +
+          "<div><b>" + (actionable.length ? t("coHeadline", { n: actionable.length }) : t("coHeadlineGood")) + "</b><small>" + esc(V.coachSummaryText()) + "</small></div></div>" +
+        '<button class="btn btn-primary" id="coAi" style="width:100%;margin:4px 0 16px">' + V.icon("sparkle") + " " + t("coAiCta") + "</button>" +
+        '<div id="coAiOut"></div>' +
+        '<div class="section-head"><h3>' + t("coInsights") + "</h3></div>" +
+        (ins.length ? ins.map(insightCard).join("") : '<p class="md-empty">' + t("coNone") + "</p>") +
+        '<div class="section-head"><h3>' + t("coOverview") + "</h3></div>" +
+        overview() +
+        '<p class="hr-multi-note">' + t("coDisc") + "</p>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        backX();
+        each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
+        var ai = $("#coAi"); if (ai) ai.addEventListener("click", runCoachAI);
+      } }
+    );
+  };
+
   V.screens.symptom = function () {
     var lastSyText = "";
     var CHIPS = [
@@ -3827,6 +3903,17 @@
       '<span class="stp-home__t"><b>' + h.bio + " " + t("haYears") + '</b><small>' + t("haBioAge") + " · " + (h.delta > 0 ? "+" : "") + h.delta + "</small></span>" + V.icon("next") + "</button>";
   };
   V.wireBioHome = function () { var c = document.getElementById("bioHome"); if (c) c.addEventListener("click", function () { V.go("fullscan"); }); };
+  // AI intelligence flagship card — shows the top insight
+  V.coachHomeCard = function () {
+    var ins = V.insights ? V.insights() : [];
+    var actionable = ins.filter(function (i) { return i.sev !== "good"; });
+    var top = actionable[0] || ins[0];
+    return '<button class="card-soft co-home" id="coachHome">' + V.iconBox("sparkle", "green") +
+      '<span class="co-home__t"><b>' + t("coHomeTitle") + "</b><small>" +
+        (top ? (actionable.length ? t("coHomeN", { n: actionable.length }) + " · " + L(top.title) : L(top.title)) : t("coHomeReady")) +
+      "</small></span>" + V.icon("next") + "</button>";
+  };
+  V.wireCoachHome = function () { var c = document.getElementById("coachHome"); if (c) c.addEventListener("click", function () { V.go("coach"); }); };
 
   /* ---------- small shared helpers for the new screens ---------- */
   function head(icon, tone, titleKey) {

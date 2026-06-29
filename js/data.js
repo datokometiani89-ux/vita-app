@@ -275,6 +275,7 @@ window.VITA = window.VITA || {};
   /* ---------- Home widgets (customizable cards) ---------- */
   // each widget renders via V[card]() and wires via V[wire](); kicker = optional label above
   V.HOME_WIDGETS = [
+    { id: "coach", key: "hwCoach", card: "coachHomeCard", wire: "wireCoachHome", kicker: "coTitle" },
     { id: "scan", key: "hwScan", card: "scanHomeCard", wire: "wireScanHome", kicker: "scnTitle" },
     { id: "today", key: "hwToday", card: "todayMini", wire: "wireTodayMini", kicker: "todayK" },
     { id: "meds", key: "hwMeds", card: "medsHomeCard", wire: "wireMedsHome" },
@@ -287,7 +288,7 @@ window.VITA = window.VITA || {};
     { id: "garden", key: "hwGarden", card: "gardenHomeCard", wire: "wireGardenHome" },
   ];
   V.homeWidget = function (id) { return V.HOME_WIDGETS.filter(function (w) { return w.id === id; })[0]; };
-  V.homeCardsDefault = function () { return { order: ["scan", "today", "meds", "water", "steps", "food", "mood", "readiness", "bio", "garden"], hidden: { bio: true, garden: true } }; };
+  V.homeCardsDefault = function () { return { order: ["coach", "scan", "today", "meds", "water", "steps", "food", "mood", "readiness", "bio", "garden"], hidden: { bio: true, garden: true } }; };
   // merge saved prefs with the registry so newly-added widgets always appear
   V.homeCardsPrefs = function () {
     var d = V.homeCardsDefault(), p = V.state.homeCards || {};
@@ -296,6 +297,117 @@ window.VITA = window.VITA || {};
     return { order: order, hidden: p.hidden || d.hidden };
   };
   V.setHomeCards = function (prefs) { V.state.homeCards = prefs; V.save(); };
+
+  /* ===================== AI HEALTH INTELLIGENCE (unified analysis) =====================
+     One engine that reads ALL the user's data, connects the dots, and surfaces
+     proactive insights + actions. Deterministic (works offline); the screen can
+     also layer an AI narrative on top. */
+  V.daysSince = function (iso) { if (!iso) return 99999; return Math.floor((new Date(V.todayISO()) - new Date(iso)) / 86400000); };
+
+  // gather every signal into one structured snapshot (the "one space")
+  V.healthSignals = function () {
+    var w = V.state.wellness || {}, p = V.state.profile || {};
+    function lastOf(arr) { return arr && arr.length ? arr[arr.length - 1] : null; }
+    // last "active" day = had steps or completed a task
+    var steps = w.steps || {}, doneT = V.state.doneTasks || {};
+    var lastActive = null;
+    for (var i = 0; i < 60; i++) {
+      var d = new Date(V.todayISO()); d.setDate(d.getDate() - i);
+      var iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      if ((steps[iso] || 0) >= 2000 || ((doneT[iso] || []).length > 0)) { lastActive = iso; break; }
+    }
+    // mood 7-day average (1..5)
+    var mood = w.mood || {}, mvals = [];
+    Object.keys(mood).sort().slice(-7).forEach(function (k) { if (mood[k] && mood[k].score) mvals.push(mood[k].score); });
+    var moodAvg = mvals.length ? mvals.reduce(function (a, b) { return a + b; }, 0) / mvals.length : null;
+    // sleep 7-day average hours
+    var sleep = (w.sleep || []).slice(-7), sleepAvg = sleep.length ? sleep.reduce(function (a, s) { return a + (s.hours || 0); }, 0) / sleep.length : null;
+    var scan = lastOf(w.scan), lab = lastOf(V.state.labResults);
+    return {
+      lastActive: lastActive, inactiveDays: lastActive ? V.daysSince(lastActive) : 99999,
+      meds: (V.userMeds ? V.userMeds() : []).length, medsDue: (V.medsDueToday ? V.medsDueToday().length : 0),
+      moodAvg: moodAvg, moodN: mvals.length,
+      sleepAvg: sleepAvg,
+      scanDays: scan ? V.daysSince(scan.date) : null, scanScore: scan ? scan.score : null, hrv: scan ? scan.hrv : null,
+      labDays: lab ? V.daysSince(lab.date) : null,
+      water: V.waterToday ? V.waterToday() : 0, waterGoal: V.waterGoal ? V.waterGoal() : 2500,
+      bio: V.healthAge ? V.healthAge() : null,
+      readiness: V.readiness ? (V.readiness().score) : null,
+    };
+  };
+
+  // the rule engine → prioritised, actionable insights that CONNECT signals
+  V.insights = function () {
+    var s = V.healthSignals(), out = [];
+    function add(sev, icon, title, detail, cta, route) { out.push({ sev: sev, icon: icon, title: title, detail: detail, cta: cta, route: route }); }
+
+    // 1) inactivity (+ tie in meds, like the user's example)
+    if (s.inactiveDays >= 4 && s.inactiveDays < 9000) {
+      var medNote = s.meds ? { ka: " წამლების მიღებისას მოძრაობა განსაკუთრებით მნიშვნელოვანია.", en: " Movement matters even more while you're on medication." } : { ka: "", en: "" };
+      add(s.inactiveDays >= 7 ? "high" : "med", "walk",
+        { ka: s.inactiveDays + " დღეა აქტიურად არ ყოფილხარ", en: s.inactiveDays + " days without real activity" },
+        { ka: "ბოლოს " + s.inactiveDays + " დღის წინ იყავი აქტიური." + medNote.ka, en: "You were last active " + s.inactiveDays + " days ago." + medNote.en },
+        { ka: "დაიწყე ვარჯიში", en: "Start a workout" }, "workouts");
+    }
+    // 2) meds due today
+    if (s.medsDue > 0)
+      add("med", "pill", { ka: "დღეს " + s.medsDue + " წამალი მისაღები გაქვს", en: s.medsDue + " meds to take today" },
+        { ka: "ნუ გამოტოვებ — მონიშნე მიღების შემდეგ.", en: "Don't skip — check them off once taken." }, { ka: "ნახე წამლები", en: "View meds" }, "meds");
+    // 3) mood low (+ correlation with meds)
+    if (s.moodAvg != null && s.moodAvg < 2.6 && s.moodN >= 3)
+      add("med", "brain", { ka: "განწყობა ბოლო დღეებში დაბალია", en: "Your mood has been low lately" },
+        { ka: "საშ. " + s.moodAvg.toFixed(1) + "/5. " + (s.meds ? "თუ წამალს იწყებ ბოლო დროს — ეს შეიძლება დაკავშირებული იყოს; ესაუბრე ექიმს." : "ცოტა მოძრაობა და მზე ეხმარება; საჭიროებისას ესაუბრე VITA-ს."), en: "Avg " + s.moodAvg.toFixed(1) + "/5. " + (s.meds ? "If you recently started a medication this can be related — discuss with your doctor." : "Movement and daylight help; talk to VITA if you need.") },
+        { ka: "ესაუბრე VITA-ს", en: "Talk to VITA" }, "vita");
+    // 4) labs overdue / never
+    if (s.labDays == null || s.labDays > 180)
+      add("med", "flask", { ka: "სისხლის ანალიზი დასაკეთებელია", en: "A blood panel is due" },
+        { ka: s.labDays == null ? "ჯერ არ აგიტვირთავს ანალიზი — საბაზისო სურათისთვის ღირს." : "ბოლო ანალიზიდან " + Math.round(s.labDays / 30) + " თვეა.", en: s.labDays == null ? "No labs yet — a baseline panel is worth doing." : "It's been " + Math.round(s.labDays / 30) + " months since your last panel." },
+        { ka: "დაგეგმე", en: "Plan it" }, "annual");
+    // 5) scan stale / never
+    if (s.scanDays == null || s.scanDays >= 14)
+      add("low", "heart", { ka: "გაიკეთე AI ჯანმრთელობის სკანი", en: "Run an AI health scan" },
+        { ka: s.scanDays == null ? "30 წამში მიიღებ გულის, HRV-ის და სტრესის სურათს." : s.scanDays + " დღეა ბოლო სკანიდან.", en: s.scanDays == null ? "30 seconds for a heart, HRV and stress snapshot." : s.scanDays + " days since your last scan." },
+        { ka: "სკანის გაკეთება", en: "Open scan" }, "scan");
+    // 6) sleep low
+    if (s.sleepAvg != null && s.sleepAvg < 6.2)
+      add("med", "moon", { ka: "ძილი ნაკლებია ნორმაზე", en: "You're sleeping below target" },
+        { ka: "საშ. " + s.sleepAvg.toFixed(1) + " სთ. მიზანი 7–8 სთ — ეს ენერგიასა და განწყობას არეგულირებს.", en: "Avg " + s.sleepAvg.toFixed(1) + "h. Aim for 7–8h — it drives energy and mood." },
+        { ka: "ძილის დღიური", en: "Sleep diary" }, "sleep");
+    // 7) correlation: poor sleep + low readiness
+    if (s.readiness != null && s.readiness < 55 && s.sleepAvg != null && s.sleepAvg < 6.5)
+      add("high", "bolt", { ka: "დაბალი მზაობა — სხეული დასვენებას ითხოვს", en: "Low readiness — your body wants rest" },
+        { ka: "მზაობა " + s.readiness + "/100 + მცირე ძილი. დღეს მსუბუქი დატვირთვა აჯობებს.", en: "Readiness " + s.readiness + "/100 + short sleep. Go lighter today." },
+        { ka: "ნახე მზაობა", en: "View readiness" }, "readiness");
+    // 8) hydration
+    if (s.water < s.waterGoal * 0.5 && new Date().getHours() >= 14)
+      add("low", "drop", { ka: "დღეს ცოტა წყალი დალიე", en: "Low on water today" },
+        { ka: Math.round(s.water / 100) / 10 + "ლ " + s.waterGoal / 1000 + "ლ-დან.", en: (Math.round(s.water / 100) / 10) + "L of " + s.waterGoal / 1000 + "L." }, { ka: "დაამატე", en: "Add" }, "water");
+    // 9) positive reinforcement
+    var streak = V.taskStreak ? V.taskStreak() : 0;
+    if (streak >= 3)
+      add("good", "sparkle", { ka: streak + " დღე ზედიზედ აქტიური ხარ! 🔥", en: streak + "-day active streak! 🔥" },
+        { ka: "შესანიშნავი თანმიმდევრულობა — გააგრძელე.", en: "Great consistency — keep it going." }, null, null);
+    if (s.bio && s.bio.delta < 0)
+      add("good", "heart", { ka: "ბიო-ასაკი ქრონოლოგიურზე დაბალია 🎉", en: "Your bio-age is below your real age 🎉" },
+        { ka: "ბიო-ასაკი " + s.bio.bio + " (" + s.bio.delta + "). განაგრძე იგივე რეჟიმი.", en: "Bio-age " + s.bio.bio + " (" + s.bio.delta + "). Keep your routine." }, null, null);
+
+    var rank = { high: 0, med: 1, low: 2, good: 3 };
+    return out.sort(function (a, b) { return rank[a.sev] - rank[b.sev]; });
+  };
+
+  // plain-text summary of everything — feeds the optional AI narrative
+  V.coachSummaryText = function () {
+    var s = V.healthSignals(), ka = V.lang() === "ka", parts = [];
+    if (s.bio) parts.push((ka ? "ბიო-ასაკი " : "Bio-age ") + s.bio.bio + " (" + (s.bio.delta > 0 ? "+" : "") + s.bio.delta + ")");
+    if (s.readiness != null) parts.push((ka ? "მზაობა " : "Readiness ") + s.readiness + "/100");
+    if (s.scanScore != null) parts.push((ka ? "სკან-ქულა " : "Scan score ") + s.scanScore + (s.hrv ? ", HRV " + s.hrv + "ms" : ""));
+    if (s.sleepAvg != null) parts.push((ka ? "ძილი ~" : "Sleep ~") + s.sleepAvg.toFixed(1) + (ka ? "სთ" : "h"));
+    if (s.moodAvg != null) parts.push((ka ? "განწყობა " : "Mood ") + s.moodAvg.toFixed(1) + "/5");
+    if (s.meds) parts.push((ka ? "წამლები: " : "Meds: ") + s.meds + (s.medsDue ? (ka ? " (დღეს " + s.medsDue + " მისაღები)" : " (" + s.medsDue + " due today)") : ""));
+    parts.push((ka ? "ბოლო აქტივობა " : "Last active ") + (s.inactiveDays < 9000 ? s.inactiveDays + (ka ? " დღის წინ" : "d ago") : (ka ? "უცნობია" : "unknown")));
+    if (s.labDays != null) parts.push((ka ? "ბოლო ანალიზი " : "Last labs ") + s.labDays + (ka ? " დღის წინ" : "d ago"));
+    return parts.join(" · ");
+  };
 
   /* ---------- Plan insights (streak / focus / daily tip) ---------- */
   // consecutive days (up to today) with at least one task done

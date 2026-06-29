@@ -1510,6 +1510,7 @@
           tile("location", "blue", "mVisits", 'data-go="visits"', upVisits || null),
         ]) +
         group("grpAssistant", [
+          tile("sparkle", "green", "mCoach", 'data-go="coach"'),
           tile("chat", "blue", "mChat", 'data-go="vita"'),
           tile("progress", "green", "mProgress", 'data-go="progress"'),
           tile("eye", "blue", "mWellness", 'data-go="wellness"'),
