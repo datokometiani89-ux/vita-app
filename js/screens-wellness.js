@@ -4010,6 +4010,7 @@
       var offs = V.offers(), optedOut = m.offersOptIn === false;
       var active = (m.orders || []).filter(function (o) { return V.orderStage(o) < 4; })[0];
       var h = '<p class="s-sub">' + t("mkSub") + "</p>";
+      h += V.datalabBand ? V.datalabBand() : "";
       if (active) h += '<button class="mk-trackbar" data-track="' + active.id + '">' + V.iconBox("location", "crimson") + '<span class="mk-trackbar__t"><b>' + t("mkTrack") + "</b><small>" + t("mkEtaMin", { n: active.etaMin }) + "</small></span>" + V.icon("next") + "</button>";
       if (optedOut) {
         h += '<div class="mk-optout">' + V.icon("info") + "<p>" + t("mkOptOut") + '</p><button class="btn btn-primary" id="mkOptIn">' + t("mkOptInBtn") + "</button></div>";
@@ -4107,6 +4108,96 @@
             }, 1200);
           }
         }
+      } }
+    );
+  };
+
+  /* ===================== BIG-DATA INTELLIGENCE — #/datalab ===================== */
+  function dlMetricKey(id) { return { sleep: "dlMSleep", steps: "dlMSteps", readiness: "dlMReadiness" }[id]; }
+  function dlBestKey(id) { return { sleep: "dlTopSleep", readiness: "dlTopReadiness", steps: "dlTopActivity" }[id] || "dlTopActivity"; }
+  function dlStepsTxt(v) { return v >= 1000 ? (Math.round(v / 100) / 10) + "k" : v; }
+
+  V.datalabBand = function () {
+    var c = V.cohort();
+    return '<button class="dl-band" data-go2="datalab">' + V.iconBox("progress", "green") +
+      '<span class="dl-band__t"><b>' + t("dlBandTitle", { n: c.size.toLocaleString() }) + "</b><small>" + t("dlBandSub") + "</small></span>" + V.icon("next") + "</button>";
+  };
+  V.intelHomeCard = function () {
+    var c = V.cohort(); if (!c.metrics.length) return "";
+    var line = (c.best && c.topPct != null) ? t(dlBestKey(c.best.id), { n: c.topPct }) : t("dlBandSub");
+    return '<button class="card-soft mk-home" id="intelHome">' + V.iconBox("progress", "green") +
+      '<span class="mk-home__t"><b>' + t("dlBandTitle", { n: c.size.toLocaleString() }) + "</b><small>" + line + "</small></span>" + V.icon("next") + "</button>";
+  };
+  V.wireIntelHome = function () { var c = document.getElementById("intelHome"); if (c) c.addEventListener("click", function () { V.go("datalab"); }); };
+
+  V.screens.datalab = function () {
+    var c = V.cohort();
+
+    function cohortHero() {
+      if (!c.metrics.length) return '<div class="dl-hero card-soft"><p class="md-empty" style="padding:8px 4px">' + t("dlNoData") + "</p></div>";
+      var N = 40, topN = c.topPct != null ? Math.max(2, Math.round(N * c.topPct / 100)) : 0, dots = "";
+      for (var i = 0; i < N; i++) dots += '<span class="dl-dot' + (i < topN ? " hot" : "") + (i === 0 ? " you" : "") + '"></span>';
+      var line = (c.best && c.topPct != null) ? t(dlBestKey(c.best.id), { n: c.topPct }) : "";
+      var opp = c.weak ? t("dlOpportunity", { m: t(dlMetricKey(c.weak.id)) }) : "";
+      return '<div class="dl-hero card-soft">' +
+        '<div class="dl-hero__n"><b>' + c.size.toLocaleString() + "</b><span>" + t("dlCohortLabel") + "</span></div>" +
+        '<div class="dl-dots">' + dots + "</div>" +
+        (line ? '<p class="dl-hero__line">' + V.icon("sparkle") + " " + line + "</p>" : "") +
+        (opp ? '<p class="dl-hero__opp">' + opp + "</p>" : "") + "</div>";
+    }
+    function vsCohort() {
+      if (!c.metrics.length) return "";
+      function bar(m) {
+        var tone = m.good ? "good" : "bad";
+        var valTxt = m.id === "sleep" ? (m.val + (V.lang() === "ka" ? " სთ" : "h")) : m.id === "steps" ? dlStepsTxt(m.val) : m.val;
+        var avgTxt = m.id === "sleep" ? m.avg : m.id === "steps" ? dlStepsTxt(m.avg) : m.avg;
+        return '<div class="dl-bar"><div class="dl-bar__h"><span>' + t(dlMetricKey(m.id)) + '</span><span class="dl-bar__v ' + tone + '"><b>' + valTxt + "</b> · " + t("dlYou") + " <i>vs " + avgTxt + "</i></span></div>" +
+          '<div class="dl-track"><span class="dl-fill ' + tone + '" style="width:' + m.uPct + '%"></span><span class="dl-mark" style="left:' + m.aPct + '%"></span></div></div>';
+      }
+      return '<div class="section-head"><h3>' + t("dlVsCohort") + "</h3></div>" +
+        '<div class="dl-bars card-soft">' + c.metrics.map(bar).join("") + '<p class="dl-avgnote">' + t("dlAvgMark") + "</p></div>";
+    }
+    function predicted() {
+      var needs = V.predictNeeds();
+      var inner = needs.length ? needs.map(function (nd) {
+        var tc = nd.sev === "high" ? "high" : nd.sev === "med" ? "med" : "low";
+        return '<div class="dl-need card-soft"><div class="dl-need__h">' + V.iconBox("pill", nd.sev === "high" ? "crimson" : nd.sev === "med" ? "yellow" : "green") +
+          '<div class="dl-need__t"><b>' + esc(nd.name) + "</b><small>" + t("dlAtDose", { n: nd.daysLeft }) + "</small></div>" +
+          '<span class="dl-need__d ' + tc + '">' + nd.daysLeft + "<i>" + (V.lang() === "ka" ? "დღე" : "d") + "</i></span></div>" +
+          '<div class="dl-depl"><span class="' + tc + '" style="width:' + nd.pct + '%"></span></div>' +
+          '<button class="btn btn-primary dl-reorder" data-reorder="' + nd.id + '">' + V.icon("pill") + " " + t("dlAutoRefill", { p: nd.price }) + "</button></div>";
+      }).join("") : '<p class="md-empty">' + t("dlNoPredict") + "</p>";
+      return '<div class="section-head"><h3>' + t("dlPredict") + "</h3></div>" + inner +
+        (needs.length ? '<p class="dl-note">' + V.icon("info") + " " + t("dlPredictNote") + "</p>" : "");
+    }
+    function proven() {
+      if (!c.actions.length) return "";
+      var keys = { sleep: "dlActSleep", readiness: "dlActReadiness", steps: "dlActSteps", vitd: "dlActVitd" };
+      return '<div class="section-head"><h3>' + t("dlProven") + "</h3></div>" +
+        '<div class="dl-proven card-soft">' + c.actions.map(function (a) {
+          return '<div class="dl-act"><div class="dl-act__h"><b>' + t(keys[a.id]) + '</b><button class="dl-act__cta" data-go3="' + a.route + '">' + t("dlSeeService") + " " + V.icon("next") + "</button></div>" +
+            '<div class="dl-adopt"><span style="width:' + a.adopt + '%"></span></div><small>' + t("dlAdopt", { n: a.adopt }) + "</small></div>";
+        }).join("") + "</div>";
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("dlTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("dlSub") + "</p>" +
+        cohortHero() + vsCohort() + predicted() + proven() +
+        '<div class="mk-priv">' + V.icon("shield") + "<span>" + t("dlPrivacy") + "</span></div>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.go("home"); });
+        each("[data-go3]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go3")); }); });
+        each("[data-reorder]", function (b) { b.addEventListener("click", function () {
+          var id = b.getAttribute("data-reorder");
+          var item = (V.refillItems() || []).filter(function (p) { return String(p.id) === "rx-" + id || String(p.id).indexOf(id) >= 0; })[0];
+          if (item) { V.cartAdd(item); marketView = "cart"; V.go("market"); }
+          else { V.go("market"); }
+        }); });
       } }
     );
   };

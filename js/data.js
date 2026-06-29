@@ -277,6 +277,7 @@ window.VITA = window.VITA || {};
   V.HOME_WIDGETS = [
     { id: "coach", key: "hwCoach", card: "coachHomeCard", wire: "wireCoachHome", kicker: "coTitle" },
     { id: "offers", key: "hwOffers", card: "offersHomeCard", wire: "wireOffersHome", kicker: "mkForYou" },
+    { id: "intel", key: "hwIntel", card: "intelHomeCard", wire: "wireIntelHome", kicker: "dlTitle" },
     { id: "scan", key: "hwScan", card: "scanHomeCard", wire: "wireScanHome", kicker: "scnTitle" },
     { id: "today", key: "hwToday", card: "todayMini", wire: "wireTodayMini", kicker: "todayK" },
     { id: "meds", key: "hwMeds", card: "medsHomeCard", wire: "wireMedsHome" },
@@ -289,7 +290,7 @@ window.VITA = window.VITA || {};
     { id: "garden", key: "hwGarden", card: "gardenHomeCard", wire: "wireGardenHome" },
   ];
   V.homeWidget = function (id) { return V.HOME_WIDGETS.filter(function (w) { return w.id === id; })[0]; };
-  V.homeCardsDefault = function () { return { order: ["coach", "offers", "scan", "today", "meds", "water", "steps", "food", "mood", "readiness", "bio", "garden"], hidden: { bio: true, garden: true } }; };
+  V.homeCardsDefault = function () { return { order: ["coach", "offers", "intel", "scan", "today", "meds", "water", "steps", "food", "mood", "readiness", "bio", "garden"], hidden: { bio: true, garden: true } }; };
   // merge saved prefs with the registry so newly-added widgets always appear
   V.homeCardsPrefs = function () {
     var d = V.homeCardsDefault(), p = V.state.homeCards || {};
@@ -577,6 +578,59 @@ window.VITA = window.VITA || {};
     V.save();
     if (V.awardOnce && offer.points) V.awardOnce("offer:" + offer.id + ":" + rec.date, offer.points, "Offer: " + (offer.title.en || ""));
     return rec;
+  };
+
+  /* ===================== BIG-DATA INTELLIGENCE (cohort + prediction) =====================
+     The data moat made visible: compare the user to an anonymized "people like you"
+     cohort, predict upcoming needs (refills), and recommend services proven by crowd
+     behaviour (collaborative-filtering flavour). All deterministic from the user's own
+     profile/signals + fixed population baselines — aggregate/anonymized framing, no real
+     PII, nothing individual is ever sold. */
+  V.cohort = function () {
+    var p = V.state.profile || {}, s = V.healthSignals(), w = V.state.wellness || {};
+    var ageBand = p.age ? Math.max(20, Math.floor(p.age / 10) * 10) : 30;
+    var seed = ageBand * 7 + (p.sex === "woman" ? 13 : 7) + (p.conditions || []).length * 5 + (p.goals || []).length * 3;
+    var size = 5200 + (seed % 95) * 150;            // deterministic ~5200..19450
+    var steps = w.steps || {}, sv = Object.keys(steps).sort().slice(-7).map(function (k) { return steps[k]; }).filter(function (x) { return x != null; });
+    var stepAvg = sv.length ? Math.round(sv.reduce(function (a, b) { return a + b; }, 0) / sv.length) : null;
+    var avg = { sleep: 7.1, steps: 6300, readiness: 70 };          // population baselines
+    var metrics = [];
+    function push(id, val, a, dec) {
+      if (val == null) return;
+      var good = val >= a;
+      metrics.push({ id: id, val: dec ? Math.round(val * 10) / 10 : Math.round(val), avg: dec ? a : Math.round(a), good: good,
+        uPct: Math.max(6, Math.min(100, Math.round(val / (a * 1.5) * 100))), aPct: 67 });
+    }
+    push("sleep", s.sleepAvg, avg.sleep, true);
+    push("steps", stepAvg, avg.steps, false);
+    push("readiness", s.readiness, avg.readiness, false);
+    var best = metrics.filter(function (m) { return m.good; }).sort(function (a, b) { return (b.val / b.avg) - (a.val / a.avg); })[0] || null;
+    var weak = metrics.filter(function (m) { return !m.good; }).sort(function (a, b) { return (a.val / a.avg) - (b.val / b.avg); })[0] || null;
+    var topPct = best ? Math.max(5, Math.min(45, Math.round(40 - (best.val / best.avg - 1) * 60))) : null;
+    var actions = [];
+    if (weak && weak.id === "sleep") actions.push({ id: "sleep", adopt: 78, route: "sleep" });
+    if (weak && weak.id === "readiness") actions.push({ id: "readiness", adopt: 71, route: "readiness" });
+    if (weak && weak.id === "steps") actions.push({ id: "steps", adopt: 69, route: "workouts" });
+    if (s.meds > 0 || (s.bio && s.bio.delta > 0) || (s.sleepAvg != null && s.sleepAvg < 6.5)) actions.push({ id: "vitd", adopt: 64, route: "market" });
+    if (!actions.length) actions.push({ id: "vitd", adopt: 64, route: "market" });
+    return { size: size, ageBand: ageBand, metrics: metrics, best: best, weak: weak, topPct: topPct, actions: actions };
+  };
+
+  // Predictive demand — estimate days-until-empty per med → proactive reorder (predictive commerce).
+  V.predictNeeds = function () {
+    var meds = V.userMeds ? V.userMeds() : [], out = [], m = V.marketState(), lastOrder = (m.orders || [])[0];
+    meds.forEach(function (med, i) {
+      var perDay = (med.when && med.when.length) ? med.when.length : 1;
+      var key = String(med.id || med.name || ("m" + i)), h = 0;
+      for (var c = 0; c < key.length; c++) h = (h * 31 + key.charCodeAt(c)) & 0xffff;
+      var daysLeft = 2 + (h % 12);                   // deterministic 2..13
+      if (lastOrder && lastOrder.placedISO === V.todayISO()) daysLeft += 21;   // a refill today resets the clock
+      var pack = 30, pct = Math.max(4, Math.min(100, Math.round(daysLeft / (pack / perDay) * 100)));
+      out.push({ kind: "med", id: med.id, name: med.name + (med.dose ? " " + med.dose : ""), daysLeft: daysLeft, pct: pct,
+        price: 8 + (i % 3) * 4, sev: daysLeft <= 3 ? "high" : daysLeft <= 6 ? "med" : "low" });
+    });
+    out.sort(function (a, b) { return a.daysLeft - b.daysLeft; });
+    return out;
   };
 
   // Longevity forecast — projects bio-age 10y out at the current aging rate, and
