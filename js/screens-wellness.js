@@ -418,6 +418,32 @@
     var ins = V.insights(), s = V.healthSignals();
     var sevTone = { high: "crimson", med: "yellow", low: "blue", good: "green" };
     var actionable = ins.filter(function (i) { return i.sev !== "good"; });
+    var fcOpts = { sleep: false, active: false, nosmoke: false };
+
+    function forecastCard() {
+      var f = V.longevityForecast(fcOpts);
+      if (!f) return '<div class="card-soft lg-card"><div class="lg-head">' + V.icon("sparkle") + " " + t("lgTitle") + "</div><p class=\"lg-note\">" + t("lgNeedAge") + '</p><button class="ai-ins__cta" data-go="profile">' + t("hpSetProfile") + "</button></div>";
+      var avail = [];
+      if (f.fixable.sleep) avail.push(["sleep", "lgSleep"]);
+      if (f.fixable.active) avail.push(["active", "lgActive"]);
+      if (f.fixable.nosmoke) avail.push(["nosmoke", "lgSmoke"]);
+      return '<div class="card-soft lg-card">' +
+        '<div class="lg-head">' + V.icon("sparkle") + " " + t("lgTitle") + "</div>" +
+        '<div class="lg-proj"><div class="lg-proj__c"><b>' + f.projected + "</b><small>" + t("lgCurrent", { n: f.N }) + "</small></div>" +
+          '<div class="lg-arrow">' + V.icon("next") + "</div>" +
+          '<div class="lg-proj__c lg-proj__c--good"><b>' + f.projectedImproved + "</b><small>" + t("lgImproved") + "</small></div></div>" +
+        (f.yearsGained > 0 ? '<div class="lg-gain">' + t("lgGain", { n: f.yearsGained }) + "</div>" : "") +
+        (avail.length
+          ? '<p class="cy-sub2">' + t("lgWhatIf") + '</p><div class="chips">' + avail.map(function (a) { return '<button class="chip ' + (fcOpts[a[0]] ? "on" : "") + '" data-fc="' + a[0] + '">' + t(a[1]) + "</button>"; }).join("") + "</div>"
+          : '<p class="lg-note">' + t("lgGood") + "</p>") +
+        '<p class="lg-disc">' + t("lgDisc") + "</p></div>";
+    }
+    function paintFc() {
+      var wrap = $("#coFcWrap"); if (!wrap) return;
+      wrap.innerHTML = forecastCard();
+      each("[data-fc]", function (b) { b.addEventListener("click", function () { var k = b.getAttribute("data-fc"); fcOpts[k] = !fcOpts[k]; paintFc(); }); });
+      each("#coFcWrap [data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
+    }
 
     function insightCard(it) {
       return '<div class="ai-ins ai-ins--' + it.sev + '">' +
@@ -473,6 +499,7 @@
         '<p class="s-sub">' + t("coSub") + "</p>" +
         '<div class="card-soft ai-headline">' + V.iconBox("sparkle", "green") +
           "<div><b>" + (actionable.length ? t("coHeadline", { n: actionable.length }) : t("coHeadlineGood")) + "</b><small>" + esc(V.coachSummaryText()) + "</small></div></div>" +
+        '<div id="coFcWrap"></div>' +
         '<button class="btn btn-primary" id="coAi" style="width:100%;margin:4px 0 16px">' + V.icon("sparkle") + " " + t("coAiCta") + "</button>" +
         '<div id="coAiOut"></div>' +
         '<div class="section-head"><h3>' + t("coInsights") + "</h3></div>" +
@@ -483,6 +510,7 @@
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
         backX();
+        paintFc();
         each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
         var ai = $("#coAi"); if (ai) ai.addEventListener("click", runCoachAI);
       } }

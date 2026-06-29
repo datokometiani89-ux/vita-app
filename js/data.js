@@ -395,6 +395,31 @@ window.VITA = window.VITA || {};
     return out.sort(function (a, b) { return rank[a.sev] - rank[b.sev]; });
   };
 
+  // Longevity forecast — projects bio-age 10y out at the current aging rate, and
+  // under user-toggled habit improvements. Deterministic, wellness-grade (not medical).
+  V.longevityForecast = function (opts) {
+    opts = opts || {};
+    var h = V.healthAge && V.healthAge(); if (!h) return null;
+    var s = V.healthSignals(), p = V.state.profile || {};
+    var fixable = { sleep: 0, active: 0, nosmoke: 0 };
+    if (s.sleepAvg != null && s.sleepAvg < 6.5) fixable.sleep = 0.15;
+    if (s.inactiveDays >= 4 && s.inactiveDays < 9000) fixable.active = 0.2;
+    if (p.smoking === "daily") fixable.nosmoke = 0.35;
+    var extra = 0;
+    if (s.moodAvg != null && s.moodAvg < 2.6) extra += 0.08;
+    if (h.delta > 5) extra += 0.1;
+    var curRate = 1.0 + fixable.sleep + fixable.active + fixable.nosmoke + extra;
+    var fixedPen = (opts.sleep ? fixable.sleep : 0) + (opts.active ? fixable.active : 0) + (opts.nosmoke ? fixable.nosmoke : 0);
+    var impRate = curRate - fixedPen;
+    var N = 10, proj = h.bio + N * curRate, projImp = h.bio + N * impRate;
+    return {
+      bioNow: h.bio, chrono: h.chrono, N: N,
+      projected: Math.round(proj), projectedImproved: Math.round(projImp),
+      yearsGained: Math.round((proj - projImp) * 10) / 10,
+      fixable: fixable,
+    };
+  };
+
   // plain-text summary of everything — feeds the optional AI narrative
   V.coachSummaryText = function () {
     var s = V.healthSignals(), ka = V.lang() === "ka", parts = [];
