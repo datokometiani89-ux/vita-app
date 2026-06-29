@@ -2217,3 +2217,41 @@
 /* ---- Per-offer mini-visualizations ---- */
 .mk-offer__viz { margin: 10px 0 4px; background: var(--field); border-radius: 12px; padding: 5px 12px; }
 .mk-offer__viz svg { display: block; width: 100%; height: 44px; }
+
+/* ---- Insurance marketplace (bidding) ---- */
+.iq-risk { padding: 16px; }
+.iq-risk__top { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.iq-tier { font-size: 12px; font-weight: 700; padding: 3px 11px; border-radius: 99px; }
+.iq-tier.low { background: var(--green-tint); color: var(--green-dark); }
+.iq-tier.medium { background: #fbf0d6; color: #8a6212; }
+.iq-tier.high { background: #fbe2e6; color: #b33; }
+.iq-meter { position: relative; height: 9px; border-radius: 99px; background: linear-gradient(90deg, #2BA94C, #e0a92e 55%, #e8536b); }
+.iq-meter__mark { position: absolute; top: -3px; width: 4px; height: 15px; background: var(--ink); border-radius: 2px; transform: translateX(-2px); box-shadow: 0 0 0 2px var(--card); }
+.iq-meter__lab { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
+.iq-why { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; color: var(--ink-2); margin: 12px 0 0; line-height: 1.5; }
+.iq-why svg { width: 14px; flex: none; margin-top: 1px; }
+.iq-bids { padding: 16px; display: flex; flex-direction: column; gap: 15px; }
+.iq-bid__h { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 7px; font-size: 13.5px; }
+.iq-bid__n { display: flex; align-items: center; gap: 6px; }
+.iq-best { font-style: normal; font-size: 11px; font-weight: 700; background: var(--green-tint); color: var(--green-dark); padding: 2px 8px; border-radius: 99px; }
+.iq-bid__p { color: var(--muted); font-weight: 700; } .iq-bid__p.best { color: var(--green-dark); }
+.iq-bar { height: 10px; background: var(--field); border-radius: 99px; overflow: hidden; }
+.iq-bar span { display: block; height: 100%; background: #c9c9c9; border-radius: 99px; }
+.iq-bar span.best { background: var(--green); }
+.iq-saved { display: flex; align-items: center; gap: 14px; background: var(--green-tint); border-radius: var(--r-lg); padding: 14px 16px; margin-top: 14px; }
+.iq-saved b { font-size: 26px; font-weight: 800; color: var(--green-dark); flex: none; }
+.iq-saved span { font-size: 13px; color: var(--green-dark); line-height: 1.4; }
+
+/* ---- Health ROI (area + waterfall) ---- */
+.roi-hero { padding: 18px 16px; }
+.roi-hero__k { font-size: 13px; color: var(--muted); }
+.roi-hero__v { display: block; font-size: 34px; font-weight: 800; color: var(--green-dark); line-height: 1.1; margin: 4px 0 12px; }
+.roi-area { width: 100%; height: 96px; display: block; }
+.roi-mlab { font-size: 9px; fill: var(--muted); }
+.roi-break { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.roi-row__h { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13.5px; }
+.roi-row__h > span { display: flex; align-items: center; gap: 7px; color: var(--ink-2); }
+.roi-row__h svg { width: 16px; color: var(--muted); }
+.roi-row__h b { color: var(--green-dark); font-weight: 700; }
+.roi-bar { height: 8px; background: var(--field); border-radius: 99px; overflow: hidden; }
+.roi-bar span { display: block; height: 100%; background: linear-gradient(90deg, #1D9E75, var(--green)); border-radius: 99px; }

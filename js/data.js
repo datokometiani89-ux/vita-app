@@ -682,6 +682,55 @@ window.VITA = window.VITA || {};
     return out;
   };
 
+  // Insurance quote — deterministic risk tier from health signals → 3 insurers bidding
+  // premiums (B2B2C). Lower risk → lower premium. Wellness-grade; real quote = insurer API.
+  V.insuranceQuote = function () {
+    var s = V.healthSignals(), p = V.state.profile || {};
+    var risk = 42;
+    if (s.bio && s.bio.delta < 0) risk -= 12; else if (s.bio && s.bio.delta > 5) risk += 15;
+    if (s.inactiveDays >= 5 && s.inactiveDays < 9000) risk += 10; else risk -= 6;
+    if (p.smoking === "daily") risk += 20; else if (p.smoking === "sometimes") risk += 8;
+    risk += (p.conditions || []).length * 6;
+    var bpArr = (V.state.wellness && V.state.wellness.bp) || [], lb = bpArr[bpArr.length - 1];
+    if (lb && (lb.sys >= 140 || lb.dia >= 90)) risk += 12;
+    if (s.readiness != null && s.readiness >= 70) risk -= 5;
+    if (p.age) risk += Math.max(0, (p.age - 35)) * 0.4;
+    risk = Math.max(8, Math.min(92, Math.round(risk)));
+    var tier = risk < 35 ? "low" : risk < 60 ? "medium" : "high";
+    var base = 30 + Math.round(risk * 0.6);                  // premium scales with risk
+    var insurers = [
+      { id: "vita", name: { ka: "VITA Insurance", en: "VITA Insurance" }, premium: base - 8, best: true },
+      { id: "aldagi", name: { ka: "Aldagi", en: "Aldagi" }, premium: base + 2 },
+      { id: "gpi", name: { ka: "GPI Holding", en: "GPI Holding" }, premium: base + 9 },
+    ];
+    insurers.sort(function (a, b) { return a.premium - b.premium; });
+    insurers.forEach(function (it, i) { it.best = i === 0; });
+    var market = base + 9, best = insurers[0].premium;
+    return { risk: risk, tier: tier, insurers: insurers, market: market, best: best,
+      savedYr: Math.max(0, (market - best) * 12), maxPrem: insurers[insurers.length - 1].premium };
+  };
+
+  // Health ROI — money saved this year by healthy behaviour (avoided visits, fewer meds,
+  // partner discounts). Deterministic; powers VITA+ retention + B2B corporate ROI proof.
+  V.healthROI = function () {
+    var s = V.healthSignals(), m = V.marketState();
+    var streak = V.taskStreak ? V.taskStreak() : 0;
+    var scans = ((V.state.wellness && V.state.wellness.scan) || []).length;
+    var active = s.inactiveDays < 5;
+    var visits = 300 + Math.min(6, scans) * 60 + (active ? 400 : 0) + Math.min(20, streak) * 20;
+    var meds = s.meds > 0 ? 520 : 240;
+    var discounts = ((m.redeemed || []).length) * 60 + 180;
+    var total = visits + meds + discounts;
+    var series = [];                                          // cumulative over 6 months → total
+    for (var i = 1; i <= 6; i++) series.push(Math.round(total * i / 6));
+    return { total: total, series: series,
+      breakdown: [
+        { key: "roiVisits", icon: "stethoscope", val: visits },
+        { key: "roiMeds", icon: "pill", val: meds },
+        { key: "roiDisc", icon: "sparkle", val: discounts },
+      ] };
+  };
+
   // Longevity forecast — projects bio-age 10y out at the current aging rate, and
   // under user-toggled habit improvements. Deterministic, wellness-grade (not medical).
   V.longevityForecast = function (opts) {

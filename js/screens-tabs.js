@@ -1701,6 +1701,8 @@
           tile("sparkle", "yellow", "mChallenges", 'data-go="challenges"'),
           tile("location", "crimson", "mMarket", 'data-go="market"', V.cartCount && V.cartCount() ? V.cartCount() : null),
           tile("progress", "green", "mDatalab", 'data-go="datalab"'),
+          tile("shield", "blue", "mInsurance", 'data-go="insurance"'),
+          tile("trend", "green", "mRoi", 'data-go="roi"'),
           tile("bolt", "green", "mExercises", 'data-go="exercises"'),
           tile("heart", "green", "mCare", 'data-go="careplans"'),
           tile("bolt", "blue", "mWorkouts", 'data-go="workouts"'),

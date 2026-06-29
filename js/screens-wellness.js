@@ -4123,6 +4123,7 @@
         var tg = $("#mkOffersTgl"); if (tg) tg.addEventListener("change", function () { V.setOffersOptIn(tg.checked); V.render(); });
         each("[data-offer]", function (b) { b.addEventListener("click", function () {
           var o = V.offers().filter(function (x) { return x.id === b.getAttribute("data-offer"); })[0]; if (!o) return;
+          if (o.id === "insure") { V.go("insurance"); return; }
           if (o.action === "refill") { marketView = "cart"; V.render(); return; }
           if (o.action === "shop") { var p = mkShopProduct(o); if (p) V.cartAdd(p); marketView = "cart"; V.render(); return; }
           V.redeemOffer(o); V.toast && V.toast(o.action === "book" ? t("mkBooked") : t("mkCodeReady")); V.render();
@@ -4246,6 +4247,89 @@
           else { V.go("market"); }
         }); });
       } }
+    );
+  };
+
+  /* ===================== INSURANCE MARKETPLACE — #/insurance (bidding) ===================== */
+  V.screens.insurance = function () {
+    var q = V.insuranceQuote();
+    function money(n) { return "₾" + n; }
+    var tierClass = q.tier;                                   // low|medium|high
+
+    function bidRow(it) {
+      var w = Math.max(10, Math.round(it.premium / q.maxPrem * 100));
+      return '<div class="iq-bid">' +
+        '<div class="iq-bid__h"><span class="iq-bid__n">' + L(it.name) + (it.best ? ' <i class="iq-best">' + t("iqBest") + "</i>" : "") + "</span>" +
+          '<b class="' + (it.best ? "iq-bid__p best" : "iq-bid__p") + '">' + t("iqPerMonth", { n: it.premium }) + "</b></div>" +
+        '<div class="iq-bar"><span class="' + (it.best ? "best" : "") + '" style="width:' + w + '%"></span></div></div>';
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("iqTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("iqSub") + "</p>" +
+
+        '<div class="iq-risk card-soft">' +
+          '<div class="iq-risk__top"><span>' + t("iqRiskTier") + '</span><span class="iq-tier ' + tierClass + '">' + t("iqTier" + tierClass) + "</span></div>" +
+          '<div class="iq-meter"><span class="iq-meter__mark" style="left:' + q.risk + '%"></span></div>' +
+          '<div class="iq-meter__lab"><span>' + t("iqRiskLow") + "</span><span>" + t("iqRiskHigh") + "</span></div>" +
+          '<p class="iq-why">' + V.icon("info") + " " + t("iqWhy") + "</p></div>" +
+
+        '<div class="section-head"><h3>' + t("iqBidding") + "</h3></div>" +
+        '<div class="iq-bids card-soft">' + q.insurers.map(bidRow).join("") + "</div>" +
+
+        '<div class="iq-saved"><b>' + money(q.savedYr) + "</b><span>" + t("iqSaved") + "</span></div>" +
+
+        '<button class="btn btn-primary" id="iqCta" style="width:100%;margin-top:14px">' + V.icon("shield") + " " + t("iqCta", { n: L(q.insurers[0].name) }) + "</button>" +
+        '<p class="dl-note">' + V.icon("info") + " " + t("iqNote") + "</p>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () {
+        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.go("home"); });
+        var c = $("#iqCta"); if (c) c.addEventListener("click", function () { V.toast && V.toast(t("iqRequested")); });
+      } }
+    );
+  };
+
+  /* ===================== HEALTH ROI — #/roi (area + waterfall) ===================== */
+  V.screens.roi = function () {
+    var r = V.healthROI();
+    function money(n) { return "₾" + n.toLocaleString(); }
+    var months = V.lang() === "ka" ? ["იან", "თებ", "მარ", "აპრ", "მაი", "ივნ"] : ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+
+    // cumulative area chart from r.series (6 pts) over viewBox 0 0 300 96
+    var maxV = r.series[r.series.length - 1] || 1, n = r.series.length;
+    var pts = r.series.map(function (v, i) {
+      var x = 8 + i * (284 / (n - 1)), y = 84 - (v / maxV) * 74;
+      return Math.round(x) + "," + Math.round(y);
+    });
+    var area = '<svg viewBox="0 0 300 96" class="roi-area"><polyline points="' + pts.join(" ") + '" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<polygon points="8,88 ' + pts.join(" ") + ' 292,88" fill="#1D9E75" opacity="0.12"/>' +
+      '<text x="8" y="95" class="roi-mlab">' + months[0] + '</text><text x="150" y="95" text-anchor="middle" class="roi-mlab">' + months[2] + '</text><text x="292" y="95" text-anchor="end" class="roi-mlab">' + months[5] + "</text></svg>";
+
+    var maxB = Math.max.apply(null, r.breakdown.map(function (b) { return b.val; }));
+    function bRow(b) {
+      var w = Math.max(12, Math.round(b.val / maxB * 100));
+      return '<div class="roi-row"><div class="roi-row__h"><span>' + V.icon(b.icon) + " " + t(b.key) + "</span><b>+" + "₾" + b.val.toLocaleString() + "</b></div>" +
+        '<div class="roi-bar"><span style="width:' + w + '%"></span></div></div>';
+    }
+
+    V.mount(
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg fade-in">' +
+        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("roiTitle") + "</h1></div>" +
+          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        '<p class="s-sub">' + t("roiSub") + "</p>" +
+
+        '<div class="roi-hero card-soft"><span class="roi-hero__k">' + t("roiSavedYear") + '</span><b class="roi-hero__v">' + money(r.total) + "</b>" + area + "</div>" +
+
+        '<div class="section-head"><h3>' + t("roiSource") + "</h3></div>" +
+        '<div class="roi-break card-soft">' + r.breakdown.map(bRow).join("") + "</div>" +
+
+        '<div class="dl-note" style="margin-top:14px">' + V.icon("info") + " " + t("roiB2B") + "</div>" +
+      "</div>" + V.tabbar("home") + "</div>",
+      { onMount: function () { var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.go("home"); }); } }
     );
   };
 
