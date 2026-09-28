@@ -206,3 +206,23 @@
 [data-theme="dark"] .actionbar { background: rgba(28,28,30,.88); }
 .actionbar .btn-ghost { color: var(--label-2); }
 .actionbar .btn-primary { max-width: none; border-radius: 14px; }
+
+/* ---------- content polish: decorative tints/gradients → white surfaces (state colours kept) ---------- */
+.an-prog-card, .garden-card, .rw-balance, .scn-fullcta, .vp-hero, .mk-feat, .ch-streak, .ex-demo, .iq-saved,
+.cy-hint, .fm-privacy, .cu-card, .qu-row {
+  background: var(--surface) !important; background-image: none !important;
+  border: 1px solid var(--separator) !important; box-shadow: none !important; color: var(--label);
+}
+.rw-balance, .vp-hero, .garden-card, .an-prog-card { color: var(--label) !important; }
+.rw-balance *, .vp-hero *, .garden-card h3, .garden-card p, .an-prog-card b, .an-prog-card small { color: inherit; }
+.vp-hero .btn-primary, .rw-balance .btn-primary { color: #fff; }
+.avatar { background: var(--green) !important; background-image: none !important; }
+.tag { background: var(--fill-2); color: var(--label-2); }
+.tag.pink, .tag.blue, .tag.green, .tag.yellow { background: var(--fill-2); color: var(--label-2); }
+.ch-lb__row { background: var(--fill-2) !important; }
+.cal-btn, .water-btn, .water-preset, .fd-pbtn {
+  background: var(--surface) !important; border: 1px solid var(--separator) !important; color: var(--label) !important;
+}
+.water-preset.on, .cal-btn.on { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
+.fd-pbtn svg { color: var(--yellow-text); }
+.qu-row.done { border-color: var(--separator) !important; }
