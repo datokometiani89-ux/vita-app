@@ -1,5 +1,5 @@
 /* VITA service worker — caches the app shell for offline use. */
-var CACHE = "vita-v132";
+var CACHE = "vita-v133";
 var VER = CACHE.replace("vita-v", "");
 // precache the SAME URLs the pages request (`?v=NN`), so an asset isn't fetched and stored
 // twice (once by install, once by the page); matching ignores the query for robustness.
@@ -81,8 +81,12 @@ self.addEventListener("fetch", function (e) {
   }
 
   // cache-first for static assets
+  // Versioned assets (?v=NN) must match EXACTLY: a bumped version has to miss the old cache
+  // and hit the network even while the previous worker is still in control. Only
+  // unversioned requests (icons, fonts) may ignore the query string.
+  var versioned = url.search.indexOf("v=") >= 0;
   e.respondWith(
-    caches.match(req, { ignoreSearch: true }).then(function (m) {
+    caches.match(req, { ignoreSearch: !versioned }).then(function (m) {
       return m || fetch(req).then(function (res) {
         var copy = res.clone();
         caches.open(CACHE).then(function (c) { c.put(req, copy); });

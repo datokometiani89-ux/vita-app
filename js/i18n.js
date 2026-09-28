@@ -543,6 +543,15 @@ window.VITA = window.VITA || {};
     },
     obSteps: { ka: "5 ნაბიჯი", en: "5 steps" },
     obMin: { ka: "2 წუთი", en: "2 minutes" },
+    obTagline: { ka: "პრევენციული ჯანდაცვა შენს ჯიბეში", en: "Preventive healthcare in your pocket" },
+    obStart: { ka: "დაწყება", en: "Get started" },
+    obBegin: { ka: "პროფილის შექმნა", en: "Create my profile" },
+    obF1: { ka: "AI სკანი კამერით", en: "AI scan with your camera" },
+    obF1s: { ka: "პულსი, სტრესი, კანი, ხმა — 30 წამში", en: "Pulse, stress, skin, voice — in 30 seconds" },
+    obF2: { ka: "პერსონალური პრევენციის გეგმა", en: "A personal prevention plan" },
+    obF2s: { ka: "ყოველდღიური ნაბიჯები შენი მონაცემებიდან", en: "Daily steps built from your own data" },
+    obF3: { ka: "ექიმი და აფთიაქი ერთ აპში", en: "Doctor and pharmacy in one app" },
+    obF3s: { ka: "ონლაინ ვიზიტი, რეცეპტი, მიწოდება", en: "Online visit, prescription, delivery" },
 
     /* steps */
     s1Title: { ka: "ძირითადი ინფორმაცია", en: "Basic info" },

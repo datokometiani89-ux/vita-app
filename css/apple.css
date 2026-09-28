@@ -162,3 +162,28 @@
 .ig-row.danger .ig-ic, .ig-row.danger .ig-row__v { display: none; }
 .ig-row.danger .ig-row__t { flex: none; text-align: center; }
 .ig-row.danger .ig-row__t b { font-weight: 500; }
+
+/* ---------- splash + intro (Apple-style onboarding) ---------- */
+.jelly-cluster { position: relative; width: 236px; height: 214px; margin: 0 auto; transform-origin: center; }
+.jelly-cluster .blob { position: absolute; }
+.jelly-cluster__c { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.jelly-cluster__c .logo-badge, .jelly-cluster__c svg { filter: drop-shadow(0 8px 18px rgba(20,24,31,.18)); }
+.splash { position: relative; flex: 1; display: flex; flex-direction: column; align-items: stretch; justify-content: space-between; padding: 24px 16px calc(16px + var(--safe-bottom)); overflow: hidden; }
+.splash__hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding-bottom: 12px; }
+.splash__hero .word { margin-top: 18px; font-size: 30px; font-weight: 700; letter-spacing: .34em; padding-left: .34em; color: var(--green); }
+.splash__tag { font-size: 17px; color: var(--label-2); max-width: 260px; line-height: 1.4; margin: 0; }
+.splash__cta { width: 100%; padding: 0; gap: 10px; }
+.splash__cta .btn-primary { width: 100%; }
+.sso-btn { border-radius: 14px; border: 1px solid var(--separator); background: var(--surface); color: var(--label); font-weight: 500; box-shadow: none; padding: 13px 16px; }
+.sso-google, .sso-fb { background: var(--surface); border-color: var(--separator); color: var(--label); box-shadow: none; }
+.sso-fb .sso-ic path { fill: #1877F2; }
+.sso-or { margin: 0; }
+.sso-or::before, .sso-or::after { background: var(--separator); }
+.sso-legal { color: var(--label-3); }
+.intro .nav-large { padding-bottom: 6px; }
+.intro-cluster { display: flex; justify-content: center; height: 176px; align-items: center; margin: 4px 0 14px; }
+.intro .ig { margin-bottom: 0; }
+.ig-row.static { cursor: default; }
+.ig-row.static:active { background: none; }
+.actionbar.single { justify-content: stretch; }
+.actionbar.single .btn-primary { flex: 1; max-width: none; }

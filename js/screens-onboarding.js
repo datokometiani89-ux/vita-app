@@ -10,25 +10,23 @@
 
   /* ===================== SPLASH ===================== */
   V.screens.splash = function () {
-    var blobs =
-      '<div class="blob b-green"  style="width:120px;height:118px;top:60px;left:30px;animation:floaty 7s ease-in-out infinite"></div>' +
-      '<div class="blob b-yellow" style="width:165px;height:150px;top:120px;right:24px;animation:floaty 8s ease-in-out infinite .6s"></div>' +
-      '<div class="blob b-pink"   style="width:140px;height:120px;top:240px;left:14px;animation:floaty 9s ease-in-out infinite 1.2s"></div>';
+    // Apple-style splash: one calm composition (brand jellies clustered behind the mark),
+    // wordmark + the positioning line, then a clear primary action and quiet social options.
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="splash">' +
-      blobs +
-      '<div class="splash__logo">' + V.mark(116) +
-        '<div class="word">VITA</div></div>' +
+      '<div class="splash__hero">' +
+        jellyCluster(V.mark(112)) +
+        '<div class="word">VITA</div>' +
+        '<p class="splash__tag">' + t("obTagline") + "</p>" +
+      "</div>" +
       '<div class="splash__cta">' +
-        '<div class="sso-head"><small>' + t("noAccount") + '</small><b>' + t("createNow") + "</b></div>" +
+        '<button class="btn btn-primary" data-next>' + t("obStart") + " " + V.icon("next") + "</button>" +
+        '<div class="sso-or"><span>' + t("ssoOr") + "</span></div>" +
         '<button class="sso-btn sso-google" data-sso="google">' + V.brandGlyph("google") + "<span>" + t("ssoGoogle") + "</span></button>" +
         '<button class="sso-btn sso-fb" data-sso="facebook">' + V.brandGlyph("facebook") + "<span>" + t("ssoFacebook") + "</span></button>" +
-        '<div class="sso-or"><span>' + t("ssoOr") + "</span></div>" +
-        '<button class="btn btn-primary" data-next>' + t("ssoEmail") + " " + V.icon("next") + "</button>" +
         '<p class="sso-legal">' + t("ssoLegal") + "</p>" +
       "</div>" +
-      '<div class="home-bar"></div>' +
       "</div></div>",
       { onMount: function () {
         $("[data-next]").addEventListener("click", function () { V.go("intro"); });
@@ -54,31 +52,35 @@
   };
 
   /* ===================== INTRO ===================== */
+  // the 3 brand jellies as ONE small composition (used by splash + intro) — replaces the
+  // scattered full-screen blobs; `center` (optional HTML) sits on top, e.g. the logo mark
+  function jellyCluster(center, size) {
+    size = size || 1;
+    return '<div class="jelly-cluster" style="transform:scale(' + size + ')">' +
+      '<div class="blob b-green"  style="width:104px;height:100px;top:0;left:10px;animation:floaty 7s ease-in-out infinite"></div>' +
+      '<div class="blob b-yellow" style="width:118px;height:108px;top:22px;right:0;animation:floaty 8s ease-in-out infinite .6s"></div>' +
+      '<div class="blob b-pink"   style="width:96px;height:88px;bottom:0;left:38px;animation:floaty 9s ease-in-out infinite 1.2s"></div>' +
+      (center ? '<div class="jelly-cluster__c">' + center + "</div>" : "") +
+    "</div>";
+  }
+
   V.screens.intro = function () {
-    var blobs =
-      '<div class="blob b-green"  style="width:120px;height:110px;top:10px;left:18px;animation:floaty 7s ease-in-out infinite"></div>' +
-      '<div class="blob b-blue"   style="width:150px;height:140px;top:40px;right:8px;animation:floaty 8s ease-in-out infinite .5s"></div>' +
-      '<div class="blob b-pink"   style="width:120px;height:110px;top:150px;left:2px;animation:floaty 9s ease-in-out infinite 1s"></div>' +
-      '<div class="blob b-yellow" style="width:130px;height:120px;top:150px;right:30px;animation:floaty 7.5s ease-in-out infinite 1.4s"></div>';
+    function feat(icon, tone, k) {
+      return '<div class="ig-row static"><span class="ig-ic ' + tone + '">' + (V.icons[icon] || "") + "</span>" +
+        '<span class="ig-row__t"><b>' + t(k) + "</b><small>" + t(k + "s") + "</small></span></div>";
+    }
     V.mount(
       V.statusbar() +
-      '<div class="screen">' +
-        '<div class="intro-art"><div class="blobwrap">' + blobs + "</div></div>" +
-        '<div class="intro-meta">' +
-          '<div class="intro-tags">' +
-            '<span class="tag pink">' + t("obSteps") + "</span>" +
-            '<span class="tag blue">' + t("obMin") + "</span>" +
-          "</div>" +
-          "<h2>" + t("obTitle") + "</h2>" +
-          "<p>" + t("obDesc") + "</p>" +
-        "</div>" +
-        '<div class="actionbar">' +
-          '<button class="btn btn-ghost" data-back>' + V.icon("back") + " " + t("back") + "</button>" +
-          '<button class="btn btn-primary" data-next>' + t("next") + " " + V.icon("next") + "</button>" +
-        "</div>" +
-      "</div>",
+      '<div class="screen"><div class="pad-lg intro fade-in">' +
+        V.screenHead({ title: t("obTitle"), sub: t("obDesc"), back: "splash" }) +
+        '<div class="intro-cluster">' + jellyCluster(null, .72) + "</div>" +
+        '<div class="ig">' + feat("camera", "green", "obF1") + feat("plan", "blue", "obF2") + feat("stethoscope", "pink", "obF3") + "</div>" +
+        '<p class="ig-note">' + t("obSteps") + " · " + t("obMin") + "</p>" +
+      "</div>" +
+      '<div class="actionbar single">' +
+        '<button class="btn btn-primary" data-next>' + t("obBegin") + " " + V.icon("next") + "</button>" +
+      "</div></div>",
       { onMount: function () {
-        $("[data-back]").addEventListener("click", function () { V.go("splash"); });
         $("[data-next]").addEventListener("click", function () { V.go("s1"); });
       }}
     );
