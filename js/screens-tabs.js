@@ -1315,7 +1315,7 @@
 
     function pendingBody() {
       return '<div class="card-soft fm-invite">' +
-        '<div class="fm-invite__h">' + V.iconBox("send", "blue") + "<div><b>" + t("fmInviteTitle") + "</b><small>" + t("fmInviteSub", { name: fname }) + "</small></div></div>" +
+        '<div class="fm-invite__h">' + V.iconBox("send", "blue") + "<div><b>" + t("fmInviteTitle") + "</b><small>" + t("fmInviteSub", { name: V.esc(fname) }) + "</small></div></div>" +
         '<div class="fm-code">' + esc(m.invite) + "</div>" +
         '<button class="btn btn-ghost" id="fmCopy" style="width:100%">' + V.icon("file") + " " + t("fmCopyCode") + "</button>" +
         '<button class="btn btn-primary" id="fmSimAccept" style="width:100%;margin-top:8px">' + V.icon("check") + " " + t("fmSimAccept") + "</button>" +
@@ -1338,7 +1338,7 @@
         '<div class="card-soft">' + V.SHARE_CATS.map(function (c) {
           return '<div class="fm-share"><span>' + V.icon(c.icon) + " " + L(c.label) + '</span><div class="toggle ' + (sh[c.id] ? "on" : "") + '" data-share="' + c.id + '"></div></div>';
         }).join("") + "</div>" +
-        '<p class="lg-disc">' + t("fmConsentNote", { name: fname }) + "</p>" +
+        '<p class="lg-disc">' + t("fmConsentNote", { name: V.esc(fname) }) + "</p>" +
         '<button class="set-reset" id="fmUnlink" style="margin-top:14px">' + t("fmUnlink") + "</button>";
     }
     function manualBody() {
@@ -1720,7 +1720,7 @@
           tile("eye", "blue", "mWellness", 'data-go="wellness"'),
           tile("stethoscope", "crimson", "mTelemed", 'data-go="telemed"'),
           tile("sparkle", "yellow", "mPlus", 'data-go="plus"', V.isPlus() ? "✓" : null),
-          tile("bolt", "blue", "mWearable", 'data-go="wearable"', (V.state.wearable && V.state.wearable.connected) ? "✓" : null),
+          tile("bolt", "blue", "mWearable", 'data-go="wearable"', (V.wearableConnected && V.wearableConnected()) ? "✓" : null),
           tile("sparkle", "yellow", "mRewards", 'data-go="rewards"', (V.state.points || 0) || null),
           tile("globe", "green", "mVitaapp", 'data-go="vitaapp"'),
         ]) +

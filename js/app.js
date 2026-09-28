@@ -110,17 +110,20 @@
   }
   function openQuickAdd() {
     var phone = root.querySelector(".phone");
-    if (!root.querySelector("#qaSheet")) phone.insertAdjacentHTML("beforeend", quickAddSheet());
     var sh = root.querySelector("#qaSheet");
-    sh.addEventListener("click", function (e) { if (e.target === sh) sh.classList.remove("on"); });
-    sh.querySelectorAll("[data-qa]").forEach(function (b) {
-      b.addEventListener("click", function () {
-        var act = b.getAttribute("data-qa");
-        sh.classList.remove("on");
-        if (act === "water") { if (V.waterAdd) { V.waterAdd(250); V.toast && V.toast(V.t("qaWaterDone")); render(); } }
-        else go(act);
+    if (!sh) { // bind once per sheet — rebinding on every open logged water N× on the Nth open
+      phone.insertAdjacentHTML("beforeend", quickAddSheet());
+      sh = root.querySelector("#qaSheet");
+      sh.addEventListener("click", function (e) { if (e.target === sh) sh.classList.remove("on"); });
+      sh.querySelectorAll("[data-qa]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var act = b.getAttribute("data-qa");
+          sh.classList.remove("on");
+          if (act === "water") { if (V.waterAdd) { V.waterAdd(250); V.toast && V.toast(V.t("qaWaterDone")); render(); } }
+          else go(act);
+        });
       });
-    });
+    }
     requestAnimationFrame(function () { sh.classList.add("on"); });
   }
 
@@ -221,9 +224,17 @@
       fn();
     } catch (e) {
       try { console.error("[VITA] screen '" + r + "' failed to render:", e); } catch (_) {}
+      var recovered = false;
       if (r !== "home" && V.state.onboarded && S.home) {
         current = "home";
-        try { S.home(); V.toast && V.toast(V.t("errScreen")); } catch (e2) {}
+        try { S.home(); V.toast && V.toast(V.t("errScreen")); recovered = true; } catch (e2) {}
+      }
+      if (!recovered) { // home itself is broken (bad saved state): a minimal screen instead of a blank app
+        root.innerHTML = '<div class="phone"><div class="screen"><div class="pad-lg" style="padding-top:80px;text-align:center">' +
+          '<p style="margin-bottom:16px">' + V.esc(V.t("errScreen")) + '</p>' +
+          '<button class="btn btn-primary" id="errReload" style="width:100%">' + V.esc(V.t("swReload")) + "</button></div></div></div>";
+        var rb = root.querySelector("#errReload");
+        if (rb) rb.addEventListener("click", function () { location.hash = "#/home"; location.reload(); });
       }
     }
     var sc = root.querySelector(".screen");

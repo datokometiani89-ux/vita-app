@@ -11,7 +11,7 @@
   var t = V.t, esc = V.esc;
   function L(o) { return o[V.lang()] || o.en; }
   function today() { return V.todayISO(); }
-  function daysSince(iso) { return iso ? Math.round((new Date(today()) - new Date(iso)) / 86400000) : 1e9; }
+  function daysSince(iso) { return iso ? Math.round((V.parseISO(today()) - V.parseISO(iso)) / 86400000) : 1e9; }
   function alive(el) { return el && document.body.contains(el); }
 
   function W() { return (V.state.wellness = V.state.wellness || {}); }
@@ -925,9 +925,13 @@
     }
     function camErr(key) { var m = $("#hrMsg"); if (m) m.innerHTML = '<div class="note-warn">' + V.icon("info") + " " + t(key) + "</div>"; var mi = $("#hrManual"); if (mi) mi.focus(); var st = $("#hrStatus"); if (st) st.textContent = t("hrRestNote"); }
 
+    var waveEl = null;
     function loop() {
       if (!running) return;
-      if (!alive($("#hrWave"))) { stop(); return; } // self-clean on navigation
+      // self-clean on navigation. Pin the element from THIS screen: #/scan also renders an
+      // #hrWave, so a fresh lookup kept this loop alive after navigating there (60fps errors + 2 cameras)
+      if (!waveEl) waveEl = $("#hrWave");
+      if (!alive(waveEl)) { stop(); return; }
       raf = requestAnimationFrame(loop);
       if (!video || video.readyState < 2) return;
       hctx.drawImage(video, 0, 0, 60, 60);
@@ -1176,18 +1180,25 @@
     if (!summary) { out.innerHTML = warn(t("haNeedScan")); return; }
     if (btn) btn.disabled = true;
     out.innerHTML = '<div class="scn-rep-load">' + V.icon("sparkle") + " " + t("haReportGen") + "</div>";
-    var done = false;
-    function offline() { if (done) return; done = true; out.innerHTML = reportWrap(reportOffline(), true); if (btn) btn.disabled = false; }
+    var done = false, wd = null;
+    function finish() { done = true; if (wd) clearTimeout(wd); }
+    function offline() { if (done) return; finish(); out.innerHTML = reportWrap(reportOffline(), true); if (btn) btn.disabled = false; }
+    // watchdog: a stream that stalls (proxy hangs, tab throttled, network drop mid-stream)
+    // used to leave the "generating…" spinner forever — fall back to the offline report
+    function arm(ms) { if (wd) clearTimeout(wd); wd = setTimeout(function () { if (!done) offline(); }, ms); }
     if (!V.api || !V.api.chat) { offline(); return; }
+    arm(15000);
     V.api.ready().then(function (on) {
       if (done) return;
       if (!on) { offline(); return; }
       out.innerHTML = reportWrap('<span class="scn-rep-cursor">▍</span>', false);
       var acc = "";
-      V.api.chat([{ role: "user", text: reportPrompt(summary) }],
-        function (tok, full) { acc = full || (acc + tok); var b = out.querySelector("#scnRepBody"); if (b) b.innerHTML = reportFmt(acc) + '<span class="scn-rep-cursor">▍</span>'; },
-        function (full) { done = true; var b = out.querySelector("#scnRepBody"); if (b) b.innerHTML = reportFmt(full || acc); if (btn) btn.disabled = false; },
+      arm(30000);
+      var p = V.api.chat([{ role: "user", text: reportPrompt(summary) }],
+        function (tok, full) { arm(20000); acc = full || (acc + tok); var b = out.querySelector("#scnRepBody"); if (b) b.innerHTML = reportFmt(acc) + '<span class="scn-rep-cursor">▍</span>'; },
+        function (full) { if (done) return; finish(); var b = out.querySelector("#scnRepBody"); if (b) b.innerHTML = reportFmt(full || acc); if (btn) btn.disabled = false; },
         function () { offline(); });
+      if (p && p.catch) p.catch(offline); // chat() rejects when the backend drops — that path never reached the outer .catch
     }).catch(offline);
   }
 
@@ -1196,7 +1207,7 @@
   V.scanStreak = function () {
     var arr = (W().scan || []); if (!arr.length) return 0;
     var days = {}; arr.forEach(function (s) { days[s.date] = 1; });
-    var d = new Date(today()), streak = 0;
+    var d = V.parseISO(today()), streak = 0;
     if (!days[isoOf(d)]) d.setDate(d.getDate() - 1); // today not done yet → count up to yesterday
     while (days[isoOf(d)]) { streak++; d.setDate(d.getDate() - 1); }
     return streak;
@@ -2423,7 +2434,7 @@
   var MOOD_TAGS = ["moTWork", "moTFamily", "moTSleep", "moTHealth", "moTStress", "moTExercise", "moTSocial", "moTMoney"];
 
   function moodStreak(mood) {
-    var n = 0, d = new Date(today());
+    var n = 0, d = V.parseISO(today());
     for (;;) {
       var iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
       if (mood[iso]) { n++; d.setDate(d.getDate() - 1); } else break;
@@ -3611,6 +3622,7 @@
   function makePedometer(onStep) {
     var ema = 9.8, hi = false, lastStep = 0;
     function h(e) {
+      if (!document.getElementById("stpCount")) { window.removeEventListener("devicemotion", h); return; } // screen left via router
       var a = e.accelerationIncludingGravity || e.acceleration; if (!a) return;
       var m = Math.sqrt((a.x || 0) * (a.x || 0) + (a.y || 0) * (a.y || 0) + (a.z || 0) * (a.z || 0));
       ema = ema * 0.9 + m * 0.1; var dev = m - ema, now = Date.now();
@@ -3646,7 +3658,7 @@
         '<circle cx="66" cy="66" r="' + r + '" fill="none" stroke="var(--green)" stroke-width="12" stroke-linecap="round" stroke-dasharray="' + len + " " + (C - len) + '" transform="rotate(-90 66 66)"/></svg>';
     }
     function bars7() {
-      var days = []; for (var i = 6; i >= 0; i--) { var d = new Date(today()); d.setDate(d.getDate() - i); days.push(isoOf(d)); }
+      var days = []; for (var i = 6; i >= 0; i--) { var d = V.parseISO(today()); d.setDate(d.getDate() - i); days.push(isoOf(d)); }
       var vals = days.map(function (dd) { return w.steps[dd] || 0; }); vals[6] = count();
       var max = Math.max.apply(null, vals.concat([STEP_GOAL])) * 1.1 || 1, ww = 320, h = 110, padX = 14, n = 7, bw = (ww - 2 * padX) / n * 0.56;
       var gy = 14 + (1 - STEP_GOAL / max) * (h - 30);
@@ -4086,12 +4098,12 @@
     }
     function prodRow(p) {
       var inCart = (m.cart || []).filter(function (c) { return c.id === p.id; })[0];
-      return '<div class="mk-prod"><div class="mk-prod__t"><b>' + nm(p.name) + "</b><small>" + money(p.price) + "</small></div>" +
+      return '<div class="mk-prod"><div class="mk-prod__t"><b>' + V.esc(nm(p.name)) + "</b><small>" + money(p.price) + "</small></div>" +
         (inCart ? '<span class="mk-prod__q">×' + inCart.qty + "</span>" : "") +
         '<button class="mk-prod__add" data-add="' + p.id + '">' + V.icon("plus") + "</button></div>";
     }
     function cartRow(c) {
-      return '<div class="mk-crow"><div class="mk-crow__t"><b>' + nm(c.name) + "</b><small>" + money(c.price) + "</small></div>" +
+      return '<div class="mk-crow"><div class="mk-crow__t"><b>' + V.esc(nm(c.name)) + "</b><small>" + money(c.price) + "</small></div>" +
         '<div class="mk-qty"><button data-q="' + c.id + '|-1">−</button><span>' + c.qty + '</span><button data-q="' + c.id + '|1">+</button></div>' +
         '<button class="mk-crow__x" data-rm="' + c.id + '">' + V.icon("x") + "</button></div>";
     }
@@ -4155,7 +4167,7 @@
       h += '<div class="mk-steps">' + stageKeys.map(function (k, i) {
         return '<div class="mk-step' + (i < stage ? " done" : i === stage ? " active" : "") + '" data-step="' + i + '"><span class="mk-step__dot">' + (i < stage ? "✓" : (i + 1)) + "</span><b>" + t(k) + "</b></div>";
       }).join("") + "</div>";
-      h += '<div class="mk-track__items">' + o.items.map(function (c) { return '<div class="mk-trow"><span>' + nm(c.name) + " ×" + c.qty + "</span><b>" + money(c.price * c.qty) + "</b></div>"; }).join("") +
+      h += '<div class="mk-track__items">' + o.items.map(function (c) { return '<div class="mk-trow"><span>' + V.esc(nm(c.name)) + " ×" + c.qty + "</span><b>" + money(c.price * c.qty) + "</b></div>"; }).join("") +
         '<div class="mk-trow mk-trow__g"><span>' + t("mkTotal") + "</span><b>" + money(o.total) + "</b></div></div>";
       h += '<p class="hr-multi-note">' + t("mkSeam") + "</p></div>";
       return h;

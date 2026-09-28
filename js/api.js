@@ -9,10 +9,16 @@ window.VITA = window.VITA || {};
   V.api = {
     ready: function () {
       if (state.checked) return Promise.resolve(state.ai);
+      // a failed probe (server still booting, flaky network) is retried after 30s instead of
+      // being cached for the whole session — otherwise the AI stayed "off" until a reload
+      if (state.failedAt && Date.now() - state.failedAt < 30000) return Promise.resolve(false);
       return fetch("/api/health", { method: "GET" })
-        .then(function (r) { return r.ok ? r.json() : { ai: false }; })
-        .then(function (j) { state.checked = true; state.ai = !!j.ai; state.model = j.model || null; state.provider = j.provider || null; return state.ai; })
-        .catch(function () { state.checked = true; state.ai = false; return false; });
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j) { state.failedAt = Date.now(); state.ai = false; return false; }
+          state.checked = true; state.failedAt = 0; state.ai = !!j.ai; state.model = j.model || null; state.provider = j.provider || null; return state.ai;
+        })
+        .catch(function () { state.failedAt = Date.now(); state.ai = false; return false; });
     },
 
     aiOn: function () { return state.ai; },

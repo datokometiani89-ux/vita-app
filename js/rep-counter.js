@@ -209,14 +209,25 @@
         .catch(function () { manualMode(t("rcDenied")); });
     }
 
+    var closed = false;
     function close(save) {
+      if (closed) return;
+      closed = true;
       running = false;
       if (rafId) cancelAnimationFrame(rafId);
       if (stream) stream.getTracks().forEach(function (tr) { tr.stop(); });
       if (pose && pose.close) { try { pose.close(); } catch (e) {} }
+      window.removeEventListener("resize", fitCanvas);
+      window.removeEventListener("hashchange", onLeave);
+      clearInterval(guard);
       el.remove();
       if (save && opts.onDone) opts.onDone(reps);
     }
+    // The overlay lives inside the app root, which V.mount() wipes on every route change with
+    // no teardown hook — without these guards the camera + Pose kept running off-screen.
+    function onLeave() { close(false); }
+    window.addEventListener("hashchange", onLeave);
+    var guard = setInterval(function () { if (!el.isConnected) close(false); }, 800);
 
     el.querySelector("[data-x]").addEventListener("click", function () { close(false); });
     el.querySelector("[data-plus]").addEventListener("click", function () { setReps(reps + 1); });

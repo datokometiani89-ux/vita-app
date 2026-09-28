@@ -128,6 +128,13 @@ window.VITA = window.VITA || {};
     var d = new Date();
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   };
+  // Parse a "YYYY-MM-DD" key as LOCAL midnight. `new Date("YYYY-MM-DD")` is UTC midnight,
+  // so west of UTC every getDate()/getDay() on it is off by one day (streaks, calendars, cycle).
+  V.parseISO = function (s) {
+    if (s instanceof Date) return s;
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ""));
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(s);
+  };
 
   /* ---------- derived metrics ---------- */
 
@@ -201,7 +208,7 @@ window.VITA = window.VITA || {};
   /* day index of the active plan (1-based) */
   V.planDay = function () {
     if (!V.state.planStartDay) return 1;
-    var ms = new Date(V.todayISO()) - new Date(V.state.planStartDay);
-    return Math.max(1, Math.floor(ms / 86400000) + 1);
+    var ms = V.parseISO(V.todayISO()) - V.parseISO(V.state.planStartDay);
+    return Math.max(1, Math.round(ms / 86400000) + 1);
   };
 })(window.VITA);

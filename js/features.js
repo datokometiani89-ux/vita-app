@@ -201,7 +201,7 @@ window.VITA = window.VITA || {};
       '.note{margin-top:28px;color:#8A94A6;font-size:12px}</style></head><body>' +
       "<h1>" + T.title + "</h1><div class='sub'>" + T.sub + "</div>" +
       "<h2>" + T.profile + "</h2><div class='row'>" +
-        "<div><b>" + (p.name || "—") + "</b>" + (p.age || "—") + " " + V.t("years") + " · " + (p.sex === "woman" ? V.t("woman") : V.t("man")) + " · " + (p.location || "") + "</div>" +
+        "<div><b>" + V.esc(p.name || "—") + "</b>" + (p.age || "—") + " " + V.t("years") + " · " + (p.sex === "woman" ? V.t("woman") : V.t("man")) + " · " + V.esc(p.location || "") + "</div>" +
         "<div><b>" + (p.weight || "—") + V.t("kg") + "</b>" + V.t("weight") + "</div>" +
         "<div><b>" + (p.height || "—") + V.t("cm") + "</b>" + V.t("height") + "</div>" +
         "<div><b>" + (bmi || "—") + "</b>BMI</div>" +

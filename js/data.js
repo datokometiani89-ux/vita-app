@@ -304,7 +304,7 @@ window.VITA = window.VITA || {};
      One engine that reads ALL the user's data, connects the dots, and surfaces
      proactive insights + actions. Deterministic (works offline); the screen can
      also layer an AI narrative on top. */
-  V.daysSince = function (iso) { if (!iso) return 99999; return Math.floor((new Date(V.todayISO()) - new Date(iso)) / 86400000); };
+  V.daysSince = function (iso) { if (!iso) return 99999; return Math.round((V.parseISO(V.todayISO()) - V.parseISO(iso)) / 86400000); };
 
   // gather every signal into one structured snapshot (the "one space")
   V.healthSignals = function () {
@@ -314,7 +314,7 @@ window.VITA = window.VITA || {};
     var steps = w.steps || {}, doneT = V.state.doneTasks || {};
     var lastActive = null;
     for (var i = 0; i < 60; i++) {
-      var d = new Date(V.todayISO()); d.setDate(d.getDate() - i);
+      var d = V.parseISO(V.todayISO()); d.setDate(d.getDate() - i);
       var iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
       if ((steps[iso] || 0) >= 2000 || ((doneT[iso] || []).length > 0)) { lastActive = iso; break; }
     }
@@ -638,7 +638,7 @@ window.VITA = window.VITA || {};
   V.cohort = function () {
     var p = V.state.profile || {}, s = V.healthSignals(), w = V.state.wellness || {};
     var ageBand = p.age ? Math.max(20, Math.floor(p.age / 10) * 10) : 30;
-    var seed = ageBand * 7 + (p.sex === "woman" ? 13 : 7) + (p.conditions || []).length * 5 + (p.goals || []).length * 3;
+    var seed = ageBand * 7 + (p.sex === "woman" ? 13 : 7) + (p.conditions || []).length * 5 + (V.state.goals || []).length * 3;
     var size = 5200 + (seed % 95) * 150;            // deterministic ~5200..19450
     var steps = w.steps || {}, sv = Object.keys(steps).sort().slice(-7).map(function (k) { return steps[k]; }).filter(function (x) { return x != null; });
     var stepAvg = sv.length ? Math.round(sv.reduce(function (a, b) { return a + b; }, 0) / sv.length) : null;
@@ -689,7 +689,7 @@ window.VITA = window.VITA || {};
     var risk = 42;
     if (s.bio && s.bio.delta < 0) risk -= 12; else if (s.bio && s.bio.delta > 5) risk += 15;
     if (s.inactiveDays >= 5 && s.inactiveDays < 9000) risk += 10; else risk -= 6;
-    if (p.smoking === "daily") risk += 20; else if (p.smoking === "sometimes") risk += 8;
+    if (p.smoking === "daily") risk += 20; else if (p.smoking === "occ") risk += 8;
     risk += (p.conditions || []).length * 6;
     var bpArr = (V.state.wellness && V.state.wellness.bp) || [], lb = bpArr[bpArr.length - 1];
     if (lb && (lb.sys >= 140 || lb.dia >= 90)) risk += 12;
@@ -761,7 +761,7 @@ window.VITA = window.VITA || {};
     var w = V.state.wellness || {};
     function avg(a) { a = (a || []).filter(function (x) { return typeof x === "number" && isFinite(x); }); return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : null; }
     function mk(recent, prior, higherBetter, eps) { if (recent == null || prior == null) return null; var d = recent - prior; if (Math.abs(d) < (eps || 0.01)) return { dir: 0, good: true }; var up = d > 0; return { dir: up ? 1 : -1, good: higherBetter ? up : !up }; }
-    function diso(off) { var d = new Date(V.todayISO()); d.setDate(d.getDate() - off); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+    function diso(off) { var d = V.parseISO(V.todayISO()); d.setDate(d.getDate() - off); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
     function weekAvg(wk) { var sum = 0, n = 0; for (var i = 0; i < 7; i++) { var v = (w.steps || {})[diso(i + wk * 7)]; if (v != null) { sum += v; n++; } } return n ? sum / n : null; }
     var sl = (w.sleep || []).map(function (s) { return s.hours; });
     var mood = Object.keys(w.mood || {}).sort().map(function (k) { return (w.mood[k] || {}).score; });
@@ -794,7 +794,7 @@ window.VITA = window.VITA || {};
   // consecutive days (up to today) with at least one task done
   V.taskStreak = function () {
     function diso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
-    var n = 0, base = new Date(V.todayISO());
+    var n = 0, base = V.parseISO(V.todayISO());
     for (var i = 0; i < 180; i++) {
       var d = new Date(base.getFullYear(), base.getMonth(), base.getDate() - i);
       var has = (((V.state.doneTasks || {})[diso(d)]) || []).length > 0;
@@ -813,7 +813,7 @@ window.VITA = window.VITA || {};
     { icon: "brain", key: "df5", label: { ka: "მენტალური სიმშვიდე", en: "Mental calm" } },
     { icon: "bolt", key: "df6", label: { ka: "აქტიურობა", en: "Be active" } },
   ];
-  V.dayFocus = function () { return V.DAY_FOCUS[new Date(V.todayISO()).getDay()]; };
+  V.dayFocus = function () { return V.DAY_FOCUS[V.parseISO(V.todayISO()).getDay()]; };
   // rotating daily tip (deterministic by date)
   V.DAILY_TIPS = [
     { ka: "დილით 1 ჭიქა წყალი მეტაბოლიზმს აღვიძებს.", en: "A glass of water on waking kick-starts your metabolism." },
@@ -828,7 +828,7 @@ window.VITA = window.VITA || {};
     { ka: "ყოველ საათში 2–3 წუთით წამოდექი.", en: "Stand up for 2–3 minutes every hour." },
   ];
   V.dailyTip = function () {
-    var d = new Date(V.todayISO());
+    var d = V.parseISO(V.todayISO());
     var idx = (d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % V.DAILY_TIPS.length;
     return V.DAILY_TIPS[idx];
   };
@@ -913,7 +913,7 @@ window.VITA = window.VITA || {};
   V.challengeProgress = function (ch) {
     var n = 0, win = Math.max(14, ch.days);
     for (var i = 0; i < win; i++) {
-      var d = new Date(V.todayISO()); d.setDate(d.getDate() - i);
+      var d = V.parseISO(V.todayISO()); d.setDate(d.getDate() - i);
       var iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
       if (chQualifies(ch.metric, iso)) n++;
     }
@@ -1125,7 +1125,7 @@ window.VITA = window.VITA || {};
   // ---- yearly screening completion tracking ----
   // trim per-day/per-year maps so localStorage doesn't grow unbounded (call once at boot)
   V.pruneState = function () {
-    var keepDays = 21, now = new Date(V.todayISO());
+    var keepDays = 21, now = V.parseISO(V.todayISO());
     function staleDateKey(key) {
       if (!/^\d{4}-\d\d-\d\d/.test(key)) return false; // keep non-date keys (e.g. "quit:start")
       var ms = now - new Date(key.slice(0, 10));
@@ -1408,7 +1408,7 @@ window.VITA = window.VITA || {};
 
   /* ---------- Women's cycle ---------- */
   function dISO(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
-  function addDays(iso, n) { var d = new Date(iso); d.setDate(d.getDate() + n); return d; }
+  function addDays(iso, n) { var d = V.parseISO(iso); d.setDate(d.getDate() + n); return d; }
 
   V.cycleDefault = function () {
     return { lastPeriod: dISO(addDays(V.todayISO(), -8)), cycleLen: 28, periodLen: 5, logs: {}, periodDays: {}, flow: {} };
@@ -1441,7 +1441,7 @@ window.VITA = window.VITA || {};
     var c = V.cycle();
     if (c.periodDays[iso]) return "period";
     var len = c.cycleLen || 28, plen = c.periodLen || 5, ovDay = len - 14;
-    var elapsed = Math.floor((new Date(iso) - new Date(V.cycleLastStart())) / 86400000);
+    var elapsed = Math.round((V.parseISO(iso) - V.parseISO(V.cycleLastStart())) / 86400000);
     var dayInCycle = ((elapsed % len) + len) % len + 1;   // 1..len, wraps both directions
     if (dayInCycle <= plen) return "predPeriod";
     if (dayInCycle === ovDay) return "ovulation";
@@ -1452,7 +1452,7 @@ window.VITA = window.VITA || {};
   V.cycleInfo = function () {
     var c = V.cycle();
     var len = c.cycleLen || 28, plen = c.periodLen || 5;
-    var ms = new Date(V.todayISO()) - new Date(c.lastPeriod);
+    var ms = V.parseISO(V.todayISO()) - V.parseISO(c.lastPeriod);
     var elapsed = Math.floor(ms / 86400000);
     var day = ((elapsed % len) + len) % len + 1;      // 1..len
     var ovDay = len - 14;                              // ovulation day

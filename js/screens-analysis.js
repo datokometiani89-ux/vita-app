@@ -56,6 +56,8 @@
     var thresholds = [10, 40, 70, 92];
 
     var tick = setInterval(function () {
+      // the user navigated away mid-animation: stop, and never force-jump them to #/profile
+      if (!fg || !document.body.contains(fg)) { clearInterval(tick); return; }
       var p = Math.min(1, (Date.now() - start) / dur);
       pct = Math.round(p * target);
       if (fg) fg.setAttribute("stroke-dashoffset", c * (1 - p));
@@ -76,7 +78,7 @@
       });
       if (p >= 1) {
         clearInterval(tick);
-        setTimeout(function () { V.go("profile"); }, 650);
+        setTimeout(function () { if (document.body.contains(fg)) V.go("profile"); }, 650);
       }
     }, 40);
   }
