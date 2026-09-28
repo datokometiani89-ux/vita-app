@@ -38,13 +38,13 @@
       return '<button class="tab ' + (active === id ? "on" : "") + '" data-tab="' + id + '">' +
         V.icon(icon) + "<span>" + V.t(key) + "</span></button>";
     }
+    // 4-tab IA (Apple redesign): Today · Health · Care · Me. Plan/chat/progress live inside the hubs.
     return (
       '<nav class="tabbar">' +
       tab("home", "home", "nHome") +
-      tab("plan", "plan", "nPlan") +
-      '<button class="fab" data-fab="1">' + V.icon("plus") + "</button>" +
-      tab("vita", "chat", "nVita") +
-      tab("progress", "progress", "nProgress") +
+      tab("health", "heart", "nHealth") +
+      tab("care", "stethoscope", "nCare") +
+      tab("me", "user", "nMe") +
       "</nav>"
     );
   };

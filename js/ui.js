@@ -65,6 +65,7 @@ window.VITA = window.VITA || {};
     cog: P('<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5 5l2.1 2.1M16.9 16.9 19 19M19 5l-2.1 2.1M7.1 16.9 5 19"/>'),
     sliders: P('<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.4"/><circle cx="8" cy="17" r="2.4"/>'),
     back: P('<path d="M15 5l-7 7 7 7"/>'),
+    chev: P('<path d="M9 6l6 6-6 6"/>'),
     next: P('<path d="M5 12h13M13 6l6 6-6 6"/>'),
     check: P('<path d="M4.5 12.5 10 18 19.5 7"/>'),
     bell: P('<path d="M6 9.5a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10.2 19.5a2 2 0 0 0 3.6 0"/>'),

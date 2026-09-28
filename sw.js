@@ -1,5 +1,5 @@
 /* VITA service worker — caches the app shell for offline use. */
-var CACHE = "vita-v125";
+var CACHE = "vita-v126";
 var VER = CACHE.replace("vita-v", "");
 // precache the SAME URLs the pages request (`?v=NN`), so an asset isn't fetched and stored
 // twice (once by install, once by the page); matching ignores the query for robustness.
@@ -9,6 +9,7 @@ var ASSETS = [
   "manifest.json",
   "css/base.css",
   "css/app.css",
+  "css/apple.css",
   "css/landing.css",
   "js/i18n.js",
   "js/ui.js",
@@ -24,6 +25,7 @@ var ASSETS = [
   "js/screens-analysis.js",
   "js/screens-tabs.js",
   "js/screens-wellness.js",
+  "js/screens-hubs.js",
   "js/app.js",
   "icons/icon-192.png",
   "icons/icon-512.png",

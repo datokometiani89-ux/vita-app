@@ -32,16 +32,12 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="dash-head">' +
-          '<span class="dash-logo">' + V.logoBadge(34) + "</span>" +
-          '<div class="dash-icons">' +
-            '<button class="pts-chip" data-rewards aria-label="' + t("rwTitle") + '">' + V.icon("sparkle") + (V.state.points || 0) + "</button>" +
-            '<button class="icon-box gray" data-go="reminders" aria-label="' + t("rmTitle") + '">' + V.icon("bell") + "</button>" +
-            '<button class="icon-box gray" data-go="customize" aria-label="' + t("customizeHome") + '">' + V.icon("sliders") + "</button>" +
-            '<button class="icon-box gray" data-menu aria-label="' + t("menuTitle") + '">' + V.icon("grid") + "</button>" +
-          "</div>" +
-        "</div>" +
-        '<h1 class="dash-greet">' + esc(homeGreeting()) + "</h1>" +
+        // Apple redesign: large-title greeting; trailing actions = points · quick-add · ask VITA
+        V.screenHead({ title: homeGreeting(), actions: [
+          { icon: "sparkle", cls: "pts-chip", attr: "data-rewards", label: t("rwTitle"), text: V.state.points || 0 },
+          { icon: "plus", attr: 'data-fab="1"', label: t("qaTitle") },
+          { icon: "chat", attr: 'data-go="vita"', label: t("meAskVita") },
+        ] }) +
         '<button class="day-prog" data-go="plan">' +
           '<span class="day-prog__ic">' + V.icon("plan") + "</span>" +
           '<span class="day-prog__t"><b>' + t("hpDayPlan") + "</b>" +
@@ -73,7 +69,6 @@
           var html = V[w.card](); if (!html) return "";
           return (w.kicker ? '<div class="kicker" style="margin:22px 0 10px">' + t(w.kicker) + "</div>" : "") + html;
         }).join("") +
-        '<button class="hc-cta" data-go="customize">' + V.icon("cog") + " " + t("customizeHome") + "</button>" +
         nextScreeningCard() +
         '<div class="kicker" style="margin:22px 0 10px">' + t("areas") + "</div>" +
         '<div class="list-card">' +
