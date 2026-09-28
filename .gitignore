@@ -8,8 +8,10 @@ venv/
 .DS_Store
 *.log
 
-# local tooling (Claude Code harness, preview config)
-.claude/
+# local tooling (Claude Code harness, preview config) — agents + skills ARE shared with the repo
+.claude/*
+!.claude/agents/
+!.claude/skills/
 
 # local working files (not part of the app)
 design/

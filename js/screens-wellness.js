@@ -864,7 +864,7 @@
         '<div id="hrMsg"></div>' +
         (last ? '<div class="hr-last">' + t("hrLast") + ": <b>" + last.bpm + " " + t("hrBpm") + "</b>" + (last.rr ? " · " + last.rr + " " + t("hrRRUnit") : "") + (last.hrv ? " · HRV " + last.hrv + " ms" : "") + " · " + esc(last.date) + "</div>" : "") +
         '<p class="hr-multi-note">' + t("hrSkinNote") + "</p>" +
-        '<video id="hrVideo" playsinline muted style="display:none"></video>' +
+        '<video id="hrVideo" playsinline muted autoplay style="position:absolute;width:2px;height:2px;opacity:.01;pointer-events:none"></video>' +
       "</div>" +
       V.tabbar("home") +
       "</div>",
@@ -1321,7 +1321,7 @@
           scanHistory() +
           '<button class="scn-infolink" data-go="scaninfo">' + V.icon("info") + " " + L({ ka: "როგორ მუშაობს & რამდენად ზუსტია", en: "How it works & how accurate it is" }) + " " + V.icon("next") + "</button>" +
           '<p class="hr-multi-note">' + t("scnDisc") + "</p>" +
-          '<video id="hrVideo" playsinline muted style="display:none"></video>' +
+          '<video id="hrVideo" playsinline muted autoplay style="position:absolute;width:2px;height:2px;opacity:.01;pointer-events:none"></video>' +
         "</div>" +
         V.tabbar("home") +
         "</div>",
@@ -2069,7 +2069,7 @@
       navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function (s) {
         stream = s;
         var AC = window.AudioContext || window.webkitAudioContext;
-        ctx = new AC(); src = ctx.createMediaStreamSource(s);
+        ctx = new AC(); try { if (ctx.state === "suspended") ctx.resume(); } catch (_) {} src = ctx.createMediaStreamSource(s);
         analyser = ctx.createAnalyser(); analyser.fftSize = 2048; src.connect(analyser);
         pitches = []; rmss = []; startT = performance.now(); running = true; status("vcSpeak"); loop();
       }).catch(function (e) {
