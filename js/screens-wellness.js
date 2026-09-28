@@ -3342,9 +3342,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("bolt", r.band.tone) + "<h1>" + t("rdTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
-        '<p class="s-sub">' + t("rdSub") + "</p>" +
+        V.screenHead({ title: t("rdTitle"), sub: t("rdSub"), backAttr: "data-x" }) +
         '<div class="rd-hero"><div class="rd-ring rd-big rd-tone-' + r.band.tone + '"><b>' + r.score + "</b><small>/100</small></div>" +
           '<div class="rd-hero__b rd-text-' + r.band.tone + '">' + t(r.band.k) + "</div></div>" +
         '<div class="section-head"><h3>' + t("rdFactors") + "</h3></div>" +
@@ -4310,11 +4308,10 @@
 
   /* ---------- small shared helpers for the new screens ---------- */
   function head(icon, tone, titleKey) {
-    return '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' +
-      V.iconBox(icon, tone) + "<h1>" + t(titleKey) + "</h1></div>" +
-      '<button class="icon-box gray" data-x aria-label="' + t("back") + '">' + V.icon("back") + "</button></div>";
+    // Apple redesign: large title + chevron back; the back keeps [data-x] so each tool's own wiring works
+    return V.screenHead({ title: t(titleKey), backAttr: "data-x" });
   }
-  function backX() { var b = $("[data-x]"); if (b) b.addEventListener("click", function () { V.go("wellness"); }); }
+  function backX() { var b = $("[data-x]"); if (b) b.addEventListener("click", function () { V.goBack("health"); }); }
   function warn(msg) { return '<div class="note-warn">' + V.icon("info") + " " + msg + "</div>"; }
   function deepClinic(id, title) { if (V.openClinics) V.openClinics(id, title); else V.go("clinics"); }
 })();

@@ -13,7 +13,10 @@
   /* Large-title header. o = { title, sub, back:true|route, backLabel, actions:[{icon,attr,label}] } */
   V.screenHead = function (o) {
     o = o || {};
-    var back = o.back ? '<button class="nav-large__back" data-back' + (typeof o.back === "string" ? '="' + esc(o.back) + '"' : "") +
+    // back: true → generic [data-back] (V.mount navigates to o.back route or home);
+    // backAttr lets legacy screens keep their own wiring (wellness tools listen on [data-x]).
+    var attr = o.backAttr || "data-back";
+    var back = (o.back || o.backAttr) ? '<button class="nav-large__back" ' + attr + (typeof o.back === "string" ? '="' + esc(o.back) + '"' : "") +
       ' aria-label="' + esc(t("back")) + '">' + V.icon("back") + (o.backLabel ? "<span>" + esc(o.backLabel) + "</span>" : "") + "</button>" : "";
     var acts = (o.actions || []).map(function (a) {
       return '<button class="' + (a.cls || "icon-box") + '" ' + (a.attr || "") + ' aria-label="' + esc(a.label || "") + '">' + V.icon(a.icon) + (a.text != null ? esc(String(a.text)) : "") + "</button>";
@@ -42,7 +45,6 @@
       V.statusbar() + '<div class="screen"><div class="pad-lg fade-in">' + head + body + "</div>" + V.tabbar(tab) + "</div>",
       { onMount: function () {
         each("[data-go]", function (b) { b.addEventListener("click", function () { var r = b.getAttribute("data-go"); if (r.charAt(0) !== "_") V.go(r); }); });
-        var back = $("[data-back]"); if (back) back.addEventListener("click", function () { V.go(back.getAttribute("data-back") || "home"); });
       } }
     );
   }

@@ -25,9 +25,20 @@
     var hasW = p.weight != null;
     var weight = hasW ? p.weight : null;
     var target = hasW ? Math.max(60, Math.round(p.weight - 8)) : null;
-    var facePos = score; // 0..100
-
+    var rd = null; try { rd = V.readiness(); } catch (e) {}
     var scoreStatus = score >= 71 ? t("hsGood") : score >= 41 ? t("hsModerate") : t("hsRisk");
+    var scoreTone = score >= 71 ? "var(--green)" : score >= 41 ? "#E39A1F" : "var(--crimson)";
+
+    function summaryCard() {
+      var r = 32, c = 2 * Math.PI * r, pct = V.dayProgress();
+      return '<button class="sum" data-go="plan">' +
+        '<span class="sum-ring"><svg viewBox="0 0 76 76"><circle cx="38" cy="38" r="' + r + '" fill="none" stroke="var(--fill)" stroke-width="7"/>' +
+          '<circle cx="38" cy="38" r="' + r + '" fill="none" stroke="' + scoreTone + '" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + (c * score / 100) + " " + c + '"/></svg>' +
+          "<b>" + score + "</b></span>" +
+        '<span class="sum__t"><b>' + t("healthScore") + "</b><small>" + scoreStatus + " · " + t("hpDayPlan") + " " + pct + "%</small>" +
+          '<span class="bar"><i style="width:' + pct + '%"></i></span></span>' +
+        V.icon("chev") + "</button>";
+    }
 
     V.mount(
       V.statusbar() +
@@ -38,29 +49,15 @@
           { icon: "plus", attr: 'data-fab="1"', label: t("qaTitle") },
           { icon: "chat", attr: 'data-go="vita"', label: t("meAskVita") },
         ] }) +
-        '<button class="day-prog" data-go="plan">' +
-          '<span class="day-prog__ic">' + V.icon("plan") + "</span>" +
-          '<span class="day-prog__t"><b>' + t("hpDayPlan") + "</b>" +
-            '<span class="day-prog__bar"><i style="width:' + V.dayProgress() + '%"></i></span></span>' +
-          '<span class="day-prog__pct">' + V.dayProgress() + "%</span>" +
-        "</button>" +
-        '<div class="kicker" style="margin:20px 0 10px">' + t("yourData") + "</div>" +
-        '<div class="score-card"><div class="score-card__top">' +
-          '<div class="score-card__num">' + score + '<span>/100</span></div>' +
-          '<div class="score-badge">' + V.icon("shield") + "</div></div>" +
-          '<div class="score-track"><div class="score-face" style="left:' + Math.max(8, Math.min(92, facePos)) + '%">' + V.icon("smile") + "</div></div>" +
-          '<div class="score-scale"><span>0-40</span><span>41-70</span><span>71-100</span></div>' +
-          "<h3>" + t("healthScore") + "</h3><p>" + scoreStatus + "</p>" +
-        "</div>" +
-        '<div class="metric-row">' +
-          '<div class="metric p"' + (hasW ? "" : ' data-go="profile" style="cursor:pointer"') + '><div class="metric__tag">' + V.icon("scale") + "</div>" +
-            '<div class="metric__num">' + (hasW ? weight + '<span>' + t("kg") + "</span>" : "—") + "</div>" +
-            '<div class="metric__lbl">' + t("weight") + "</div>" +
-            '<div class="metric__sub">' + (hasW ? t("target") + ": " + target + t("kg") : t("hpSetProfile")) + "</div></div>" +
-          '<div class="metric y"' + (bmiVal != null ? "" : ' data-go="profile" style="cursor:pointer"') + '><div class="metric__tag">' + V.icon("ruler") + "</div>" +
-            '<div class="metric__num">' + (bmiVal != null ? bmiVal : "—") + "</div>" +
-            '<div class="metric__lbl">' + t("bmi") + "</div>" +
-            '<div class="metric__sub">' + (bmiVal != null ? (bmiSt === "good" ? t("normal") : t("caution")) : t("hpSetProfile")) + "</div></div>" +
+        // Apple redesign: one summary card (score ring + day-plan progress) and three flat tiles
+        summaryCard() +
+        '<div class="tiles">' +
+          '<button class="tile" data-go="profile"><small>' + t("weight") + "</small><b>" + (hasW ? weight + "<span>" + t("kg") + "</span>" : "—") + "</b>" +
+            "<i>" + (hasW ? t("target") + " " + target + t("kg") : t("hpSetProfile")) + "</i></button>" +
+          '<button class="tile" data-go="profile"><small>' + t("bmi") + "</small><b>" + (bmiVal != null ? bmiVal : "—") + "</b>" +
+            "<i>" + (bmiVal != null ? (bmiSt === "good" ? t("normal") : t("caution")) : t("hpSetProfile")) + "</i></button>" +
+          '<button class="tile" data-go="readiness"><small>' + t("rdTitle") + "</small><b>" + (rd ? rd.score : "—") + "</b>" +
+            "<i>" + (rd ? t(rd.band.k) : "") + "</i></button>" +
         "</div>" +
         V.homeCardsPrefs().order.map(function (id) {
           if (V.homeCardsPrefs().hidden[id]) return "";
@@ -204,15 +201,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="dash-head">' +
-          '<span class="dash-logo">' + V.logoBadge(34) + "</span>" +
-          '<div class="dash-icons">' +
-            '<button class="icon-box gray" data-go="reminders" aria-label="' + t("rmTitle") + '">' + V.icon("bell") + "</button>" +
-            '<button class="icon-box gray" data-go="menu" aria-label="' + t("menuTitle") + '">' + V.icon("grid") + "</button>" +
-            '<button class="icon-box gray" data-open-settings aria-label="' + t("setTitle") + '">' + V.icon("cog") + "</button>" +
-          "</div>" +
-        "</div>" +
-        '<h1 class="dash-greet">' + t("plMyPlan") + "</h1>" +
+        V.screenHead({ title: t("plMyPlan"), back: "health", actions: [{ icon: "bell", attr: 'data-go="reminders"', label: t("rmTitle") }] }) +
         '<div class="plan-hero"><div class="plan-hero__top">' +
           "<h2>" + (pct >= 100 ? t("plDone") : pct >= 50 ? t("plAlmost") : pct > 0 ? t("plKeepGoing") : t("plStart")) + '</h2><div class="plan-hero__pct">' + pct + "<span>%</span></div></div>" +
           weekStrip() +
@@ -586,7 +575,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head">' + V.logoBadge(34) + "<h1>" + t("pgTitle") + "</h1></div>" +
+        V.screenHead({ title: t("pgTitle"), back: "health" }) +
         '<p class="s-sub">' + t("pgDesc") + "</p>" +
 
         '<div class="kicker" style="margin:6px 0 10px">' + t("pgWellness") + "</div>" +

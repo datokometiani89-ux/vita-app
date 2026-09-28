@@ -33,7 +33,16 @@
     );
   };
 
+  // which tab a route belongs to — so detail screens highlight their hub, not "Today"
+  var TAB_OF = {};
+  [["health", "health scan fullscan skinscan voicescan tonguescan reactionscan scaninfo steps water food sleep mood bplog cycle meds coach readiness progress datalab results bodymap annual plan wellness exercises workouts quests challenges eyecare breathe symptom heartrate mindtests fasting quitsmoke risk posture analyse"],
+   ["care", "care telemed visits checkup careplans market insurance roi family familyMember calendar reminders vitaapp clinics"],
+   ["me", "me profile rewards plus wearable customize menu"]].forEach(function (p) {
+    p[1].split(" ").forEach(function (r) { TAB_OF[r] = p[0]; });
+  });
   V.tabbar = function (active) {
+    var route = (location.hash || "").replace(/^#\/?/, "").split("?")[0];
+    active = TAB_OF[route] || active;
     function tab(id, icon, key) {
       return '<button class="tab ' + (active === id ? "on" : "") + '" data-tab="' + id + '">' +
         V.icon(icon) + "<span>" + V.t(key) + "</span></button>";
@@ -62,10 +71,19 @@
     a11yPass();
   }
   V.mount = mount;
+  // Back that respects where the user came from (hub → tool → hub); falls back to a route
+  // when the app was opened directly on a deep link.
+  V.goBack = function (fallback) {
+    if (history.length > 1 && V._navCount > 0) history.back(); else go(fallback || "home");
+  };
+  V._navCount = 0;
+  window.addEventListener("hashchange", function () { V._navCount++; });
 
   // Accessibility baseline applied to every screen (65 hand-assembled headers, div-toggles):
   // icon-only buttons get a name, .toggle divs become keyboard-operable switches.
   function a11yPass() {
+    // generic back button from V.screenHead({back}) — navigates to the given route (default home)
+    root.querySelectorAll("[data-back]").forEach(function (b) { b.addEventListener("click", function () { var r = b.getAttribute("data-back"); if (r) go(r); else V.goBack("home"); }); });
     root.querySelectorAll("button[data-x]:not([aria-label])").forEach(function (b) { b.setAttribute("aria-label", V.t("back")); });
     root.querySelectorAll("[data-fab]:not([aria-label])").forEach(function (b) { b.setAttribute("aria-label", V.t("qaTitle")); });
     root.querySelectorAll("[data-open-settings]:not([aria-label])").forEach(function (b) { b.setAttribute("aria-label", V.t("setTitle")); });
