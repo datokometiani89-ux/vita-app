@@ -226,3 +226,21 @@
 .water-preset.on, .cal-btn.on { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
 .fd-pbtn svg { color: var(--yellow-text); }
 .qu-row.done { border-color: var(--separator) !important; }
+
+/* ---------- real phones (≤480px, full-bleed) ---------- */
+@media (max-width: 480px) {
+  /* the "9:41" status bar is a desktop-demo affordance — on a device the real one is above;
+     keep only the notch/safe-area padding */
+  .statusbar { height: max(10px, env(safe-area-inset-top, 10px)); padding: 0; }
+  .statusbar > span, .statusbar .dots { display: none !important; }
+  .nav-large h1 { font-size: 30px; }
+  .nav-large__sub { font-size: 14.5px; }
+  .scn-mod i { display: none; }
+}
+/* scan: modality strip = one horizontally scrollable row instead of a 3-row wrap */
+.scn-mods { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin: 0 -16px 14px; padding: 0 16px; }
+.scn-mods::-webkit-scrollbar { display: none; }
+.scn-mod { flex: none; white-space: nowrap; background: var(--surface); border: 1px solid var(--separator); color: var(--label-2); }
+.scn-mod.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.scn-mod.on i { opacity: .9; }
+.scn-fullcta__t small { white-space: normal; }
