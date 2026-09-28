@@ -282,7 +282,34 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
         super().end_headers()
+
+    # Static files that must never leave the server: the backend DB dir, dotfiles
+    # (.env/.git), server source, docs and working files that sit in the repo root.
+    _PRIVATE_EXT = (".py", ".pyc", ".md", ".xlsx", ".pptx", ".yaml", ".yml", ".toml", ".ini")
+
+    def _is_private(self, path):
+        parts = [p for p in path.split("/") if p]
+        if any(p.startswith(".") or p.startswith("_") for p in parts):
+            return True
+        if parts and parts[-1].lower().endswith(self._PRIVATE_EXT):
+            return True
+        return "vita-backend" in path
+
+    def send_head(self):  # used by both GET and HEAD for static files
+        if self._is_private(urlparse(self.path).path):
+            self.send_error(404, "Not found")
+            return None
+        return super().send_head()
+
+    def _user(self, qs):
+        """Session for the request: `Authorization: Bearer <token>` or `?token=` (SSE)."""
+        auth = self.headers.get("Authorization") or ""
+        token = auth[7:].strip() if auth.lower().startswith("bearer ") else (qs.get("token") or [""])[0]
+        return backend.user_for(token)
 
     def _json(self, code, obj):
         data = json.dumps(obj, ensure_ascii=False).encode("utf-8")
@@ -299,9 +326,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             n = 0
         raw = self.rfile.read(n) if n else b""
         try:
-            return json.loads(raw.decode("utf-8")) if raw else {}
+            obj = json.loads(raw.decode("utf-8")) if raw else {}
         except Exception:
             return {}
+        return obj if isinstance(obj, dict) else {}  # handlers do body.get(...) — a list/str would crash them
 
     def do_GET(self):
         u = urlparse(self.path)
@@ -311,7 +339,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                     "model": _model, "backend": True, "online": backend.online_counts()})
         if path == "/api/events":
             return self.handle_events(qs)
-        r = backend.handle("GET", path, qs, {})
+        r = backend.handle("GET", path, qs, {}, self._user(qs))
         if r is not None:
             return self._json(r[0], r[1])
         return super().do_GET()
@@ -325,7 +353,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self.handle_interpret()
         if path == "/api/vision":
             return self.handle_vision()
-        r = backend.handle("POST", path, qs, self._body())
+        r = backend.handle("POST", path, qs, self._body(), self._user(qs))
         if r is not None:
             return self._json(r[0], r[1])
         self._json(404, {"error": "not found"})
@@ -333,10 +361,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def handle_events(self, qs):
         """Server-Sent-Events stream — the realtime channel between patient and
         doctor apps (replaces the client-only BroadcastChannel bridge)."""
-        token = (qs.get("token") or [""])[0]
-        user = backend.user_for(token) if token else {}
-        role = user.get("role") or (qs.get("role") or ["patient"])[0]
-        uid = user.get("uid") or (qs.get("uid") or ["*"])[0]
+        user = self._user(qs)
+        if not user.get("role"):  # role + uid come from the session only — never from the query string
+            return self._json(401, {"error": "auth required"})
+        role, uid = user["role"], user["uid"]
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream; charset=utf-8")
         self.send_header("Cache-Control", "no-store")

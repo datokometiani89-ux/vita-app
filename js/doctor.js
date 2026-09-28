@@ -61,7 +61,7 @@
   }
 
   /* ---------- avatars / chips ---------- */
-  function av(name, tone, size) { size = size || 44; return '<span class="doc-av" style="width:' + size + "px;height:" + size + "px;font-size:" + Math.round(size * 0.36) + "px;background:" + (TONE[tone] || TONE.green) + '">' + initials(name) + "</span>"; }
+  function av(name, tone, size) { size = size || 44; return '<span class="doc-av" style="width:' + size + "px;height:" + size + "px;font-size:" + Math.round(size * 0.36) + "px;background:" + (TONE[tone] || TONE.green) + '">' + esc(initials(name)) + "</span>"; }
   function urgChip(u) { var c = u === "high" ? "crimson" : u === "medium" ? "yellow" : "blue"; var lbl = { high: { ka: "გადაუდებელი", en: "Urgent" }, medium: { ka: "საშუალო", en: "Medium" }, low: { ka: "დაბალი", en: "Low" } }[u]; return '<span class="doc-urg" style="color:' + TONE[c] + ";background:" + TONE[c] + '22">' + L(lbl) + "</span>"; }
   function kpi(label, val, sub, color) { return '<div class="doc-kpi"><b style="color:' + (color || "var(--ink)") + '">' + val + "</b><small>" + label + "</small>" + (sub ? '<i class="doc-kpi__sub">' + sub + "</i>" : "") + "</div>"; }
 
@@ -81,9 +81,9 @@
     return '<div class="doc-qcard' + (p.live ? " doc-qcard--live" : "") + '">' + av(pname(p), p.tone, 50) +
       '<div class="doc-qcard__t"><div class="doc-qcard__top"><b>' + esc(pname(p)) + "</b>" + urgChip(p.urgency) +
         (p.live ? '<span class="doc-livereq">● ' + T("liveReq") + "</span>" : "") + "</div>" +
-        "<small>" + p.age + (p.sex === "F" ? "♀" : "♂") + " · " + esc(L(p.reason)) + "</small>" +
-        '<i class="doc-wait">' + icon("bell") + " " + T("waiting") + " " + p.wait + " " + T("min") + "</i></div>" +
-      '<button class="doc-accept" data-accept="' + p.id + '">' + icon("camera") + " " + T("accept") + "</button></div>";
+        "<small>" + esc(p.age) + (p.sex === "F" ? "♀" : "♂") + " · " + esc(L(p.reason)) + "</small>" +
+        '<i class="doc-wait">' + icon("bell") + " " + T("waiting") + " " + esc(p.wait) + " " + T("min") + "</i></div>" +
+      '<button class="doc-accept" data-accept="' + esc(p.id) + '">' + icon("camera") + " " + T("accept") + "</button></div>";
   }
 
   function patients() {
@@ -115,7 +115,7 @@
       '<div class="doc-console">' +
         // patient header + vitals
         '<div class="doc-card doc-pt"><div class="doc-pt__h">' + av(pname(p), p.tone, 46) +
-          '<div class="doc-qcard__t"><b>' + esc(pname(p)) + "</b><small>" + p.age + (p.sex === "F" ? "♀" : "♂") + " · " + esc(L(p.reason)) + "</small></div>" + urgChip(p.urgency) + "</div>" +
+          '<div class="doc-qcard__t"><b>' + esc(pname(p)) + "</b><small>" + esc(p.age) + (p.sex === "F" ? "♀" : "♂") + " · " + esc(L(p.reason)) + "</small></div>" + urgChip(p.urgency) + "</div>" +
           '<div class="doc-vitals">' +
             vital(icon("heart"), p.vitals.hr, "HR") + vital(icon("trend"), p.vitals.hrv, "HRV") +
             vital(icon("drop"), p.vitals.spo2 + "%", "SpO₂") + vital(icon("user"), p.vitals.bioAge, T("bioAge")) +
@@ -133,7 +133,7 @@
         '<button class="doc-complete" id="docComplete">' + icon("check") + " " + T("complete") + "</button>" +
       "</div>";
   }
-  function vital(ic, val, label) { return '<div class="doc-vital">' + ic + "<b>" + val + "</b><small>" + label + "</small></div>"; }
+  function vital(ic, val, label) { return '<div class="doc-vital">' + ic + "<b>" + esc(val) + "</b><small>" + label + "</small></div>"; }
 
   /* ---------- shell ---------- */
   function render() {
@@ -202,12 +202,14 @@
     prescribe: { ka: "რეცეპტის გამოწერა", en: "Prescribe" }, rxPh: { ka: "მედიკამენტი, დოზა…", en: "Medication, dose…" },
     complete: { ka: "ვიზიტის დასრულება", en: "Complete consult" }, consultDone: { ka: "ვიზიტი დასრულდა ✓", en: "Consult completed ✓" },
     newRequest: { ka: "ახალი მოთხოვნა მოვიდა 🔔", en: "New consult request 🔔" }, liveReq: { ka: "ცოცხალი", en: "live" },
+    authDenied: { ka: "სერვერმა ექიმის წვდომა არ დაადასტურა — გახსენი ?key=… ბმულით", en: "Server refused doctor access — open with ?key=… link" },
   };
   function T(k) { var o = STR[k]; return o ? L(o) : k; }
 
   /* ---------- realtime: receive consult requests from the patient app ---------- */
   if (V.bridge) {
     if (V.bridge.init) V.bridge.init("doctor");
+    V.bridge.on("auth-denied", function () { toast(T("authDenied")); });
     V.bridge.on("consult-claimed", function (p) {
       if (!p || !p.id) return;
       var before = QUEUE.length;
@@ -217,13 +219,19 @@
     V.bridge.on("consult-request", function (p) {
       if (!p || !p.id) return;
       if (QUEUE.some(function (q) { return q.id === p.id; })) return;
-      var v = p.vitals || {};
+      // untrusted payload (another user's browser, or the local channel): numbers must be numbers,
+      // strings are clipped; everything is esc()'d again at render time
+      var v = (p.vitals && typeof p.vitals === "object") ? p.vitals : {};
+      function num(x, hi) { var n = Number(x); return (x != null && x !== "" && isFinite(n) && n >= 0 && n <= hi) ? n : null; }
+      function str(x, n) { return typeof x === "string" ? x.slice(0, n) : ""; }
+      var score = num(v.score, 100), id = str(p.id, 48), name = str(p.name, 80);
+      if (!/^[\w-]+$/.test(id)) return;
       QUEUE.unshift({
-        id: p.id, uid: p.uid, name: p.name || "Patient", nameKa: p.name || "პაციენტი", age: p.age || "—", sex: p.sex || "M",
-        reason: p.reason || { ka: "ახალი მოთხოვნა", en: "New request" }, wait: 0, live: true,
-        urgency: (v.score != null && v.score < 60) ? "high" : (v.score != null && v.score < 75) ? "medium" : "low",
-        tone: (v.score != null && v.score < 60) ? "crimson" : (v.score != null && v.score < 75) ? "yellow" : "blue",
-        vitals: { hr: v.hr || "—", hrv: v.hrv || "—", spo2: v.spo2 || "—", bioAge: v.bioAge || "—", score: v.score || "—" },
+        id: id, uid: str(p.uid, 64), name: name || "Patient", nameKa: name || "პაციენტი", age: num(p.age, 120) || "—", sex: p.sex === "F" ? "F" : "M",
+        reason: (typeof p.reason === "string" || (p.reason && typeof p.reason === "object")) ? p.reason : { ka: "ახალი მოთხოვნა", en: "New request" }, wait: 0, live: true,
+        urgency: (score != null && score < 60) ? "high" : (score != null && score < 75) ? "medium" : "low",
+        tone: (score != null && score < 60) ? "crimson" : (score != null && score < 75) ? "yellow" : "blue",
+        vitals: { hr: num(v.hr, 300) || "—", hrv: num(v.hrv, 300) || "—", spo2: num(v.spo2, 100) || "—", bioAge: num(v.bioAge, 120) || "—", score: score || "—" },
       });
       if (online) toast(T("newRequest"));
       if (view === "dashboard") render();

@@ -18,3 +18,4 @@ serve_full.py
 # secrets — never commit your keys
 .env
 vita-backend.json
+_data/
