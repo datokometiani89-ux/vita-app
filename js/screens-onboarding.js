@@ -89,19 +89,16 @@
   /* ===================== wizard scaffold ===================== */
   function wizard(opts) {
     // opts: { step, title, hint, bodyHTML, onMount, route, prevRoute }
-    var pct = (opts.step / 5) * 100;
+    // Apple-style wizard: large title + chevron back (generic [data-back] → prevRoute),
+    // 5 segmented progress pills, the hint as plain secondary text, sticky action bar.
+    var steps = "";
+    for (var i = 1; i <= 5; i++) steps += '<span class="' + (i <= opts.step ? "on" : "") + '"></span>';
     V.mount(
-      '<div class="topbar tint">' +
-        V.statusbar() +
-        '<div class="topbar__row">' +
-          '<button class="topbar__back" data-back><span class="nub">' + V.icon("back") + "</span> " + t("back") + "</button>" +
-          '<span class="topbar__step">' + t("step") + " " + opts.step + "/5</span>" +
-        "</div>" +
-        '<div class="progressbar"><span style="width:' + pct + '%"></span></div>' +
-      "</div>" +
-      '<div class="screen"><div class="pad fade-in">' +
-        '<div class="s-head">' + V.logoBadge(34) + "<h1>" + opts.title + "</h1></div>" +
-        (opts.hint ? '<div class="bubble">' + opts.hint + "</div>" : "") +
+      V.statusbar() +
+      '<div class="screen"><div class="pad-lg wiz fade-in">' +
+        V.screenHead({ title: opts.title, sub: t("step") + " " + opts.step + "/5", back: opts.prevRoute }) +
+        '<div class="wiz-steps" aria-hidden="true">' + steps + "</div>" +
+        (opts.hint ? '<p class="wiz-hint">' + opts.hint + "</p>" : "") +
         opts.bodyHTML +
       "</div>" +
       '<div class="actionbar">' +
@@ -109,7 +106,6 @@
         '<button class="btn btn-primary" data-next>' + t("next") + " " + V.icon("next") + "</button>" +
       "</div></div>",
       { onMount: function () {
-        $("[data-back]").addEventListener("click", function () { V.go(opts.prevRoute); });
         $("[data-skip]").addEventListener("click", function () { V.go(opts.nextRoute); });
         $("[data-next]").addEventListener("click", function () {
           if (opts.collect) opts.collect();

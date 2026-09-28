@@ -187,3 +187,22 @@
 .ig-row.static:active { background: none; }
 .actionbar.single { justify-content: stretch; }
 .actionbar.single .btn-primary { flex: 1; max-width: none; }
+
+/* ---------- onboarding wizard (5 steps) ---------- */
+.wiz .nav-large { padding-bottom: 10px; }
+.wiz-steps { display: flex; gap: 6px; margin: 0 0 16px; }
+.wiz-steps span { flex: 1; height: 4px; border-radius: 99px; background: var(--fill); }
+.wiz-steps span.on { background: var(--accent); }
+.wiz-hint { font-size: 15px; color: var(--label-2); line-height: 1.45; margin: 0 0 18px; }
+.wiz .field > label, .wiz .qblock > label, .wiz .q-label { font-size: 13px; letter-spacing: 0; text-transform: none; color: var(--label-2); font-weight: 600; }
+.wiz .choice { background: var(--surface); border: 1.5px solid var(--separator); box-shadow: none; }
+.wiz .choice.on { background: var(--surface); border-color: var(--accent); }
+.wiz .choice .wave { display: none; }
+.wiz .qnum, .wiz .qnum.c1, .wiz .qnum.c2, .wiz .qnum.c3, .wiz .qnum.c4 { background: var(--fill); color: var(--label-2); }
+.wiz .chip { background: var(--surface); border: 1px solid var(--separator); color: var(--label); }
+.wiz .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.wiz .field input, .wiz .field select, .wiz input.field { background: var(--surface); border-color: var(--separator); }
+.actionbar { background: rgba(255,255,255,.88); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid var(--separator); padding: 10px 16px calc(12px + var(--safe-bottom)); }
+[data-theme="dark"] .actionbar { background: rgba(28,28,30,.88); }
+.actionbar .btn-ghost { color: var(--label-2); }
+.actionbar .btn-primary { max-width: none; border-radius: 14px; }

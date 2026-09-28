@@ -237,18 +237,6 @@ input.field:focus, select.field:focus, textarea.field:focus { border-color: var(
 }
 
 /* ---------- onboarding intro ---------- */
-.intro-art {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  padding: 20px;
-}
-.intro-art .blobwrap {
-  position: relative; width: 320px; height: 280px;
-}
-.intro-meta { padding: 0 22px 8px; }
-.intro-tags { display: flex; gap: 12px; margin-bottom: 16px; }
-.intro-meta h2 { font-size: 28px; font-weight: 800; text-transform: uppercase; letter-spacing: -.01em; margin-bottom: 10px; }
-.intro-meta p { color: var(--muted); font-size: 16px; line-height: 1.5; }
-
 /* ---------- splash ---------- */
 .splash {
   position: relative; flex: 1;
@@ -256,8 +244,6 @@ input.field:focus, select.field:focus, textarea.field:focus { border-color: var(
   justify-content: flex-end; padding-bottom: 28px;
   overflow: hidden;
 }
-.splash__logo { position: absolute; top: 38%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
-.splash__logo .word { margin-top: 10px; font-size: 34px; font-weight: 700; letter-spacing: .42em; color: var(--green); padding-left: .42em; }
 .splash__cta {
   width: 100%; padding: 0 22px;
   display: flex; flex-direction: column; align-items: stretch; gap: 10px;
@@ -265,7 +251,6 @@ input.field:focus, select.field:focus, textarea.field:focus { border-color: var(
 }
 .splash__cta small { display: block; color: var(--muted); font-size: 14.5px; }
 .splash__cta b { font-size: 15.5px; }
-.sso-head { text-align: center; margin-bottom: 4px; }
 
 /* social sign-in buttons */
 .sso-btn {
