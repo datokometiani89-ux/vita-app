@@ -82,8 +82,6 @@
       "</div>",
       { onMount: function () {
         each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
-        var m = $("[data-menu]");
-        if (m) m.addEventListener("click", function () { V.go("menu"); });
         var rw = $("[data-rewards]");
         if (rw) rw.addEventListener("click", function () { V.go("rewards"); });
         var ns = $("[data-next-screening]");
@@ -1624,88 +1622,6 @@
   };
 
   /* ===================== MENU / HUB ===================== */
-  V.screens.menu = function () {
-    function tile(icon, tone, labelKey, attr, badge) {
-      return '<button class="menu-tile" ' + attr + '>' +
-        (badge ? '<i class="menu-badge">' + badge + "</i>" : "") +
-        V.iconBox(icon, tone) + "<span>" + t(labelKey) + "</span></button>";
-    }
-    var upVisits = (V.state.bookings || []).filter(function (b) { return b.status !== "cancelled"; }).length;
-    var screenP = V.screeningProgress ? V.screeningProgress() : null;
-    function group(titleKey, tiles) {
-      return '<div class="menu-grp"><div class="kicker" style="margin:18px 0 10px">' + t(titleKey) + "</div>" +
-        '<div class="menu-grid">' + tiles.join("") + "</div></div>";
-    }
-
-    V.mount(
-      V.statusbar() +
-      '<div class="screen"><div class="pad-lg fade-in">' +
-        V.screenHead({ title: t("menuTitle"), backAttr: "data-x" }) +
-        '<p class="s-sub">' + t("menuSub") + "</p>" +
-
-        group("grpHealth", [
-          tile("user", "green", "mProfile", 'data-go="profile"'),
-          tile("calendar", "pink", "mAnnual", 'data-go="annual"', screenP && screenP.total ? screenP.pct + "%" : null),
-          tile("shield", "blue", "mBody", 'data-go="bodymap"'),
-          tile("flask", "yellow", "mResults", 'data-go="results"'),
-          tile("shield", V.state.profile.sex === "woman" ? "pink" : "blue", "mSexHealth", 'data-go="sexhealth"'),
-        ].concat(V.state.profile.sex === "woman" ? [tile("heart", "pink", "mCycle", 'data-go="cycle"')] : [])) +
-        group("grpCare", [
-          tile("plan", "green", "mPlan", 'data-go="plan"'),
-          tile("pill", "crimson", "mMeds", 'data-go="meds"'),
-          tile("heart", "pink", "mFamily", 'data-go="family"'),
-          tile("sparkle", "yellow", "mChallenges", 'data-go="challenges"'),
-          tile("location", "crimson", "mMarket", 'data-go="market"', V.cartCount && V.cartCount() ? V.cartCount() : null),
-          tile("progress", "green", "mDatalab", 'data-go="datalab"'),
-          tile("shield", "blue", "mInsurance", 'data-go="insurance"'),
-          tile("trend", "green", "mRoi", 'data-go="roi"'),
-          tile("bolt", "green", "mExercises", 'data-go="exercises"'),
-          tile("heart", "green", "mCare", 'data-go="careplans"'),
-          tile("bolt", "blue", "mWorkouts", 'data-go="workouts"'),
-          tile("walk", "green", "mSteps", 'data-go="steps"'),
-          tile("food", "yellow", "mFood", 'data-go="food"'),
-          tile("drop", "blue", "mWater", 'data-go="water"'),
-          tile("calendar", "green", "mCalendar", 'data-go="calendar"'),
-          tile("flask", "pink", "mCheckup", 'data-go="checkup"'),
-          tile("location", "blue", "mVisits", 'data-go="visits"', upVisits || null),
-        ]) +
-        group("grpAssistant", [
-          tile("sparkle", "green", "mCoach", 'data-go="coach"'),
-          tile("chat", "blue", "mChat", 'data-go="vita"'),
-          tile("progress", "green", "mProgress", 'data-go="progress"'),
-          tile("eye", "blue", "mWellness", 'data-go="wellness"'),
-          tile("stethoscope", "crimson", "mTelemed", 'data-go="telemed"'),
-          tile("sparkle", "yellow", "mPlus", 'data-go="plus"', V.isPlus() ? "✓" : null),
-          tile("bolt", "blue", "mWearable", 'data-go="wearable"', (V.wearableConnected && V.wearableConnected()) ? "✓" : null),
-          tile("sparkle", "yellow", "mRewards", 'data-go="rewards"', (V.state.points || 0) || null),
-          tile("globe", "green", "mVitaapp", 'data-go="vitaapp"'),
-        ]) +
-        group("grpTools", [
-          tile("calendar", "blue", "mIcs", 'data-act="ics"'),
-          tile("file", "gray", "mJson", 'data-act="json"'),
-          tile("file", "green", "mPrint", 'data-act="print"'),
-          tile("settings", "gray", "mSettings", 'data-act="settings"'),
-        ]) +
-      "</div>" +
-      V.tabbar("home") +
-      "</div>",
-      { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.goBack(); });
-        each("[data-go]", function (b) {
-          b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); });
-        });
-        each("[data-act]", function (b) {
-          b.addEventListener("click", function () {
-            var a = b.getAttribute("data-act");
-            if (a === "ics") V.features.exportICS();
-            else if (a === "json") V.features.exportJSON();
-            else if (a === "print") V.features.printSummary();
-            else if (a === "settings") { V.openSettings(); }
-          });
-        });
-      }}
-    );
-  };
 
   /* ===================== VITAAPP.GE ACCOUNT / INTEGRATION ===================== */
   V.screens.vitaapp = function () {

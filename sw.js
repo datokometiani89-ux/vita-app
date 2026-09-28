@@ -1,5 +1,5 @@
 /* VITA service worker — caches the app shell for offline use. */
-var CACHE = "vita-v134";
+var CACHE = "vita-v135";
 var VER = CACHE.replace("vita-v", "");
 // precache the SAME URLs the pages request (`?v=NN`), so an asset isn't fetched and stored
 // twice (once by install, once by the page); matching ignores the query for robustness.

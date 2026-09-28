@@ -130,6 +130,9 @@
     );
   };
 
+  // the old all-tiles grid (#/menu) is retired — every tile lives in a hub now; old links land on Me
+  V.screens.menu = function () { V.go("me"); };
+
   /* ---------- Me ---------- */
   V.screens.me = function () {
     var p = V.state.profile || {};
@@ -161,7 +164,6 @@
           { icon: "moon", tone: "purple", label: t("setTheme"), go: "__theme", value: dark ? t("igOn") : t("igOff") },
         ] },
         { title: t("meData"), rows: [
-          { icon: "grid", tone: "gray", label: t("menuTitle"), go: "menu" },
           { icon: "calendar", tone: "gray", label: t("setExportICS"), go: "__ics" },
           { icon: "file", tone: "gray", label: t("meExport"), go: "__export" },
           { icon: "file", tone: "gray", label: t("setPrint"), go: "__print" },

@@ -797,7 +797,6 @@ window.VITA = window.VITA || {};
     bmi: { ka: "BMI", en: "BMI" },
 
     /* menu / hub */
-    menuTitle: { ka: "მენიუ", en: "Menu" },
     menuSub: { ka: "ყველა ფუნქცია ერთ ადგილას", en: "All features in one place" },
     grpHealth: { ka: "ჯანმრთელობა", en: "Health" },
     grpCare: { ka: "გეგმა და ზრუნვა", en: "Plan & care" },

@@ -37,7 +37,7 @@
   var TAB_OF = {};
   [["health", "health scan fullscan skinscan voicescan tonguescan reactionscan scaninfo steps water food sleep mood bplog cycle meds coach readiness progress datalab results bodymap annual plan wellness exercises workouts quests challenges eyecare breathe symptom heartrate mindtests fasting quitsmoke risk posture analyse"],
    ["care", "care telemed visits checkup careplans market insurance roi family familyMember calendar reminders vitaapp clinics"],
-   ["me", "me profile rewards plus wearable customize menu"]].forEach(function (p) {
+   ["me", "me profile rewards plus wearable customize"]].forEach(function (p) {
     p[1].split(" ").forEach(function (r) { TAB_OF[r] = p[0]; });
   });
   V.tabbar = function (active) {
