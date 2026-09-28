@@ -114,7 +114,6 @@
 .tab { gap: 3px; font-size: 10.5px; letter-spacing: 0; text-transform: none; font-weight: 500; color: var(--label-3); background: none; border: 0; padding: 2px 0; }
 .tab svg { width: 26px; height: 26px; }
 .tab.on { color: var(--accent); }
-.fab { display: none; }
 
 /* ---------- legacy cards on the grouped background: flat white, no borders ---------- */
 .card-soft, .list-card, .score-card, .metric, .day-prog, .next-sc, .hc-cta,
@@ -150,3 +149,16 @@
 /* plan: flat white hero on the grouped background */
 .plan-hero { background: var(--surface) !important; border-radius: var(--r-ig); box-shadow: none; }
 .pl-insight { background: var(--surface); border-radius: var(--r-ig); }
+
+/* ---------- phase 4: onboarding wizard, notes, bands, danger row ---------- */
+.topbar.tint { background: var(--bg); color: var(--label); }
+.topbar__back .nub { border-color: var(--separator); background: var(--surface); }
+.topbar.tint .progressbar { background: var(--fill); }
+.bubble { background: var(--surface); }
+.note-ok { background: var(--surface); color: var(--label-2); border: 0; }
+.note-ok svg { color: var(--green); }
+.dl-band { border-color: var(--separator) !important; background: var(--surface) !important; }
+.ig-row.danger { color: var(--crimson); justify-content: center; }
+.ig-row.danger .ig-ic, .ig-row.danger .ig-row__v { display: none; }
+.ig-row.danger .ig-row__t { flex: none; text-align: center; }
+.ig-row.danger .ig-row__t b { font-weight: 500; }

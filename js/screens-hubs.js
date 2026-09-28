@@ -30,7 +30,7 @@
     return groups.map(function (g) {
       return (g.title ? '<div class="ig-title">' + esc(g.title) + "</div>" : "") +
         '<div class="ig">' + g.rows.filter(Boolean).map(function (r) {
-          return '<button class="ig-row" data-go="' + esc(r.go) + '">' +
+          return '<button class="ig-row' + (r.danger ? " danger" : "") + '" data-go="' + esc(r.go) + '">' +
             '<span class="ig-ic ' + (r.tone || "gray") + '">' + (V.icons[r.icon] || "") + "</span>" +
             '<span class="ig-row__t"><b>' + esc(r.label) + "</b>" + (r.sub ? "<small>" + esc(r.sub) + "</small>" : "") + "</span>" +
             '<span class="ig-row__v">' + (r.value != null ? esc(String(r.value)) : "") +
@@ -162,7 +162,12 @@
         ] },
         { title: t("meData"), rows: [
           { icon: "grid", tone: "gray", label: t("menuTitle"), go: "menu" },
+          { icon: "calendar", tone: "gray", label: t("setExportICS"), go: "__ics" },
           { icon: "file", tone: "gray", label: t("meExport"), go: "__export" },
+          { icon: "file", tone: "gray", label: t("setPrint"), go: "__print" },
+        ] },
+        { rows: [
+          { icon: "x", tone: "crimson", label: t("setReset"), go: "__reset", danger: true },
         ] },
       ])
     );
@@ -170,5 +175,8 @@
     each('[data-go="__lang"]', function (b) { b.addEventListener("click", function () { V.setLang(V.lang() === "ka" ? "en" : "ka"); V.render(); }); });
     each('[data-go="__theme"]', function (b) { b.addEventListener("click", function () { V.setTheme(!dark); V.render(); }); });
     each('[data-go="__export"]', function (b) { b.addEventListener("click", function () { V.features.exportJSON(); }); });
+    each('[data-go="__ics"]', function (b) { b.addEventListener("click", function () { V.features.exportICS(); }); });
+    each('[data-go="__print"]', function (b) { b.addEventListener("click", function () { V.features.printSummary(); }); });
+    each('[data-go="__reset"]', function (b) { b.addEventListener("click", function () { if (confirm(t("setResetConfirm"))) { V.reset(); V.go("splash"); V.render(); } }); });
   };
 })();
