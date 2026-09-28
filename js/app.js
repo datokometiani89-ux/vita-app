@@ -59,8 +59,23 @@
       "</div></div>";
     wireChrome();
     if (opts.onMount) opts.onMount();
+    a11yPass();
   }
   V.mount = mount;
+
+  // Accessibility baseline applied to every screen (65 hand-assembled headers, div-toggles):
+  // icon-only buttons get a name, .toggle divs become keyboard-operable switches.
+  function a11yPass() {
+    root.querySelectorAll("button[data-x]:not([aria-label])").forEach(function (b) { b.setAttribute("aria-label", V.t("back")); });
+    root.querySelectorAll("[data-fab]:not([aria-label])").forEach(function (b) { b.setAttribute("aria-label", V.t("qaTitle")); });
+    root.querySelectorAll("[data-open-settings]:not([aria-label])").forEach(function (b) { b.setAttribute("aria-label", V.t("setTitle")); });
+    root.querySelectorAll(".toggle:not([role])").forEach(function (tg) {
+      tg.setAttribute("role", "switch"); tg.setAttribute("tabindex", "0");
+      tg.setAttribute("aria-checked", tg.classList.contains("on") ? "true" : "false");
+      tg.addEventListener("click", function () { setTimeout(function () { tg.setAttribute("aria-checked", tg.classList.contains("on") ? "true" : "false"); }, 0); });
+      tg.addEventListener("keydown", function (e) { if (e.key === " " || e.key === "Enter") { e.preventDefault(); tg.click(); } });
+    });
+  }
 
   /* ---------- settings sheet ---------- */
   function settingsSheet() {

@@ -1665,67 +1665,6 @@
   ];
 
   /* ===================== TONGUE SCAN (on-device colour / coating / surface) ===================== */
-  // Pure, unit-testable readers over a flat RGBA pixel array (canvas getImageData).
-  // The "know-how": tongue colour (pale/red/purple), coating (whitish-film fraction)
-  // and surface (lightness spread → cracks). Wellness-grade signals, NOT a diagnosis.
-  V.tongueColor = function (data) {
-    if (!data || !data.length) return null;
-    var n = 0, sr = 0, sg = 0, sb = 0;
-    for (var i = 0; i < data.length; i += 4) {
-      if (data[i + 3] < 200) continue;
-      sr += data[i]; sg += data[i + 1]; sb += data[i + 2]; n++;
-    }
-    if (!n) return null;
-    var r = sr / n, g = sg / n, b = sb / n;
-    var mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-    var sat = mx ? (mx - mn) / mx : 0;
-    var redRatio = (g + b) ? r / ((g + b) / 2) : 1;   // tongue is red → r dominates
-    var purple = mx ? (b - g) / mx : 0;               // blue over green → purplish
-    var band;
-    if (sat < 0.22) band = "tgCPale";
-    else if (purple > 0.05 && redRatio < 1.9) band = "tgCPurple";
-    else if (redRatio > 2.1 && sat > 0.45) band = "tgCRed";   // forgiving: deep-red needs both
-    else band = "tgCNormal";
-    return { band: band, sat: Math.round(sat * 100) / 100, redRatio: Math.round(redRatio * 100) / 100, purple: Math.round(purple * 100) / 100, rgb: [Math.round(r), Math.round(g), Math.round(b)] };
-  };
-  V.tongueCoating = function (data) {
-    if (!data || !data.length) return 0;
-    var n = 0, white = 0;
-    for (var i = 0; i < data.length; i += 4) {
-      if (data[i + 3] < 200) continue;
-      var r = data[i], g = data[i + 1], b = data[i + 2];
-      var mx = Math.max(r, g, b), sat = mx ? (mx - Math.min(r, g, b)) / mx : 0;
-      if (mx > 165 && sat < 0.22) white++;            // pale, low-saturation film = coating
-      n++;
-    }
-    return n ? Math.round(white / n * 100) / 100 : 0;
-  };
-  V.tongueSurface = function (data) {
-    if (!data || !data.length) return 0;               // lightness spread → crack/unevenness proxy
-    var n = 0, sum = 0, sumsq = 0;
-    for (var i = 0; i < data.length; i += 8) {
-      if (data[i + 3] < 200) continue;
-      var light = Math.max(data[i], data[i + 1], data[i + 2]);
-      sum += light; sumsq += light * light; n++;
-    }
-    if (!n) return 0;
-    var mean = sum / n, sd = Math.sqrt(Math.max(0, sumsq / n - mean * mean));
-    return Math.round(Math.min(1, sd / 70) * 100) / 100;
-  };
-  V.tongueFlag = function (color, coating, surface) {
-    var score = 0;
-    if (color && color.band !== "tgCNormal") score += 2;
-    if (coating > 0.7) score += 2; else if (coating > 0.45) score += 1;
-    if (surface > 0.6) score += 1;
-    var tone = score <= 1 ? "green" : score <= 3 ? "yellow" : "crimson";
-    return {
-      k: tone === "green" ? "tgLow" : tone === "yellow" ? "tgWatch" : "tgHigh",
-      tone: tone, score: score,
-      coatBand: coating > 0.7 ? "tgKWhite" : coating > 0.45 ? "tgKThick" : "tgKThin",
-      surfBand: surface > 0.6 ? "tgSCracks" : "tgSSmooth",
-    };
-  };
-
   // ---- analytical on-device pipeline (segment → quality → colour/coating/cracks/teeth/zones) ----
   function tgHue(r, g, b) {
     var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
@@ -3981,50 +3920,6 @@
   }
 
   // Per-offer mini-visualization — each offer type gets its own distinct viz (no uniform cards).
-  function offerViz(o) {
-    if (!o || !o.viz) return "";
-    var inner = "";
-    if (o.viz === "battery") {
-      var w = Math.round(150 * (o.vizPct || 22) / 100), fill = (o.vizPct || 22) < 30 ? "#e8536b" : "#e0a92e";
-      inner = '<rect x="16" y="8" width="162" height="28" rx="9" fill="var(--card)" stroke="var(--ink-2)" stroke-width="2.5"/>' +
-        '<rect x="180" y="15" width="9" height="14" rx="3" fill="var(--ink-2)"/>' +
-        '<rect x="20" y="12" width="' + w + '" height="20" rx="6" fill="' + fill + '"/>' +
-        '<path d="M118 3 l-14 22 h13 l-9 17 28 -25 h-14 l11 -14 z" fill="var(--yellow)" stroke="var(--card)" stroke-width="2.4" stroke-linejoin="round"/>' +
-        '<path d="M118 3 l-14 22 h13 l-9 17 28 -25 h-14 l11 -14 z" fill="var(--yellow)" stroke="#c9971a" stroke-width="0.8" stroke-linejoin="round"/>';
-    } else if (o.viz === "moons") {
-      var mx = [48, 110, 172];
-      inner = '<g>' + mx.map(function (x, i) {
-        var dim = i < (o.vizN || 3) ? 1 : 0.3;
-        return '<g opacity="' + dim + '"><circle cx="' + x + '" cy="22" r="13" fill="#5b6bb0"/><circle cx="' + (x + 6) + '" cy="18" r="11" fill="var(--card)"/></g>';
-      }).join("") + '<text x="196" y="18" font-size="13" fill="var(--muted)">z</text><text x="203" y="13" font-size="10" fill="var(--muted)">z</text></g>';
-    } else if (o.viz === "wave") {
-      inner = '<polyline points="8,22 38,22 48,8 58,37 70,13 82,22 110,22 120,5 132,39 144,11 156,22 212,22" fill="none" stroke="var(--pink)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>';
-    } else if (o.viz === "timeline") {
-      var age = o.vizAge || 40, ax = Math.max(22, Math.min(198, 20 + (age - 25) / 45 * 180));
-      var ticks = [30, 40, 50, 60].map(function (a) {
-        var x = 20 + (a - 25) / 45 * 180;
-        return '<line x1="' + x + '" y1="24" x2="' + x + '" y2="32" stroke="var(--line)" stroke-width="2"/><text x="' + x + '" y="42" font-size="9" text-anchor="middle" fill="var(--muted)">' + a + "</text>";
-      }).join("");
-      inner = '<line x1="18" y1="28" x2="202" y2="28" stroke="var(--line)" stroke-width="2.5"/>' + ticks +
-        '<circle cx="' + ax + '" cy="28" r="8" fill="var(--blue)"/><circle cx="' + ax + '" cy="28" r="8" fill="none" stroke="var(--blue)" stroke-width="2" opacity="0.35" transform="scale(1)"><animate attributeName="r" values="8;13;8" dur="1.8s" repeatCount="indefinite"/></circle>' +
-        '<text x="' + ax + '" y="14" font-size="11" font-weight="700" text-anchor="middle" fill="var(--blue)">' + age + "</text>";
-    } else if (o.viz === "cyclephase") {
-      var phases = [["menstruation", "var(--pink)"], ["follicular", "var(--green)"], ["ovulation", "var(--blue)"], ["luteal", "var(--yellow)"]];
-      var px = [40, 90, 140, 190];
-      inner = phases.map(function (ph, i) {
-        var cur = ph[0] === (o.vizPhase || "luteal");
-        return '<circle cx="' + px[i] + '" cy="22" r="' + (cur ? 13 : 9) + '" fill="' + ph[1] + '" opacity="' + (cur ? 1 : 0.5) + '"/>' +
-          (cur ? '<circle cx="' + px[i] + '" cy="22" r="17" fill="none" stroke="' + ph[1] + '" stroke-width="2"/>' : "");
-      }).join("") + '<line x1="49" y1="22" x2="81" y2="22" stroke="var(--line)" stroke-width="2"/><line x1="99" y1="22" x2="131" y2="22" stroke="var(--line)" stroke-width="2"/><line x1="153" y1="22" x2="177" y2="22" stroke="var(--line)" stroke-width="2"/>';
-    } else if (o.viz === "flame") {
-      inner = '<path d="M40 6 c10 9 4 16 8 20 c3 -3 3 -7 2 -10 c7 6 10 13 6 21 c-3 6 -10 9 -16 9 c-9 0 -17 -6 -17 -16 c0 -10 9 -14 9 -22 c4 2 5 6 4 10 c2 -5 3 -14 -9 -22 z" fill="#ff7a18"/>' +
-        '<path d="M34 22 c5 5 2 9 4 12 c5 -1 8 -6 7 -12 c4 4 5 9 3 13 c-2 4 -6 6 -10 6 c-6 0 -10 -4 -10 -10 c0 -5 5 -7 6 -11 z" fill="#ffd23f"/>' +
-        '<text x="66" y="32" font-size="24" font-weight="800" fill="var(--ink)">' + (o.vizN || 7) + '</text>' +
-        '<text x="' + (66 + String(o.vizN || 7).length * 15 + 4) + '" y="32" font-size="13" fill="var(--muted)">' + t("dlDayShort") + "</text>";
-    } else return "";
-    return '<div class="mk-offer__viz t-' + (o.tone || "green") + '"><svg viewBox="0 0 220 44" preserveAspectRatio="xMidYMid meet">' + inner + "</svg></div>";
-  }
-
   // Product illustrations — give the marketplace a real "store" feel (one recognizable
   // picture per offer) instead of uniform abstract cards. viewBox 0 0 40 40.
   var OFFER_ART = {

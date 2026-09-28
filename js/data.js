@@ -610,7 +610,6 @@ window.VITA = window.VITA || {};
     return order;
   };
   // demo courier stages derived from elapsed seconds (gives a live, ticking feel)
-  V.ORDER_STAGES = ["confirmed", "preparing", "dispatched", "ontheway", "delivered"];
   V.orderStage = function (order) {
     if (!order || !order.placedTs) return 4;
     var el = (Date.now() - order.placedTs) / 1000;        // demo: compress the whole trip into ~36s
@@ -861,12 +860,6 @@ window.VITA = window.VITA || {};
     return t;
   };
 
-  V.catTone = function (cat) {
-    return { phys: "green", mental: "blue", nutrition: "pink", skin: "pink", oral: "gray" }[cat] || "gray";
-  };
-  V.catKey = function (cat) {
-    return { phys: "plCatPhys", mental: "plCatMental", nutrition: "plCatNutrition", skin: "plCatSkin", oral: "plCatOral" }[cat];
-  };
 
   /* ---------- Medications (doctor-prescribed, from doc) ---------- */
   V.medications = function () {
@@ -898,7 +891,6 @@ window.VITA = window.VITA || {};
     { id: "sleep7", icon: "moon", days: 7, points: 65, metric: "sleep", title: { ka: "7 ღამე ხარისხიანი ძილი", en: "7 nights of good sleep" }, desc: { ka: "დაიძინე 7+ საათი 7 ღამე", en: "Sleep 7+ hours on 7 nights" } },
     { id: "perfect5", icon: "check", days: 5, points: 80, metric: "fulltasks", title: { ka: "სრულყოფილი დღე × 5", en: "Perfect day × 5" }, desc: { ka: "შეასრულე დღის ყველა დავალება 5 დღე", en: "Finish all daily tasks on 5 days" } },
   ];
-  V.challengeById = function (id) { return V.CHALLENGES.filter(function (c) { return c.id === id; })[0]; };
   function chQualifies(metric, iso) {
     var w = V.state.wellness || {};
     if (metric === "water") return (V.state.waterLog[iso] || 0) >= V.waterGoal();

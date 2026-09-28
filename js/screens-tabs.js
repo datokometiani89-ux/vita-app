@@ -419,19 +419,6 @@
     return '<div class="wk-strip">' + cells + "</div>";
   }
 
-  function dayChips(day) {
-    // show pairs DAY1/DAY2 done, current, upcoming
-    var groups = [
-      { lbl: "DAY1/DAY2", state: day > 2 ? "done" : day >= 1 ? "today" : "" },
-      { lbl: "DAY3", state: day === 3 ? "today" : day > 3 ? "done" : "" },
-      { lbl: "DAY4", state: day === 4 ? "today" : day > 4 ? "done" : "" },
-    ];
-    return groups.map(function (g) {
-      var extra = g.state === "done" ? " " + V.icon("check") : "";
-      return '<div class="day-chip ' + g.state + '">' + g.lbl + extra + "</div>";
-    }).join("");
-  }
-
   function medRow(m, doneMeds, today) {
     var d = doneMeds.indexOf(m.id) >= 0;
     return '<div class="med task ' + (d ? "done" : "") + '" data-med="' + m.id + '" style="box-shadow:var(--shadow-card);border:0">' +

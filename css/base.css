@@ -35,7 +35,11 @@
   /* Neutrals */
   --ink: #14181F;
   --ink-2: #3A4350;
-  --muted: #8A94A6;
+  --muted: #6B7688;         /* was #8A94A6 (3.06:1 on white — failed AA); now 4.9:1 */
+  --green-text: #14702F;    /* AA-safe green for small text; --green (#2BA94C) is for fills/icons only */
+  --yellow-text: #8A6212;   /* AA-safe amber for small text on white/yellow tint */
+  --crimson: #C62839;
+  --crimson-tint: #FDECEF;
   --line: #E6EAF2;
   --bg: #F2F5FA;
   --card: #FFFFFF;
@@ -69,7 +73,11 @@
 
   --ink: #F2F5F9;
   --ink-2: #C6CEDA;
-  --muted: #8D97A7;
+  --muted: #9AA3B2;
+  --green-text: #6FD68F;
+  --yellow-text: #E6B84A;
+  --crimson: #F07080;
+  --crimson-tint: #3A2226;
   --line: #2A323C;
   --bg: #11181D;
   --card: #1B232A;
