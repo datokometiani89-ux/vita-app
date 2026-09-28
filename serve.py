@@ -42,6 +42,20 @@ from urllib.parse import urlparse, parse_qs
 import backend  # real server side: auth, SSE bus, consult routing, EHR, payment/video seams
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+# app version = the ?v=NN cache-bust in app.html (used for the Sentry release tag)
+try:
+    import re as _re
+    with open(os.path.join(ROOT, "app.html"), encoding="utf-8") as _f:
+        APP_VERSION = (_re.search(r"\?v=(\d+)", _f.read()) or [None, "0"])[1]
+except Exception:
+    APP_VERSION = "0"
+# optional backend error monitoring (pip install sentry-sdk; SENTRY_DSN_BACKEND env)
+try:
+    if os.environ.get("SENTRY_DSN_BACKEND"):
+        import sentry_sdk
+        sentry_sdk.init(dsn=os.environ["SENTRY_DSN_BACKEND"], release="vita@" + APP_VERSION, send_default_pii=False, traces_sample_rate=0)
+except Exception:
+    pass
 PORT = int(os.environ.get("PORT", "4170"))
 # 127.0.0.1 for local; hosting platforms (Render/Railway) need 0.0.0.0 — set HOST=0.0.0.0
 HOST = os.environ.get("HOST", "127.0.0.1")
@@ -294,7 +308,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     # Static files that must never leave the server: the backend DB dir, dotfiles
     # (.env/.git), server source, docs and working files that sit in the repo root.
-    _PRIVATE_EXT = (".py", ".pyc", ".md", ".xlsx", ".pptx", ".yaml", ".yml", ".toml", ".ini")
+    _PRIVATE_EXT = (".py", ".pyc", ".md", ".sql", ".xlsx", ".pptx", ".yaml", ".yml", ".toml", ".ini")
 
     def _is_private(self, path):
         parts = [p for p in path.split("/") if p]
@@ -314,7 +328,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def _cache_control(self, path, query):
         low = path.lower()
-        if low.endswith((".html", "/")) or low.endswith("sw.js") or low.endswith("manifest.json"):
+        if low.endswith((".html", "/")) or low.endswith("sw.js") or low.endswith("manifest.json") or low.endswith("/js/config.js"):
             return "no-cache"
         if "v=" in query:
             return "public, max-age=31536000, immutable"
@@ -391,6 +405,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         u = urlparse(self.path)
         path, qs = u.path, parse_qs(u.query)
+        if path == "/js/config.js" and (os.environ.get("SUPABASE_URL") or os.environ.get("SENTRY_DSN")):
+            # runtime config from env (public values only) — never cached, so env changes apply on reload
+            cfg = {"supabaseUrl": os.environ.get("SUPABASE_URL", ""), "supabaseAnonKey": os.environ.get("SUPABASE_ANON_KEY", ""),
+                   "sentryDsn": os.environ.get("SENTRY_DSN", ""), "release": "vita@" + APP_VERSION}
+            data = ("window.VITA_CONFIG = " + json.dumps(cfg) + ";\n").encode("utf-8")
+            self._cc = "no-cache"
+            self.send_response(200)
+            self.send_header("Content-Type", "text/javascript; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            return self.wfile.write(data)
         if path == "/api/health":
             return self._json(200, {"ok": True, "ai": ai_on(), "provider": _provider,
                                     "model": _model, "backend": True, "online": backend.online_counts()})

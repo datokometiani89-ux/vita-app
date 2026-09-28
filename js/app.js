@@ -37,7 +37,7 @@
   var TAB_OF = {};
   [["health", "health scan fullscan skinscan voicescan tonguescan reactionscan scaninfo steps water food sleep mood bplog cycle meds coach readiness progress datalab results bodymap annual plan wellness exercises workouts quests challenges eyecare breathe symptom heartrate mindtests fasting quitsmoke risk posture analyse"],
    ["care", "care telemed visits checkup careplans market insurance roi family familyMember calendar reminders vitaapp clinics"],
-   ["me", "me profile rewards plus wearable customize"]].forEach(function (p) {
+   ["me", "me profile rewards plus wearable customize signin"]].forEach(function (p) {
     p[1].split(" ").forEach(function (r) { TAB_OF[r] = p[0]; });
   });
   V.tabbar = function (active) {
@@ -301,4 +301,13 @@
   // re-arm today's reminders if the user has them on
   if (V.features && V.features.notifOn()) V.features.scheduleToday();
   render();
+  // cloud (Supabase) — no-op when VITA_CONFIG is empty; re-render when a session or a
+  // newer snapshot from another device arrives
+  if (V.cloud && V.cloud.enabled()) {
+    V.cloud.on(function (ev) {
+      if (ev === "signed-in" || ev === "signed-out") render();
+      if (ev === "push-failed" && V.toast) V.toast(V.t("meSyncFailed"));
+    });
+    V.cloud.init();
+  }
 })();

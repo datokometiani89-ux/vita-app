@@ -1,5 +1,5 @@
 /* VITA service worker — caches the app shell for offline use. */
-var CACHE = "vita-v139";
+var CACHE = "vita-v140";
 var VER = CACHE.replace("vita-v", "");
 // precache the SAME URLs the pages request (`?v=NN`), so an asset isn't fetched and stored
 // twice (once by install, once by the page); matching ignores the query for robustness.
@@ -14,6 +14,8 @@ var ASSETS = [
   "js/i18n.js",
   "js/ui.js",
   "js/state.js",
+  "js/cloud.js",
+  "js/monitor.js",
   "js/data.js",
   "js/chat-engine.js",
   "js/api.js",
@@ -63,8 +65,8 @@ self.addEventListener("fetch", function (e) {
   var req = e.request;
   if (req.method !== "GET") return;
   var url = new URL(req.url);
-  // never cache the AI proxy
-  if (url.pathname.indexOf("/api/") === 0) return;
+  // never cache the AI proxy or the runtime config (generated from env)
+  if (url.pathname.indexOf("/api/") === 0 || url.pathname.indexOf("/js/config.js") >= 0) return;
   // same-origin only
   if (url.origin !== self.location.origin) return;
 

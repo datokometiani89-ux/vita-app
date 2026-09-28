@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VITA — კონფიდენციალურობის პოლიტიკა / Privacy Policy</title>
+  <link rel="stylesheet" href="css/base.css">
+  <style>
+    body { background: #F2F2F7; color: #1C1C1E; font-family: var(--font); margin: 0; }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
+    .draft { background: #FBF0D7; color: #8A6212; border-radius: 12px; padding: 12px 16px; font-size: 14px; margin-bottom: 24px; }
+    h1 { font-size: 30px; letter-spacing: -.02em; margin: 0 0 6px; } h2 { font-size: 20px; margin: 28px 0 8px; }
+    p, li { font-size: 16px; line-height: 1.55; } .en { color: #6B7688; }
+    .lang { display: flex; gap: 8px; margin-bottom: 16px; } .lang button { border: 1px solid rgba(60,60,67,.14); background: #fff; border-radius: 999px; padding: 6px 14px; font: inherit; cursor: pointer; } .lang button.on { background: #2BA94C; color: #fff; border-color: #2BA94C; }
+    [data-l="en"] { display: none; } html[data-lang="en"] [data-l="ka"] { display: none; } html[data-lang="en"] [data-l="en"] { display: block; }
+    a { color: #14702F; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="lang"><button class="on" onclick="setL('ka',this)">ქართული</button><button onclick="setL('en',this)">English</button></div>
+  <div class="draft">DRAFT — ამ დოკუმენტს საბოლოო სახეს იურისტი აძლევს გამოშვებამდე. / This draft must be reviewed by counsel before launch.</div>
+
+  <div data-l="ka">
+    <h1>კონფიდენციალურობის პოლიტიკა</h1>
+    <p>ბოლო განახლება: 2026-09-28. VITA (შემდგომში „ჩვენ") არის ჯანმრთელობის wellness-აპლიკაცია. ეს დოკუმენტი აღწერს, რა მონაცემებს ვამუშავებთ, რატომ და როგორ აკონტროლებ მათ.</p>
+    <h2>1. რა მონაცემებს ვამუშავებთ</h2>
+    <ul>
+      <li><b>ანგარიში:</b> ელფოსტა და სახელი (შესვლისას Google/Apple-ით — მხოლოდ ის, რასაც პროვაიდერი გადმოგვცემს).</li>
+      <li><b>ჯანმრთელობის მონაცემები, რომლებსაც თვითონ შეიყვან:</b> პროფილი (ასაკი, სქესი, წონა, სიმაღლე), დიაგნოზები, მედიკამენტები, ჩვევები, დღიურები (ძილი, განწყობა, წნევა), ლაბორატორიული შედეგები, ციკლი.</li>
+      <li><b>კამერით/მიკროფონით მიღებული სიგნალები:</b> პულსი, HRV, სუნთქვის სიხშირე, კანის/ენის ფოტოს ანალიზი, ხმის სტაბილურობა. ვიდეო და აუდიო <b>არ ინახება</b> — მუშავდება მოწყობილობაზე, ინახება მხოლოდ შედეგი. ფოტო ინახება მხოლოდ თუ თვითონ დაამატებ (მაგ. კვების დღიური) და შენს ანგარიშშია.</li>
+      <li><b>ტექნიკური:</b> მოწყობილობის ტიპი, ბრაუზერი, შეცდომების ანგარიშები (Sentry) — პირადი ჯანმრთელობის მონაცემების გარეშე.</li>
+    </ul>
+    <h2>2. სად ინახება</h2>
+    <p>ანგარიშის გარეშე — მხოლოდ შენს მოწყობილობაზე. ანგარიშით — ევროკავშირის სერვერებზე (Supabase, EU რეგიონი), დაშიფრული გადაცემით და შენახვით; მონაცემებზე წვდომა აქვს მხოლოდ შენს ანგარიშს (Row Level Security). ექიმი ხედავს მხოლოდ იმ ვიზიტის მონაცემებს, რომელიც შენ დაიწყე, და ყოველი წვდომა ილოგება.</p>
+    <h2>3. AI ასისტენტი</h2>
+    <p>ჩატის შეკითხვები და სკანის რეზიუმე მუშავდება AI-პროვაიდერის (Anthropic / Google) სერვერზე პასუხის დასაგენერირებლად; არ გამოიყენება მოდელების სასწავლებლად ჩვენი ხელშეკრულებების პირობებით. AI-ს პასუხი <b>არ არის სამედიცინო დიაგნოზი</b>.</p>
+    <h2>4. რას არ ვაკეთებთ</h2>
+    <p>არ ვყიდით პერსონალურ მონაცემებს. პარტნიორების შეთავაზებები (აფთიაქი, ლაბორატორია) გენერირდება შენს მოწყობილობაზე/ანგარიშში; პარტნიორი ხედავს მხოლოდ იმას, რასაც შეკვეთისას თვითონ გაუგზავნი. B2B ანგარიშები მხოლოდ აგრეგირებული და ანონიმიზებულია (მინიმუმ 20 ადამიანის ჯგუფი).</p>
+    <h2>5. შენი უფლებები (GDPR)</h2>
+    <p>ნებისმიერ დროს შეგიძლია: <b>ექსპორტი</b> (მე → მონაცემების ექსპორტი), <b>წაშლა</b> (მე → პროფილის წაშლა; ანგარიშის სრული წაშლა — support@vitaapp.ge, 30 დღეში), წვდომა, შესწორება, დამუშავების შეზღუდვა. საჩივარი — შენი ქვეყნის მონაცემთა დაცვის ორგანოში.</p>
+    <h2>6. ბავშვები</h2>
+    <p>აპი განკუთვნილია 16+ ასაკისთვის.</p>
+    <h2>7. კონტაქტი</h2>
+    <p>support@vitaapp.ge · მონაცემთა დაცვის საკითხები: privacy@vitaapp.ge</p>
+  </div>
+
+  <div data-l="en">
+    <h1>Privacy Policy</h1>
+    <p>Last updated 2026-09-28. VITA ("we") is a health &amp; wellness app. This document explains what data we process, why, and how you control it.</p>
+    <h2>1. Data we process</h2>
+    <ul>
+      <li><b>Account:</b> email and name (with Google/Apple sign-in, only what the provider shares).</li>
+      <li><b>Health data you enter:</b> profile (age, sex, weight, height), conditions, medications, habits, diaries (sleep, mood, blood pressure), lab results, cycle.</li>
+      <li><b>Camera/microphone signals:</b> pulse, HRV, breathing rate, skin/tongue photo analysis, voice steadiness. Video and audio are <b>not stored</b> — they are processed on your device and only the result is kept. Photos are stored only when you add them yourself (e.g. the food diary) and live in your account.</li>
+      <li><b>Technical:</b> device type, browser, error reports (Sentry) — without personal health data.</li>
+    </ul>
+    <h2>2. Where it is stored</h2>
+    <p>Without an account — only on your device. With an account — on EU servers (Supabase, EU region), encrypted in transit and at rest; only your account can access your rows (Row Level Security). A doctor sees only the consultation you started, and every access is logged.</p>
+    <h2>3. AI assistant</h2>
+    <p>Chat questions and scan summaries are processed by an AI provider (Anthropic / Google) to generate a reply and are not used to train models under our agreements. AI replies are <b>not a medical diagnosis</b>.</p>
+    <h2>4. What we do not do</h2>
+    <p>We do not sell personal data. Partner offers (pharmacy, lab) are generated on your device/account; a partner only sees what you send when you place an order. B2B reports are aggregated and anonymised only (groups of at least 20 people).</p>
+    <h2>5. Your rights (GDPR)</h2>
+    <p>At any time you can <b>export</b> (Me → Export data), <b>delete</b> (Me → Reset profile; full account deletion — support@vitaapp.ge, within 30 days), access, correct or restrict processing. Complaints go to your national data-protection authority.</p>
+    <h2>6. Children</h2><p>The app is intended for users aged 16+.</p>
+    <h2>7. Contact</h2><p>support@vitaapp.ge · data protection: privacy@vitaapp.ge</p>
+  </div>
+</main>
+<script>function setL(l, b){ document.documentElement.setAttribute("data-lang", l); document.querySelectorAll(".lang button").forEach(function(x){ x.classList.toggle("on", x===b); }); }</script>
+</body>
+</html>

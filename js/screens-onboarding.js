@@ -12,6 +12,7 @@
   V.screens.splash = function () {
     // Apple-style splash: one calm composition (brand jellies clustered behind the mark),
     // wordmark + the positioning line, then a clear primary action and quiet social options.
+    var cloud = !!(V.cloud && V.cloud.enabled());
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="splash">' +
@@ -24,12 +25,16 @@
         '<button class="btn btn-primary" data-next>' + t("obStart") + " " + V.icon("next") + "</button>" +
         '<div class="sso-or"><span>' + t("ssoOr") + "</span></div>" +
         '<button class="sso-btn sso-google" data-sso="google">' + V.brandGlyph("google") + "<span>" + t("ssoGoogle") + "</span></button>" +
-        '<button class="sso-btn sso-fb" data-sso="facebook">' + V.brandGlyph("facebook") + "<span>" + t("ssoFacebook") + "</span></button>" +
-        '<p class="sso-legal">' + t("ssoLegal") + "</p>" +
+        (cloud
+          ? '<button class="sso-btn sso-apple" data-sso="apple">' + V.brandGlyph("apple") + "<span>" + t("siApple") + "</span></button>"
+          : '<button class="sso-btn sso-fb" data-sso="facebook">' + V.brandGlyph("facebook") + "<span>" + t("ssoFacebook") + "</span></button>") +
+        '<p class="sso-legal">' + t("ssoLegal") + ' <a href="privacy.html" target="_blank" rel="noopener">' + t("mePrivacy") + "</a> · " +
+          '<a href="terms.html" target="_blank" rel="noopener">' + t("meTerms") + "</a></p>" +
       "</div>" +
       "</div></div>",
       { onMount: function () {
-        $("[data-next]").addEventListener("click", function () { V.go("intro"); });
+        // cloud on → real account (email code / OAuth); off → demo identities, straight to the intro
+        $("[data-next]").addEventListener("click", function () { V.go(cloud ? "signin" : "intro"); });
         each("[data-sso]", function (b) {
           b.addEventListener("click", function () {
             var provider = b.getAttribute("data-sso");
@@ -37,6 +42,10 @@
             b.classList.add("loading");
             var span = b.querySelector("span"), label = span.textContent;
             span.textContent = t("ssoConnecting");
+            if (cloud) {
+              V.cloud.signInWithOAuth(provider).catch(function () { b.classList.remove("loading"); span.textContent = label; V.toast && V.toast(t("ssoFailed")); });
+              return;
+            }
             V.auth.signIn(provider).then(function (id) {
               V.applyAuth(id);
               V.go("intro");
@@ -52,6 +61,54 @@
   };
 
   /* ===================== INTRO ===================== */
+  /* ===================== SIGN-IN (email one-time code, cloud mode) ===================== */
+  V.screens.signin = function () {
+    var email = (V.state.auth && V.state.auth.email) || "", step = "email", busy = false;
+    function after() { V.go(V.state.onboarded ? "home" : "intro"); }
+    function paint() {
+      var body = step === "email"
+        ? '<div class="field"><label>' + t("siEmail") + '</label><input id="siEmail" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" value="' + esc(email) + '"></div>' +
+          '<button class="btn btn-primary" id="siSend" style="width:100%">' + t("siSend") + "</button>" +
+          '<p class="ig-note" style="text-align:center;margin-top:14px">' + t("siNoPassword") + "</p>" +
+          '<button class="btn btn-ghost" id="siGuest" style="width:100%;margin-top:6px">' + t("siGuest") + "</button>"
+        : '<p class="wiz-hint">' + t("siCodeSub", { email: esc(email) }) + "</p>" +
+          '<div class="field"><label>' + t("siCode") + '</label><input id="siCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456"></div>' +
+          '<button class="btn btn-primary" id="siVerify" style="width:100%">' + t("siVerify") + "</button>" +
+          '<button class="btn btn-ghost" id="siResend" style="width:100%;margin-top:6px">' + t("siResend") + "</button>";
+      V.mount(
+        V.statusbar() +
+        '<div class="screen"><div class="pad-lg wiz fade-in">' +
+          V.screenHead({ title: step === "email" ? t("siTitle") : t("siCodeTitle"), sub: step === "email" ? t("siSub") : "", back: step === "email" ? "splash" : true }) +
+          body +
+        "</div></div>",
+        { onMount: function () {
+          if (step === "code") { var bk = $("[data-back]"); if (bk) bk.onclick = function (e) { e.stopImmediatePropagation(); step = "email"; paint(); }; }
+          var send = $("#siSend"), inp = $("#siEmail");
+          if (send) send.addEventListener("click", function () {
+            var v = (inp.value || "").trim().toLowerCase();
+            if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { V.toast && V.toast(t("siErrEmail")); inp.focus(); return; }
+            if (busy) return; busy = true; send.disabled = true; email = v;
+            V.cloud.signInWithOtp(v).then(function () { busy = false; step = "code"; paint(); V.toast && V.toast(t("siSent")); })
+              .catch(function (e) { busy = false; send.disabled = false; V.toast && V.toast((e && e.message) || t("ssoFailed")); });
+          });
+          if (inp) inp.addEventListener("keydown", function (e) { if (e.key === "Enter" && send) send.click(); });
+          var guest = $("#siGuest"); if (guest) guest.addEventListener("click", function () { V.go("intro"); });
+          var ver = $("#siVerify"), code = $("#siCode");
+          if (ver) ver.addEventListener("click", function () {
+            var c = (code.value || "").replace(/\D/g, "");
+            if (c.length < 6) { V.toast && V.toast(t("siErrCode")); code.focus(); return; }
+            if (busy) return; busy = true; ver.disabled = true;
+            V.cloud.verifyOtp(email, c).then(function () { busy = false; after(); })
+              .catch(function () { busy = false; ver.disabled = false; V.toast && V.toast(t("siErrCode")); code.select(); });
+          });
+          if (code) { code.focus(); code.addEventListener("keydown", function (e) { if (e.key === "Enter" && ver) ver.click(); }); }
+          var rs = $("#siResend"); if (rs) rs.addEventListener("click", function () { V.cloud.signInWithOtp(email).then(function () { V.toast && V.toast(t("siSent")); }).catch(function () { V.toast && V.toast(t("ssoFailed")); }); });
+        } }
+      );
+    }
+    paint();
+  };
+
   // the 3 brand jellies as ONE small composition (used by splash + intro) — replaces the
   // scattered full-screen blobs; `center` (optional HTML) sits on top, e.g. the logo mark
   function jellyCluster(center, size) {

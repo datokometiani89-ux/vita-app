@@ -24,12 +24,12 @@
 ## 2. ფაზები (თითო = 1 sprint, აგენტების გუნდით)
 
 ### P0 — საფუძველი (1–2 კვირა) → „რეალურ იუზერს შეუძლია დარეგისტრირდეს და მონაცემები არ დაკარგოს"
-- [ ] Supabase პროექტი (EU), სქემა: `profiles`, `state_snapshots` (JSONB per user — არსებული `V.state` პირდაპირ), `consults`, `ehr_records`, `orders`
-- [ ] Auth: email OTP + Apple + Google; `js/auth.js` seam → Supabase; `bridge.js` token → Supabase JWT
-- [ ] Sync: `V.save()` → debounce → `PATCH /state`; login-ზე merge (last-write-wins + local cache)
+- [x] სქემა `supabase/schema.sql` (RLS, realtime, audit log) — მფლობელი უშვებს SQL Editor-ში (`SETUP_CLOUD.md`); Supabase პროექტი (EU): `profiles`, `state_snapshots` (JSONB per user — არსებული `V.state` პირდაპირ), `consults`, `ehr_records`, `orders`
+- [x] Auth: email OTP + Google + Apple (`js/cloud.js`, `#/signin`); demo რეჟიმი რჩება env-ის გარეშე — [ ] `bridge.js` → Supabase JWT (P1)
+- [x] Sync: `V.save()` → 1.5 წმ debounce → `state_snapshots` upsert; შესვლისას/realtime-ზე pull, last-write-wins (`saved_at`), localStorage cache; mock-ით ვერიფიცირებული
 - [ ] `backend.py` → FastAPI: `/api/chat|interpret|vision` (rate-limit per user), consult routing Supabase Realtime-ზე
-- [ ] Sentry + UptimeRobot; Privacy/ToS გვერდები; consent banner
-- [ ] რეალურ 3 ტელეფონზე QA (iPhone Safari, Android Chrome, Samsung Internet): კამერის ფლოუები, safe-area, PWA install
+- [x] Sentry (browser + backend, env-ით) · [x] Privacy/ToS (DRAFT, იურისტი) · [ ] UptimeRobot (მფლობელი) · [ ] consent banner (P2, ანალიტიკასთან ერთად)
+- [ ] რეალურ 3 ტელეფონზე QA (`QA_DEVICE_CHECKLIST.md`) (iPhone Safari, Android Chrome, Samsung Internet): კამერის ფლოუები, safe-area, PWA install
 - **Done =** ახალი იუზერი ორ მოწყობილობაზე ერთსა და იმავე მონაცემს ხედავს; test suite მწვანე; Sentry-ში 0 error 48 სთ
 
 ### P1 — ტელემედიცინა რეალურად (2–4 კვირა) → „ექიმთან რეალური ვიდეო-ვიზიტი, ფასიანი"

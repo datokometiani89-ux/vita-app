@@ -2,7 +2,8 @@
 import subprocess, time, json, os, sys, urllib.request, urllib.error, tempfile
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 PORT = os.environ.get("VITA_TEST_PORT", "4199")
-env = dict(os.environ, PORT=PORT, HOST="127.0.0.1", VITA_DB_PATH=os.path.join(tempfile.mkdtemp(), "db.json"))
+env = dict(os.environ, PORT=PORT, HOST="127.0.0.1", VITA_DB_PATH=os.path.join(tempfile.mkdtemp(), "db.json"),
+           SUPABASE_URL="https://test.supabase.co", SUPABASE_ANON_KEY="anon-test", SENTRY_DSN="")
 srv = subprocess.Popen([sys.executable, "serve.py"], cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 time.sleep(1.2)
 B = "http://127.0.0.1:" + PORT
@@ -31,6 +32,13 @@ for p, want in [("/_data/db.json", 404), ("/vita-backend.json", 404), ("/backend
                 ("/CLAUDE.md", 404), ("/.gitignore", 404), ("/VITA_Financial_Model.xlsx", 404),
                 ("/app.html", 200), ("/js/bridge.js", 200), ("/manifest.json", 200), ("/doctor.html", 200)]:
     check("static " + p, req("GET", p)[0], want)
+
+# 1b. runtime config from env (public values), never cached
+s, b = req("GET", "/js/config.js")
+check("config.js from env", s == 200 and b"https://test.supabase.co" in b and b"anon-test" in b, True)
+r = urllib.request.Request(B + "/js/config.js")
+with urllib.request.urlopen(r, timeout=4) as x: check("config.js no-cache", x.headers.get("Cache-Control"), "no-cache")
+check("config.js has no secrets", b"service_role" in b or b"sk-" in b, False)
 
 # 2. unauthenticated
 check("queue no-token", req("GET", "/api/consult/queue")[0], 401)

@@ -27,7 +27,7 @@
 
   /* Inset-grouped list. groups = [{ title, note, rows:[{ icon, tone, label, sub, go, value, badge }] }] */
   V.igList = function (groups) {
-    return groups.map(function (g) {
+    return groups.filter(Boolean).map(function (g) {
       return (g.title ? '<div class="ig-title">' + esc(g.title) + "</div>" : "") +
         '<div class="ig">' + g.rows.filter(Boolean).map(function (r) {
           return '<button class="ig-row' + (r.danger ? " danger" : "") + '" data-go="' + esc(r.go) + '">' +
@@ -143,9 +143,15 @@
     var notif = safe(function () { return V.features.notifOn(); }, false);
     var hero = '<button class="me-hero" data-go="profile"><span class="me-av">' + esc(V.initials(name) || "V") + "</span>" +
       '<span class="me-hero__t"><b>' + esc(name) + (plus ? '<span class="me-plus">VITA+</span>' : "") + "</b><small>" + esc(sub || t("meEditProfile")) + "</small></span>" + V.icon("chev") + "</button>";
+    var cloud = !!(V.cloud && V.cloud.enabled()), cu = cloud ? V.cloud.user() : null;
+    var accountRows = !cloud ? [] : cu
+      ? [{ icon: "check", tone: "green", label: t("meSynced"), sub: cu.email || "", go: "__none" },
+         { icon: "x", tone: "gray", label: t("meSignOut"), go: "__signout" }]
+      : [{ icon: "user", tone: "green", label: t("meSignIn"), sub: t("meSignInSub"), go: "signin" }];
     hub("me",
       V.screenHead({ title: t("nMe"), actions: [{ icon: "settings", attr: "data-open-settings", label: t("setTitle") }] }),
       hero + V.igList([
+        accountRows.length ? { title: t("meCloud"), rows: accountRows } : null,
         { title: t("meActivity"), rows: [
           { icon: "progress", tone: "green", label: t("mProgress"), go: "progress" },
           { icon: "sparkle", tone: "yellow", label: t("mRewards"), go: "rewards", value: V.state.points || 0 },
@@ -167,6 +173,8 @@
           { icon: "calendar", tone: "gray", label: t("setExportICS"), go: "__ics" },
           { icon: "file", tone: "gray", label: t("meExport"), go: "__export" },
           { icon: "file", tone: "gray", label: t("setPrint"), go: "__print" },
+          { icon: "shield", tone: "gray", label: t("mePrivacy"), go: "__privacy" },
+          { icon: "file", tone: "gray", label: t("meTerms"), go: "__terms" },
         ] },
         { rows: [
           { icon: "x", tone: "crimson", label: t("setReset"), go: "__reset", danger: true },
@@ -180,5 +188,8 @@
     each('[data-go="__ics"]', function (b) { b.addEventListener("click", function () { V.features.exportICS(); }); });
     each('[data-go="__print"]', function (b) { b.addEventListener("click", function () { V.features.printSummary(); }); });
     each('[data-go="__reset"]', function (b) { b.addEventListener("click", function () { if (confirm(t("setResetConfirm"))) { V.reset(); V.go("splash"); V.render(); } }); });
+    each('[data-go="__signout"]', function (b) { b.addEventListener("click", function () { V.signOut().then(function () { V.render(); }); }); });
+    each('[data-go="__privacy"]', function (b) { b.addEventListener("click", function () { window.open("privacy.html", "_blank", "noopener"); }); });
+    each('[data-go="__terms"]', function (b) { b.addEventListener("click", function () { window.open("terms.html", "_blank", "noopener"); }); });
   };
 })();

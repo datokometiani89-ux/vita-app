@@ -115,6 +115,19 @@ window.VITA = window.VITA || {};
 
   V.state = load();
 
+  // merge a raw state object (e.g. a cloud snapshot from another device) over the defaults —
+  // same schema-tolerant merge as load(), without touching localStorage
+  V.hydrate = function (raw) {
+    if (!raw || typeof raw !== "object") return V.state;
+    var out = JSON.parse(JSON.stringify(defaults));
+    Object.keys(raw).forEach(function (k) { out[k] = raw[k]; });
+    out.profile = Object.assign({}, defaults.profile, raw.profile || {});
+    out.wellness = Object.assign({}, defaults.wellness, raw.wellness || {});
+    out.vitaAccount = Object.assign({}, defaults.vitaAccount, raw.vitaAccount || {});
+    V.state = out;
+    return out;
+  };
+
   V.save = function () {
     // localStorage can throw (quota ~5 MB — task photos are base64; private mode; disabled
     // storage). An uncaught throw here used to abort whatever screen action called save().
