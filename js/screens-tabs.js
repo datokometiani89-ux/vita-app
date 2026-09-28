@@ -132,14 +132,13 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("hcTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("hcTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("hcDesc") + "</p>" +
         '<div class="card-soft hc-list" id="hcList">' + rows() + "</div>" +
         '<button class="btn btn-primary" id="hcDone" style="width:100%;margin-top:16px">' + V.icon("check") + " " + t("hcDone") + "</button>" +
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         $("#hcDone").addEventListener("click", function () { V.go("home"); });
         function save() { V.setHomeCards(pr); $("#hcList").innerHTML = rows(); wire(); }
         function wire() {
@@ -708,8 +707,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("cpTitleScreen") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("cpTitleScreen"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("cpDescScreen") + "</p>" +
         plans.map(function (pl) {
           var open = pl.id === openPlan;
@@ -728,7 +726,7 @@
       V.tabbar("plan") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("plan"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-plan]", function (b) {
           b.addEventListener("click", function () {
             var id = b.getAttribute("data-plan");
@@ -754,8 +752,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("waterTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("waterTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("waterDesc") + "</p>" +
 
         '<div class="water-hero">' +
@@ -800,7 +797,7 @@
       V.tabbar("plan") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("plan"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-water]", function (b) {
           b.addEventListener("click", function () { V.waterAdd(parseInt(b.getAttribute("data-water"), 10)); V.render(); });
         });
@@ -861,8 +858,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("clTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("clTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + L(clinicCtx.title) + " · " + t("clDesc") + "</p>" +
         '<div class="seg" style="margin-bottom:16px">' +
           ["rating", "price", "distance"].map(function (s) {
@@ -875,7 +871,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("checkup"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-sort]", function (b) { b.addEventListener("click", function () { clinicSort = b.getAttribute("data-sort"); V.render(); }); });
         each("[data-book]", function (b) {
           b.addEventListener("click", function () { openBookSheet(JSON.parse(b.getAttribute("data-book"))); });
@@ -932,8 +928,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("visitsTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("visitsTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("visitsDesc") + "</p>" +
         (bookings.length ? bookings.map(visitCard).join("")
           : '<div class="empty-state"><div class="empty-ic">' + V.iconBox("calendar", "green") + "</div>" +
@@ -943,7 +938,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         var tc = $("[data-tocheckup]");
         if (tc) tc.addEventListener("click", function () { V.go("checkup"); });
         each("[data-attend]", function (b) { b.addEventListener("click", function () { V.confirmVisit(b.getAttribute("data-attend")); V.render(); }); });
@@ -990,8 +985,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("calTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("calTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("calDesc") + "</p>" +
 
         '<div class="cal-nav"><button class="cal-arrow" data-mn="-1">' + V.icon("back") + "</button>" +
@@ -1021,7 +1015,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-mn]", function (b) {
           b.addEventListener("click", function () {
             calM += parseInt(b.getAttribute("data-mn"));
@@ -1086,8 +1080,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("cyTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("cyTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("cyDesc") + "</p>" +
 
         '<div class="cycle-card">' + cycleRing(info) + "</div>" +
@@ -1124,7 +1117,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-day]", function (b) {
           b.addEventListener("click", function () { V.cycleToggleDay(b.getAttribute("data-day")); V.render(); });
         });
@@ -1200,8 +1193,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("clgTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("clgTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("clgSub") + "</p>" +
         '<div class="ch-streak">' + V.icon("bolt") + "<b>" + streak + "</b><span>" + t("chStreak") + "</span></div>" +
         (trophies.length ? '<div class="ch-trophies">' + trophies.map(function (c) { return '<span class="ch-trophy" title="' + esc(L(c.title)) + '">' + V.iconBox(c.icon, "green") + "</span>"; }).join("") + '<span class="ch-trophy__n">' + t("chTrophies", { n: trophies.length }) + "</span></div>" : "") +
@@ -1214,7 +1206,7 @@
         '<p class="hr-multi-note">' + t("chNote") + "</p>" +
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-join]", function (b) { b.addEventListener("click", function () { V.joinChallenge(b.getAttribute("data-join")); V.toast && V.toast(t("chJoined")); V.render(); }); });
         each("[data-leave]", function (b) { b.addEventListener("click", function () { V.leaveChallenge(b.getAttribute("data-leave")); V.render(); }); });
         var fr = $("#chFriend"); if (fr) fr.addEventListener("click", function () { V.toast && V.toast(t("chFriendSent")); });
@@ -1244,8 +1236,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("fmTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("fmTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("fmSub") + "</p>" +
         '<div class="fm-privacy">' + V.icon("shield") + "<span>" + t("fmPrivacy") + "</span></div>" +
         (members.length
@@ -1263,7 +1254,7 @@
         '<p class="hr-multi-note">' + t("fmCareNote") + "</p>" +
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-member]", function (b) { b.addEventListener("click", function () { familyMemberId = b.getAttribute("data-member"); V.go("familyMember"); }); });
         each("[data-rel]", function (b) { b.addEventListener("click", function () { formRel = b.getAttribute("data-rel"); each("[data-rel]", function (x) { x.classList.toggle("on", x === b); }); }); });
         $("#fmLinkToggle").addEventListener("click", function () { formLinked = !formLinked; this.classList.toggle("on", formLinked); });
@@ -1334,8 +1325,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + esc(m.name) + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: m.name, backAttr: "data-x" }) +
         '<div class="fm-hero"><span class="fm-av fm-av--lg">' + V.initials(m.name || "?") + "</span>" +
           "<div><b>" + esc(m.name) + "</b><small>" + L(V.relationById(m.relation).label) + (m.age ? " · " + m.age + " " + t("years") : "") +
             (status === "linked" ? ' · <span style="color:var(--green)">' + t("fmLinked") + "</span>" : status === "pending" ? ' · <span style="color:#c9881a">' + t("fmPending") + "</span>" : "") + "</small></div></div>" +
@@ -1344,7 +1334,7 @@
         '<p class="hr-multi-note">' + t("fmCareNote") + "</p>" +
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("family"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         $("#fmRemove").addEventListener("click", function () { V.removeMember(m.id); V.go("family"); });
         // pending
         var sim = $("#fmSimAccept"); if (sim) sim.addEventListener("click", function () { V.linkMember(m.id); V.toast && V.toast(t("fmLinkedNow", { name: fname })); V.render(); });
@@ -1370,8 +1360,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("rmTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("rmTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("rmDesc") + "</p>" +
         (supported
           ? '<div class="rm-toggle"><div class="rm-toggle__t"><b>' + t("rmEnable") + "</b><small>" + t("rmEnableSub") + "</small></div>" +
@@ -1385,7 +1374,7 @@
         '<p class="hr-multi-note">' + t("rmNote") + "</p>" +
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         var tog = $("#rmTog");
         if (tog) tog.addEventListener("click", function () {
           if (F.notifOn()) { F.disableNotifications(); V.render(); }
@@ -1420,8 +1409,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("mdTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("mdTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("mdDesc") + "</p>" +
         (due.length
           ? '<div class="md-due"><b>' + t("mdDueToday", { n: due.length }) + "</b>" + due.map(function (d) { return "<span>" + esc(d.med.name) + " · " + t(slotKey[d.slot]) + "</span>"; }).join("") + "</div>"
@@ -1447,7 +1435,7 @@
         '<p class="hr-multi-note">' + t("mdDisc") + "</p>" +
       "</div>" + V.tabbar("plan") + "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-del]", function (b) { b.addEventListener("click", function () { V.removeMed(b.getAttribute("data-del")); V.render(); }); });
         each("[data-take]", function (b) {
           b.addEventListener("click", function () { var p = b.getAttribute("data-take").split("|"); V.toggleMedTaken(p[0], p[1]); V.render(); });
@@ -1485,8 +1473,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("shTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("shTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + L(sexLabel) + " · " + t("shDesc") + "</p>" +
         topics.map(function (x, i) {
           return '<div class="sh-card">' +
@@ -1500,7 +1487,7 @@
         '<p class="hr-multi-note">' + t("shDisc") + "</p>" +
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-book]", function (b) {
           b.addEventListener("click", function () {
             var x = topics[+b.getAttribute("data-book")];
@@ -1551,8 +1538,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("rwTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("rwTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("rwDesc") + "</p>" +
 
         '<div class="rw-balance">' +
@@ -1591,7 +1577,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         $("[data-redeem]").addEventListener("click", openRedeem);
       }}
     );
@@ -1654,8 +1640,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("menuTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("x") + "</button></div>" +
+        V.screenHead({ title: t("menuTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("menuSub") + "</p>" +
 
         group("grpHealth", [
@@ -1705,7 +1690,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-go]", function (b) {
           b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); });
         });
@@ -1757,8 +1742,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("vaHeader") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("x") + "</button></div>" +
+        V.screenHead({ title: t("vaHeader"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("vaIntro") + "</p>" +
         hero +
         '<button class="va-points" data-rewards>' + V.iconBox("sparkle", "yellow") +
@@ -1771,7 +1755,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("menu"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         var rw = $("[data-rewards]"); if (rw) rw.addEventListener("click", function () { V.go("rewards"); });
         var unlink = $("[data-unlink]");
         if (unlink) unlink.addEventListener("click", function () { V.unlinkVitaAccount(); V.render(); });
@@ -1818,8 +1802,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("exTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("exTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("exDesc") + "</p>" +
         '<div class="ex-coach">' + coachAvatar(coach) +
           '<div class="ex-coach__t"><b>' + t("exCoach") + "</b><small>" + t(coach === "female" ? "exCoachF" : "exCoachM") + "</small></div>" +
@@ -1832,7 +1815,7 @@
         list.map(exCard).join("") +
       "</div>" + V.tabbar("plan") + "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("workouts"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-coach]", function (b) { b.addEventListener("click", function () { V.state.coach = b.getAttribute("data-coach"); V.save(); V.render(); }); });
         each("[data-cat]", function (b) { b.addEventListener("click", function () { exCat = b.getAttribute("data-cat"); V.render(); }); });
         each("[data-explan]", function (b) { b.addEventListener("click", function () { V.toggleExPlan(b.getAttribute("data-explan")); V.render(); }); });
@@ -1878,8 +1861,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("woTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("woTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("woDesc") + "</p>" +
         '<button class="ex-libcta" data-go="exercises">' + V.iconBox("bolt", "green") +
           '<div><b>' + t("exTitle") + "</b><small>" + t("exCtaSub") + "</small></div>" + V.icon("next") + "</button>" +
@@ -1890,7 +1872,7 @@
       V.tabbar("plan") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("plan"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
         each("[data-wo]", function (b) {
           b.addEventListener("click", function () {
@@ -1994,8 +1976,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("anTitleScreen") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("anTitleScreen"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("scBasis", { age: p.age || 36 }) + "</p>" +
 
         '<div class="an-prog-card">' +
@@ -2044,7 +2025,7 @@
       V.tabbar("plan") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("plan"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         function toggle(id) {
           var i = V.state.screenings.indexOf(id);
           if (i >= 0) V.state.screenings.splice(i, 1); else V.state.screenings.push(id);
@@ -2151,8 +2132,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("ruTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("x") + "</button></div>" +
+        V.screenHead({ title: t("ruTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("ruDesc") + "</p>" +
 
         '<div class="upload-grid">' +
@@ -2186,7 +2166,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("home"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-panel]", function (b) {
           b.addEventListener("click", function () {
             captureInputs();           // keep what was typed before switching
@@ -2330,15 +2310,14 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>VITA+</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("x") + "</button></div>" +
+        V.screenHead({ title: "VITA+", backAttr: "data-x" }) +
         '<p class="s-sub">' + t("vpIntro") + "</p>" +
         body +
       "</div>" +
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("menu"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-plan]", function (b) {
           b.addEventListener("click", function () {
             V.activatePlus(b.getAttribute("data-plan"));
@@ -2460,15 +2439,14 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("weHeader") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("x") + "</button></div>" +
+        V.screenHead({ title: t("weHeader"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("weIntro") + "</p>" +
         body +
       "</div>" +
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("menu"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-src]", function (b) {
           b.addEventListener("click", function () { V.connectWearable(b.getAttribute("data-src")); V.toast && V.toast(t("weConnected")); V.render(); });
         });

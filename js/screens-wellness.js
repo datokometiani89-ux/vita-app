@@ -55,15 +55,14 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("wellTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("x") + "</button></div>" +
+        V.screenHead({ title: t("wellTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("wellSub") + "</p>" +
         groups +
       "</div>" +
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("menu"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
       }}
     );
@@ -87,8 +86,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("eye", "blue") + "<h1>" + t("eyeTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("eyeTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("eyeSub") + "</p>" +
 
         '<div class="card-soft eye-card">' +
@@ -114,7 +112,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("wellness"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         $("#eyeStart").addEventListener("click", runEyeSession);
         each("[data-amsler]", function (b) {
           b.addEventListener("click", function () {
@@ -226,8 +224,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen breathe-screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("lungs", "green") + "<h1>" + t("brTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("brTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("brSub") + "</p>" +
         '<div class="breathe-stage">' +
           '<div class="breathe-rings"><span></span><span></span><span></span></div>' +
@@ -239,7 +236,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("wellness"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         $("#brStart").addEventListener("click", startBreathe);
       }}
     );
@@ -535,8 +532,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("stethoscope", "pink") + "<h1>" + t("syTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("syTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("sySub") + "</p>" +
         '<div class="card-soft" style="padding:14px">' +
           '<textarea id="syInput" class="sy-input" rows="3" placeholder="' + esc(t("syPlaceholder")) + '"></textarea>' +
@@ -553,7 +549,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { V.go("wellness"); });
+        $("[data-x]").addEventListener("click", function () { V.goBack(); });
         var input = $("#syInput");
         each("[data-chip]", function (b) {
           b.addEventListener("click", function () {
@@ -849,8 +845,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("heart", "crimson") + "<h1>" + t("hrTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("hrTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("hrSub") + "</p>" +
 
         '<div class="card-soft hr-card">' +
@@ -874,7 +869,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        $("[data-x]").addEventListener("click", function () { stop(); V.go("wellness"); });
+        $("[data-x]").addEventListener("click", function () { stop(); V.goBack(); });
         $("#hrStart").addEventListener("click", toggle);
         $("#hrManualSave").addEventListener("click", function () {
           var v = parseInt($("#hrManual").value, 10);
@@ -1625,15 +1620,14 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("info", "blue") + "<h1>" + L({ ka: "როგორ მუშაობს & სიზუსტე", en: "How it works & accuracy" }) + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: L({ ka: "როგორ მუშაობს & სიზუსტე", en: "How it works & accuracy" }), backAttr: "data-x" }) +
         '<p class="s-sub">' + L({ ka: "VITA-ს სკანი შენი ტელეფონის სენსორებით wellness-შეფასებებს აკეთებს — არა სამედიცინო დიაგნოზს. აი, გულახდილად, რას ნიშნავს თითოეული.", en: "VITA's scan uses your phone's sensors for wellness estimates — not a medical diagnosis. Here's honestly what each one means." }) + "</p>" +
         body +
       "</div>" +
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.go("scan"); });
+        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.goBack(); });
         each("[data-go]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go")); }); });
       } }
     );
@@ -2138,7 +2132,7 @@
         V.tabbar("home") +
         "</div>",
         { onMount: function () {
-          var b = $("[data-x]"); if (b) b.addEventListener("click", function () { if (stopCap) stopCap(); V.go("scan"); });
+          var b = $("[data-x]"); if (b) b.addEventListener("click", function () { if (stopCap) stopCap(); V.goBack(); });
           $("#vcStart").addEventListener("click", startVoice);
           var br = $("[data-vc-breathe]"); if (br) br.addEventListener("click", function () { V.go("breathe"); });
         }}
@@ -2173,8 +2167,7 @@
       V.mount(
         V.statusbar() +
         '<div class="screen"><div class="pad-lg fade-in">' +
-          '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("brain", "blue") + "<h1>" + t("mtTitle") + "</h1></div>" +
-            '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+          V.screenHead({ title: t("mtTitle"), backAttr: "data-x" }) +
           body +
         "</div>" +
         V.tabbar("home") +
@@ -2451,8 +2444,7 @@
       V.mount(
         V.statusbar() +
         '<div class="screen"><div class="pad-lg fade-in">' +
-          '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("smile", "yellow") + "<h1>" + t("moTitle") + "</h1></div>" +
-            '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+          V.screenHead({ title: t("moTitle"), backAttr: "data-x" }) +
           '<p class="s-sub">' + t("moSub") + "</p>" +
 
           '<div class="card-soft" style="padding:16px">' +
@@ -2479,7 +2471,7 @@
         V.tabbar("home") +
         "</div>",
         { onMount: function () {
-          $("[data-x]").addEventListener("click", function () { V.go("wellness"); });
+          $("[data-x]").addEventListener("click", function () { V.goBack(); });
           each("[data-mood]", function (b) { b.addEventListener("click", function () {
             sel = parseInt(b.getAttribute("data-mood"), 10);
             each("[data-mood]", function (x) {
@@ -2855,7 +2847,7 @@
         '<div class="screen"><div class="pad-lg fade-in">' + head("shield", "blue", "rkTitle") + body + "</div>" +
         V.tabbar("home") + "</div>",
         { onMount: function () {
-          $("[data-x]").addEventListener("click", function () { if (session && !session.done) { session = null; renderIntro(); } else V.go("wellness"); });
+          $("[data-x]").addEventListener("click", function () { if (session && !session.done) { session = null; renderIntro(); } else V.goBack(); });
           wire();
         }}
       );
@@ -3247,8 +3239,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("quTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("quTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("quSub") + "</p>" +
         '<div class="garden-card">' +
           '<div class="garden-stage">' + plantSVG(stage) + "</div>" +
@@ -3271,7 +3262,7 @@
       V.tabbar("home") +
       "</div>",
       { onMount: function () {
-        var b = $("[data-x]"); if (b) b.addEventListener("click", function () { V.go("home"); });
+        var b = $("[data-x]"); if (b) b.addEventListener("click", function () { V.goBack(); });
         each("[data-q-go]", function (r) { r.addEventListener("click", function () { V.go(r.getAttribute("data-q-go")); }); });
       }}
     );
@@ -3361,7 +3352,7 @@
       "</div>" +
       V.tabbar("home") +
       "</div>",
-      { onMount: function () { var b = $("[data-x]"); if (b) b.addEventListener("click", function () { V.go("home"); }); } }
+      { onMount: function () { var b = $("[data-x]"); if (b) b.addEventListener("click", function () { V.goBack(); }); } }
     );
   };
 
@@ -3492,8 +3483,7 @@
       V.mount(
         V.statusbar() +
         '<div class="screen"><div class="pad-lg fade-in">' +
-          '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.iconBox("stethoscope", "green") + "<h1>" + t("tdTitle") + "</h1></div>" +
-            '<button class="icon-box gray" data-x>' + V.icon(stage === "call" ? "back" : "x") + "</button></div>" +
+          V.screenHead({ title: t("tdTitle"), backAttr: "data-x" }) +
           bodyInner +
         "</div>" +
         (stage === "call" ? "" : V.tabbar("home")) +
@@ -3537,7 +3527,7 @@
 
     function wire() {
       var x = $("[data-x]");
-      if (x) x.addEventListener("click", function () { clearTimers(); if (stage === "call") { stage = "list"; paint(); } else V.go("menu"); });
+      if (x) x.addEventListener("click", function () { clearTimers(); if (stage === "call") { stage = "list"; paint(); } else V.goBack(); });
       each("[data-doc]", function (b) { b.addEventListener("click", function () { var d = V.doctorById(b.getAttribute("data-doc")); if (!d) return; if (!d.online) { V.toast && V.toast(t("tdNextAt") + " " + d.next); return; } startCall(d); }); });
       var send = $("#tdSend"), msg = $("#tdMsg");
       function doSend() { var v = (msg.value || "").trim(); if (!v) return; pushChat("me", v); msg.value = ""; sTimer = setTimeout(function () { if (stage === "call") pushChat("doc", REPLY[V.lang() === "ka" ? "ka" : "en"][Math.floor(Math.random() * 4)]); }, 1200); }
@@ -4072,12 +4062,11 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + title + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: title, backAttr: "data-x" }) +
         body +
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
-        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { if (marketView !== "home") { marketView = "home"; V.render(); } else V.go("home"); });
+        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { if (marketView !== "home") { marketView = "home"; V.render(); } else V.goBack(); });
         each("[data-go2]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go2")); }); });
         each("[data-cat]", function (b) { b.addEventListener("click", function () { marketCat = b.getAttribute("data-cat"); V.render(); }); });
         var oi = $("#mkOptIn"); if (oi) oi.addEventListener("click", function () { V.setOffersOptIn(true); V.render(); });
@@ -4192,14 +4181,13 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("dlTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("dlTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("dlSub") + "</p>" +
         cohortHero() + vsCohort() + predicted() + proven() +
         '<div class="mk-priv">' + V.icon("shield") + "<span>" + t("dlPrivacy") + "</span></div>" +
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
-        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.go("home"); });
+        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.goBack(); });
         each("[data-go3]", function (b) { b.addEventListener("click", function () { V.go(b.getAttribute("data-go3")); }); });
         each("[data-reorder]", function (b) { b.addEventListener("click", function () {
           var id = b.getAttribute("data-reorder");
@@ -4228,8 +4216,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("iqTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("iqTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("iqSub") + "</p>" +
 
         '<div class="iq-risk card-soft">' +
@@ -4247,7 +4234,7 @@
         '<p class="dl-note">' + V.icon("info") + " " + t("iqNote") + "</p>" +
       "</div>" + V.tabbar("home") + "</div>",
       { onMount: function () {
-        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.go("home"); });
+        var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.goBack(); });
         var c = $("#iqCta"); if (c) c.addEventListener("click", function () { V.toast && V.toast(t("iqRequested")); });
       } }
     );
@@ -4279,8 +4266,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("roiTitle") + "</h1></div>" +
-          '<button class="icon-box gray" data-x>' + V.icon("back") + "</button></div>" +
+        V.screenHead({ title: t("roiTitle"), backAttr: "data-x" }) +
         '<p class="s-sub">' + t("roiSub") + "</p>" +
 
         '<div class="roi-hero card-soft"><span class="roi-hero__k">' + t("roiSavedYear") + '</span><b class="roi-hero__v">' + money(r.total) + "</b>" + area + "</div>" +
@@ -4290,7 +4276,7 @@
 
         '<div class="dl-note" style="margin-top:14px">' + V.icon("info") + " " + t("roiB2B") + "</div>" +
       "</div>" + V.tabbar("home") + "</div>",
-      { onMount: function () { var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.go("home"); }); } }
+      { onMount: function () { var x = $("[data-x]"); if (x) x.addEventListener("click", function () { V.goBack(); }); } }
     );
   };
 

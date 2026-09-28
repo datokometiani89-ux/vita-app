@@ -18,7 +18,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad fade-in">' +
-        '<div class="s-head">' + V.logoBadge(34) + "<h1>" + t("anTitle") + "</h1></div>" +
+        V.screenHead({ title: t("anTitle") }) +
         '<p class="s-sub">' + t("anDesc") + "</p>" +
         '<div class="analyse-ring"><div class="ring">' +
           ringSVG(0) +
@@ -100,8 +100,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + V.logoBadge(34) + "<h1>" + t("yourProfile") + "</h1></div>" +
-          '<button class="icon-box gray" data-open-settings>' + V.icon("settings") + "</button></div>" +
+        V.screenHead({ title: t("yourProfile"), back: true, actions: [{ icon: "settings", attr: "data-open-settings", label: t("setTitle") }] }) +
         '<div class="profile-hero">' +
           V.avatar(96) +
           "<h2>" + esc(name) + "</h2>" +
@@ -162,7 +161,7 @@
         '<div class="progressbar"><span style="width:88%"></span></div>' +
       "</div>" +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head" style="margin-top:14px">' + V.logoBadge(34) + "<h1>" + t("bmTitle") + "</h1></div>" +
+        V.screenHead({ title: t("bmTitle") }) +
         '<p class="s-sub"><b style="color:var(--green)">VITA</b> ' + t("bmDetected", { n: markers.length }).replace("VITA-მ ", "").replace("VITA ", "") + "</p>" +
         '<div class="bodymap"><div class="bodymap__img">' + bodySVG() +
           markers.map(function (m) {
@@ -262,7 +261,7 @@
     V.mount(
       V.statusbar() +
       '<div class="screen"><div class="pad-lg fade-in">' +
-        '<div class="s-head">' + V.logoBadge(34) + "<h1>" + t("cpTitle") + "</h1></div>" +
+        V.screenHead({ title: t("cpTitle") }) +
         '<p class="s-sub">' + t("cpDesc") + "</p>" +
         (priority.length ? '<div class="kicker" style="margin-bottom:14px">' + t("cpPriority") + "</div>" + priority.map(card).join("") : "") +
         (rest.length ? '<div class="kicker" style="margin:8px 0 14px">' + t("cpLater") + "</div>" + rest.map(card).join("") : "") +

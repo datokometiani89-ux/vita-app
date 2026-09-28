@@ -74,7 +74,9 @@
   // Back that respects where the user came from (hub → tool → hub); falls back to a route
   // when the app was opened directly on a deep link.
   V.goBack = function (fallback) {
-    if (history.length > 1 && V._navCount > 0) history.back(); else go(fallback || "home");
+    if (history.length > 1 && V._navCount > 0) { history.back(); return; }
+    var route = (location.hash || "").replace(/^#\/?/, "").split("?")[0];
+    go(fallback || TAB_OF[route] || "home"); // deep link: fall back to the screen's hub
   };
   V._navCount = 0;
   window.addEventListener("hashchange", function () { V._navCount++; });
@@ -83,7 +85,7 @@
   // icon-only buttons get a name, .toggle divs become keyboard-operable switches.
   function a11yPass() {
     // generic back button from V.screenHead({back}) — navigates to the given route (default home)
-    root.querySelectorAll("[data-back]").forEach(function (b) { b.addEventListener("click", function () { var r = b.getAttribute("data-back"); if (r) go(r); else V.goBack("home"); }); });
+    root.querySelectorAll("[data-back]").forEach(function (b) { b.addEventListener("click", function () { var r = b.getAttribute("data-back"); if (r) go(r); else V.goBack(); }); });
     root.querySelectorAll("button[data-x]:not([aria-label])").forEach(function (b) { b.setAttribute("aria-label", V.t("back")); });
     root.querySelectorAll("[data-fab]:not([aria-label])").forEach(function (b) { b.setAttribute("aria-label", V.t("qaTitle")); });
     root.querySelectorAll("[data-open-settings]:not([aria-label])").forEach(function (b) { b.setAttribute("aria-label", V.t("setTitle")); });
