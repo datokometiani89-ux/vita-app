@@ -1,5 +1,8 @@
 /* VITA service worker — caches the app shell for offline use. */
-var CACHE = "vita-v122";
+var CACHE = "vita-v123";
+var VER = CACHE.replace("vita-v", "");
+// precache the SAME URLs the pages request (`?v=NN`), so an asset isn't fetched and stored
+// twice (once by install, once by the page); matching ignores the query for robustness.
 var ASSETS = [
   "index.html",
   "app.html",
@@ -31,7 +34,8 @@ self.addEventListener("install", function (e) {
     caches.open(CACHE).then(function (c) {
       // cache best-effort; don't fail install if one asset 404s
       return Promise.all(ASSETS.map(function (u) {
-        return c.add(u).catch(function () {});
+        var versioned = /\.(js|css)$/.test(u) ? u + "?v=" + VER : u;
+        return c.add(versioned).catch(function () {});
       }));
     })
     // NB: no skipWaiting here — the new worker waits so the page can prompt the
@@ -76,7 +80,7 @@ self.addEventListener("fetch", function (e) {
 
   // cache-first for static assets
   e.respondWith(
-    caches.match(req).then(function (m) {
+    caches.match(req, { ignoreSearch: true }).then(function (m) {
       return m || fetch(req).then(function (res) {
         var copy = res.clone();
         caches.open(CACHE).then(function (c) { c.put(req, copy); });

@@ -990,6 +990,7 @@ window.VITA = window.VITA || {};
     dlBandSub: { ka: "ნახე როგორ ადარებ და რა მუშაობს", en: "See how you compare & what works" },
     dlDayShort: { ka: "დღე", en: "d" },
     errScreen: { ka: "გვერდი ვერ ჩაიტვირთა — დაბრუნდი მთავარზე", en: "That page failed to load — back to home" },
+    errSave: { ka: "შენახვა ვერ მოხერხდა — მეხსიერება სავსეა", en: "Couldn't save — storage is full" },
     /* Insurance marketplace (bidding) */
     mInsurance: { ka: "დაზღვევა", en: "Insurance" },
     iqTitle: { ka: "ჯანმრთელობის დაზღვევა", en: "Health insurance" },

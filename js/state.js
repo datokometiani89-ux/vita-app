@@ -116,7 +116,24 @@ window.VITA = window.VITA || {};
   V.state = load();
 
   V.save = function () {
-    localStorage.setItem(KEY, JSON.stringify(V.state));
+    // localStorage can throw (quota ~5 MB — task photos are base64; private mode; disabled
+    // storage). An uncaught throw here used to abort whatever screen action called save().
+    try {
+      localStorage.setItem(KEY, JSON.stringify(V.state));
+      return true;
+    } catch (e) {
+      // quota: drop the heaviest payload (photo proofs on task logs) and retry once
+      try {
+        var logs = V.state.taskLogs || {}, dropped = 0;
+        Object.keys(logs).forEach(function (d) {
+          Object.keys(logs[d] || {}).forEach(function (t) { if (logs[d][t] && logs[d][t].photo) { delete logs[d][t].photo; dropped++; } });
+        });
+        if (dropped) { localStorage.setItem(KEY, JSON.stringify(V.state)); return true; }
+      } catch (e2) {}
+      try { console.warn("[VITA] save failed:", e); } catch (_) {}
+      if (V.toast && V.t) { try { V.toast(V.t("errSave")); } catch (_) {} }
+      return false;
+    }
   };
 
   V.reset = function () {

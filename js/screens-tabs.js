@@ -399,7 +399,7 @@
 
   // current week (Mon–Sun) with per-day task-completion rings — replaces the cryptic DAY1/DAY2 chips
   function weekStrip() {
-    var todayIso = V.todayISO(), now = new Date(todayIso);
+    var todayIso = V.todayISO(), now = V.parseISO(todayIso);
     var dow = (now.getDay() + 6) % 7;            // Mon = 0
     var monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow);
     var total = (V.dailyTasks() || []).length || 1;

@@ -26,10 +26,13 @@ Endpoints:
     POST /api/interpret   -> {"summary": "..."} AI reading of lab results
 """
 
+import io
+import gzip
 import json
 import os
 import time
 import queue
+import threading
 import http.server
 import socketserver
 import urllib.request
@@ -280,8 +283,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a):
         pass
 
+    _cc = None  # per-request Cache-Control chosen by the static path; API/HTML default to no-store
+
     def end_headers(self):
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", self._cc or "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "SAMEORIGIN")
         self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -299,10 +304,62 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return True
         return "vita-backend" in path
 
+    # --- static files: gzip + sane caching -------------------------------------
+    # The app ships ~1.1 MB of JS/CSS; gzip makes that ~270 KB. Versioned assets
+    # (`?v=NN`, bumped on every release) are immutable; HTML / sw.js / manifest must
+    # revalidate so a new version is picked up on the next load.
+    _GZ_EXT = (".js", ".css", ".html", ".json", ".svg", ".txt", ".webmanifest")
+    _GZ_CACHE = {}  # abs path -> (mtime, size, gzipped bytes)
+    _GZ_LOCK = threading.Lock()
+
+    def _cache_control(self, path, query):
+        low = path.lower()
+        if low.endswith((".html", "/")) or low.endswith("sw.js") or low.endswith("manifest.json"):
+            return "no-cache"
+        if "v=" in query:
+            return "public, max-age=31536000, immutable"
+        if low.startswith("/fonts/") or low.startswith("/icons/"):
+            return "public, max-age=86400"
+        return "no-cache"
+
+    def _gzipped(self, fpath):
+        st = os.stat(fpath)
+        with self._GZ_LOCK:
+            hit = self._GZ_CACHE.get(fpath)
+            if hit and hit[0] == st.st_mtime and hit[1] == st.st_size:
+                return hit[2], st
+        with open(fpath, "rb") as f:
+            data = gzip.compress(f.read(), compresslevel=6)
+        with self._GZ_LOCK:
+            self._GZ_CACHE[fpath] = (st.st_mtime, st.st_size, data)
+        return data, st
+
     def send_head(self):  # used by both GET and HEAD for static files
-        if self._is_private(urlparse(self.path).path):
+        u = urlparse(self.path)
+        if self._is_private(u.path):
             self.send_error(404, "Not found")
             return None
+        self._cc = self._cache_control(u.path, u.query)
+        fpath = self.translate_path(self.path)
+        if os.path.isdir(fpath):
+            return super().send_head()  # index.html / listing handled by the base class
+        accepts_gz = "gzip" in (self.headers.get("Accept-Encoding") or "")
+        if accepts_gz and fpath.lower().endswith(self._GZ_EXT) and os.path.isfile(fpath):
+            try:
+                data, st = self._gzipped(fpath)
+            except OSError:
+                return super().send_head()
+            ctype = self.guess_type(fpath)
+            if "charset" not in ctype and (ctype.startswith("text/") or ctype in ("application/javascript", "text/javascript", "application/json", "image/svg+xml")):
+                ctype += "; charset=utf-8"
+            self.send_response(200)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Vary", "Accept-Encoding")
+            self.send_header("Last-Modified", self.date_time_string(st.st_mtime))
+            self.end_headers()
+            return io.BytesIO(data)
         return super().send_head()
 
     def _user(self, qs):

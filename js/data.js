@@ -1128,11 +1128,14 @@ window.VITA = window.VITA || {};
     var keepDays = 21, now = V.parseISO(V.todayISO());
     function staleDateKey(key) {
       if (!/^\d{4}-\d\d-\d\d/.test(key)) return false; // keep non-date keys (e.g. "quit:start")
-      var ms = now - new Date(key.slice(0, 10));
+      var ms = now - V.parseISO(key.slice(0, 10));
       return ms > keepDays * 86400000;
     }
     var s = V.state;
     if (s.awarded) Object.keys(s.awarded).forEach(function (k) { if (staleDateKey(k)) delete s.awarded[k]; });
+    // task proof logs carry base64 photos (~60 KB each) — the main localStorage growth
+    if (s.taskLogs) Object.keys(s.taskLogs).forEach(function (k) { if (staleDateKey(k)) delete s.taskLogs[k]; });
+    if (s.doneTasks) Object.keys(s.doneTasks).forEach(function (k) { if (/^\d{4}-\d\d-\d\d/.test(k) && (now - V.parseISO(k)) > 400 * 86400000) delete s.doneTasks[k]; });
     if (s.companion && s.companion.credited) Object.keys(s.companion.credited).forEach(function (k) { if (staleDateKey(k)) delete s.companion.credited[k]; });
     if (s.rewardLog && s.rewardLog.length > 100) s.rewardLog = s.rewardLog.slice(-100);
     if (s.screeningDone) { var y = new Date().getFullYear(); Object.keys(s.screeningDone).forEach(function (k) { if (+k < y - 1) delete s.screeningDone[k]; }); }
